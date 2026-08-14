@@ -1,0 +1,198 @@
+/* ==================================
+   CATEGORY BAR
+================================== */
+
+.categories {
+  max-width: 1850px;
+
+  margin: 22px auto 30px;
+
+  padding: 0 24px;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 10px;
+
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  white-space: nowrap;
+
+  scroll-behavior: smooth;
+
+  scrollbar-width: thin;
+
+  scrollbar-color: #c00020 #f3f4f6;
+}
+
+/* Chrome / Edge / Safari */
+
+.categories::-webkit-scrollbar {
+  height: 6px;
+}
+
+.categories::-webkit-scrollbar-track {
+  background: #f3f4f6;
+
+  border-radius: 10px;
+}
+
+.categories::-webkit-scrollbar-thumb {
+  background: #c00020;
+
+  border-radius: 10px;
+}
+
+.categories::-webkit-scrollbar-thumb:hover {
+  background: #96001b;
+}
+
+
+/* ==================================
+   KATEGORİ BUTONU
+================================== */
+
+.category-item {
+  flex: 0 0 auto;
+
+  height: 44px;
+
+  padding: 0 17px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 7px;
+
+  white-space: nowrap;
+
+  background: #ffffff;
+
+  border: 1px solid #e5e7eb;
+
+  border-radius: 12px;
+
+  cursor: pointer;
+
+  font-size: 14px;
+
+  font-weight: 700;
+
+  color: #374151;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+
+/* ==================================
+   HOVER
+================================== */
+
+.category-item:hover {
+  background: #fff5f7;
+
+  color: #b00020;
+
+  border-color: #f3a6b5;
+
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 5px 14px rgba(176, 0, 32, 0.10);
+}
+
+
+/* ==================================
+   AKTİF KATEGORİ
+================================== */
+
+.category-item.active {
+  background: #b00020;
+
+  color: #ffffff;
+
+  border-color: #b00020;
+
+  box-shadow:
+    0 5px 14px rgba(176, 0, 32, 0.20);
+}
+
+
+/* ==================================
+   AKTİF HOVER
+================================== */
+
+.category-item.active:hover {
+  background: #96001b;
+
+  border-color: #96001b;
+
+  color: #ffffff;
+}
+
+
+/* ==================================
+   TABLET
+================================== */
+
+@media (max-width: 900px) {
+
+  .categories {
+    margin: 20px auto 26px;
+
+    padding-left: 18px;
+    padding-right: 35px;
+
+    gap: 9px;
+  }
+
+  .category-item {
+    height: 42px;
+
+    padding: 0 15px;
+
+    font-size: 13px;
+  }
+
+}
+
+
+/* ==================================
+   MOBİL
+================================== */
+
+@media (max-width: 600px) {
+
+  .categories {
+    margin: 16px auto 22px;
+
+    padding-left: 12px;
+    padding-right: 35px;
+
+    gap: 8px;
+  }
+
+  .category-item {
+    height: 40px;
+
+    padding: 0 13px;
+
+    font-size: 12px;
+
+    border-radius: 10px;
+  }
+
+}

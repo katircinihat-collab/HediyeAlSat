@@ -1,0 +1,79 @@
+/* ===================================
+   CHECKOUT
+=================================== */
+
+.checkout-page{
+
+    max-width:1200px;
+
+    margin:40px auto;
+
+    padding:20px;
+
+}
+
+.checkout-box{
+
+    background:#fff;
+
+    padding:35px;
+
+    border-radius:20px;
+
+    box-shadow:0 8px 30px rgba(0,0,0,.08);
+
+}
+.checkout-layout{
+display:grid;
+grid-template-columns:2fr 1fr;
+gap:30px;
+align-items:start;
+}
+
+.checkout-left{
+display:flex;
+flex-direction:column;
+gap:20px;
+}
+
+.checkout-right{
+position:sticky;
+top:20px;
+}
+
+.checkout-card{
+display:flex;
+gap:20px;
+background:white;
+border-radius:20px;
+padding:20px;
+box-shadow:0 8px 25px rgba(0,0,0,.08);
+}
+
+.checkout-image{
+width:150px;
+height:150px;
+object-fit:cover;
+border-radius:15px;
+}
+
+.checkout-info{
+flex:1;
+}
+
+.checkout-info h2{
+margin-bottom:10px;
+font-size:22px;
+}
+
+.checkout-info p{
+margin:6px 0;
+color:#666;
+}
+
+.checkout-summary{
+background:white;
+padding:25px;
+border-radius:20px;
+box-shadow:0 8px 25px rgba(0,0,0,.08);
+}

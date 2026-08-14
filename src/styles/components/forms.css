@@ -1,0 +1,209 @@
+/* ===================================
+   GLOBAL FORM
+=================================== */
+
+form{
+
+    width:100%;
+
+}
+
+/* ===================================
+   INPUT
+=================================== */
+
+input{
+
+    width:100%;
+
+    height:48px;
+
+    border:1px solid #ddd;
+
+    border-radius:12px;
+
+    padding:0 16px;
+
+    font-size:15px;
+
+    outline:none;
+
+    transition:.25s;
+
+    background:#fff;
+
+}
+
+input:focus{
+
+    border-color:#ff6b00;
+
+    box-shadow:0 0 0 3px rgba(255,107,0,.15);
+
+}
+
+/* ===================================
+   TEXTAREA
+=================================== */
+
+textarea{
+
+    width:100%;
+
+    min-height:130px;
+
+    resize:vertical;
+
+    border:1px solid #ddd;
+
+    border-radius:12px;
+
+    padding:14px 16px;
+
+    font-size:15px;
+
+    outline:none;
+
+    transition:.25s;
+
+    font-family:inherit;
+
+}
+
+textarea:focus{
+
+    border-color:#ff6b00;
+
+    box-shadow:0 0 0 3px rgba(255,107,0,.15);
+
+}
+
+/* ===================================
+   SELECT
+=================================== */
+
+select{
+
+    width:100%;
+
+    height:48px;
+
+    border:1px solid #ddd;
+
+    border-radius:12px;
+
+    padding:0 14px;
+
+    background:white;
+
+    font-size:15px;
+
+    outline:none;
+
+    transition:.25s;
+
+}
+
+select:focus{
+
+    border-color:#ff6b00;
+
+    box-shadow:0 0 0 3px rgba(255,107,0,.15);
+
+}
+
+/* ===================================
+   SEARCH
+=================================== */
+
+.search-form{
+
+    display:flex;
+
+    gap:10px;
+
+    align-items:center;
+
+}
+
+.search-form input{
+
+    flex:1;
+
+}
+
+.search-form button{
+
+    width:50px;
+
+    height:48px;
+
+    border:none;
+
+    border-radius:12px;
+
+    background:#ff6b00;
+
+    color:white;
+
+    font-size:18px;
+
+}
+
+.search-form button:hover{
+
+    background:#ea5b00;
+
+}
+
+/* ===================================
+   FORM GROUP
+=================================== */
+
+.form-group{
+
+    margin-bottom:18px;
+
+}
+
+.form-group label{
+
+    display:block;
+
+    margin-bottom:8px;
+
+    font-weight:600;
+
+    color:#333;
+
+}
+
+/* ===================================
+   ERROR
+=================================== */
+
+.input-error{
+
+    border-color:#ef4444 !important;
+
+}
+
+.error-text{
+
+    color:#ef4444;
+
+    font-size:13px;
+
+    margin-top:6px;
+
+}
+
+/* ===================================
+   SUCCESS
+=================================== */
+
+.input-success{
+
+    border-color:#22c55e !important;
+
+}

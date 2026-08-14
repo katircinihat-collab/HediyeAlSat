@@ -1,0 +1,309 @@
+/* =====================================================
+   TYPOGRAPHY
+===================================================== */
+
+body{
+
+    font-family:var(--font-main);
+
+    font-size:var(--font-base);
+
+    font-weight:var(--fw-normal);
+
+    color:var(--text);
+
+    line-height:1.55;
+
+}
+
+/* =====================================================
+   HEADINGS
+===================================================== */
+
+h1{
+
+    font-size:var(--font-4xl);
+
+    font-weight:var(--fw-black);
+
+    line-height:1.1;
+
+    color:var(--black);
+
+    margin-bottom:20px;
+
+}
+
+h2{
+
+    font-size:var(--font-2xl);
+
+    font-weight:var(--fw-bold);
+
+    color:var(--black);
+
+    margin-bottom:18px;
+
+}
+
+h3{
+
+    font-size:var(--font-lg);
+
+    font-weight:var(--fw-semibold);
+
+    color:var(--black);
+
+    line-height:1.35;
+
+}
+
+h4{
+
+    font-size:16px;
+
+    font-weight:var(--fw-semibold);
+
+    color:var(--black);
+
+}
+
+/* =====================================================
+   PARAGRAPH
+===================================================== */
+
+p{
+
+    font-size:var(--font-base);
+
+    color:var(--text-light);
+
+    line-height:1.65;
+
+}
+
+/* =====================================================
+   LINKS
+===================================================== */
+
+a{
+
+    color:inherit;
+
+    text-decoration:none;
+
+    transition:var(--transition);
+
+}
+
+a:hover{
+
+    color:var(--primary);
+
+}
+
+/* =====================================================
+   PRICE
+===================================================== */
+
+.price{
+
+    font-size:28px;
+
+    font-weight:800;
+
+    color:var(--primary);
+
+    letter-spacing:-0.5px;
+
+}
+
+/* =====================================================
+   BADGE
+===================================================== */
+
+.badge{
+
+    display:inline-flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    padding:5px 10px;
+
+    font-size:11px;
+
+    font-weight:700;
+
+    text-transform:uppercase;
+
+    letter-spacing:.6px;
+
+    border-radius:999px;
+
+}
+
+/* =====================================================
+   SMALL TEXT
+===================================================== */
+
+.small{
+
+    font-size:12px;
+
+    color:var(--text-muted);
+
+}
+
+.text-xs{
+
+    font-size:11px;
+
+}
+
+.text-sm{
+
+    font-size:13px;
+
+}
+
+.text-md{
+
+    font-size:15px;
+
+}
+
+.text-lg{
+
+    font-size:18px;
+
+}
+
+.text-xl{
+
+    font-size:22px;
+
+}
+
+/* =====================================================
+   FONT WEIGHT
+===================================================== */
+
+.fw-normal{
+
+    font-weight:400;
+
+}
+
+.fw-medium{
+
+    font-weight:500;
+
+}
+
+.fw-semibold{
+
+    font-weight:600;
+
+}
+
+.fw-bold{
+
+    font-weight:700;
+
+}
+
+.fw-black{
+
+    font-weight:800;
+
+}
+
+/* =====================================================
+   TEXT ALIGN
+===================================================== */
+
+.text-center{
+
+    text-align:center;
+
+}
+
+.text-left{
+
+    text-align:left;
+
+}
+
+.text-right{
+
+    text-align:right;
+
+}
+
+/* =====================================================
+   TEXT COLORS
+===================================================== */
+
+.text-primary{
+
+    color:var(--primary);
+
+}
+
+.text-success{
+
+    color:var(--success);
+
+}
+
+.text-danger{
+
+    color:var(--danger);
+
+}
+
+.text-warning{
+
+    color:var(--warning);
+
+}
+
+.text-muted{
+
+    color:var(--text-muted);
+
+}
+
+/* =====================================================
+   RESPONSIVE
+===================================================== */
+
+@media(max-width:768px){
+
+    h1{
+
+        font-size:34px;
+
+    }
+
+    h2{
+
+        font-size:24px;
+
+    }
+
+    h3{
+
+        font-size:17px;
+
+    }
+
+    .price{
+
+        font-size:24px;
+
+    }
+
+}

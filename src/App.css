@@ -1,0 +1,154 @@
+@import "./styles/components/flash-sale.css";/* BASE */
+@import "./styles/base/reset.css";
+@import "./styles/base/variables.css";
+@import "./styles/base/typography.css";
+@import "./styles/base/animations.css";
+@import "./styles/components/flash-sale.css";
+/* LAYOUT */
+@import "./styles/layout/navbar.css";
+@import "./styles/layout/hero.css";
+@import "./styles/layout/footer.css";
+
+
+/* COMPONENTS */
+@import "./styles/components/product-card.css";
+@import "./styles/components/category-bar.css";
+@import "./styles/components/filter-bar.css";
+@import "./styles/components/gift-assistant.css";
+@import "./styles/components/stats.css";
+@import "./styles/components/featured-stores.css";
+@import "./styles/components/special-days.css";
+@import "./styles/components/trending.css";
+@import "./styles/components/buttons.css";
+@import "./styles/components/forms.css";
+@import "./styles/components/product-grid.css";
+/* PAGES */
+@import "./styles/pages/home.css";
+@import "./styles/pages/product.css";
+@import "./styles/pages/cart.css";
+@import "./styles/pages/checkout.css";
+@import "./styles/pages/admin.css";
+@import "./styles/pages/profile.css";
+@import "./styles/pages/login.css";
+@import "./styles/pages/stores.css";
+.orders-list{
+
+display:flex;
+
+flex-direction:column;
+
+gap:18px;
+
+margin-top:25px;
+
+}
+
+.order-card{
+
+background:white;
+
+border-radius:18px;
+
+padding:20px;
+
+box-shadow:0 10px 30px rgba(0,0,0,.08);
+
+}
+
+.order-top{
+
+display:flex;
+
+justify-content:space-between;
+
+align-items:center;
+
+margin-bottom:20px;
+
+}
+
+.order-date{
+
+color:#777;
+
+font-size:13px;
+
+}
+
+.order-middle{
+
+display:flex;
+
+gap:20px;
+
+align-items:center;
+
+}
+
+.order-image{
+
+width:90px;
+
+height:90px;
+
+border-radius:12px;
+
+object-fit:cover;
+
+}
+
+.order-info{
+
+display:flex;
+
+flex-direction:column;
+
+gap:8px;
+
+}
+
+.order-bottom{
+
+margin-top:20px;
+
+display:flex;
+
+justify-content:flex-end;
+
+}
+
+.status{
+
+padding:8px 18px;
+
+border-radius:30px;
+
+font-weight:700;
+
+color:white;
+
+}
+
+.status.wait{
+
+background:#ff9800;
+
+}
+
+.status.prepare{
+
+background:#1976d2;
+
+}
+
+.status.cargo{
+
+background:#00a651;
+
+}
+
+.status.done{
+
+background:#16a34a;
+
+}

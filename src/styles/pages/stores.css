@@ -1,0 +1,790 @@
+/* =========================================
+   MAĞAZALAR SAYFASI
+========================================= */
+
+.stores-page {
+  width: 100%;
+  min-height: 100vh;
+  background: #f8f8f8;
+}
+
+.stores-container {
+  width: 100%;
+  max-width: 1900px;
+  margin: 0 auto;
+  padding: 30px 25px 70px;
+  box-sizing: border-box;
+}
+
+
+/* =========================================
+   ANA SAYFAYA DÖN
+========================================= */
+
+.stores-home-link {
+  display: inline-flex;
+  align-items: center;
+
+  margin-bottom: 25px;
+
+  color: #c00000;
+  text-decoration: none;
+
+  font-size: 15px;
+  font-weight: 700;
+
+  transition: .25s;
+}
+
+.stores-home-link:hover {
+  color: #ff6600;
+  transform: translateX(-4px);
+}
+
+
+/* =========================================
+   BAŞLIK
+========================================= */
+
+.stores-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  margin-bottom: 28px;
+}
+
+.stores-badge {
+  display: inline-block;
+
+  margin-bottom: 8px;
+
+  color: #c00000;
+
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.stores-header h1 {
+  margin: 0 0 8px;
+
+  font-size: 36px;
+  font-weight: 800;
+
+  color: #222;
+}
+
+.stores-header p {
+  margin: 0;
+
+  font-size: 15px;
+
+  color: #777;
+}
+
+
+/* =========================================
+   MAĞAZA SAYISI
+========================================= */
+
+.stores-count {
+  min-width: 120px;
+
+  padding: 16px 24px;
+
+  background: #fff;
+
+  border-radius: 16px;
+
+  text-align: center;
+
+  box-shadow: 0 7px 20px rgba(0,0,0,.07);
+}
+
+.stores-count strong {
+  display: block;
+
+  font-size: 28px;
+  font-weight: 800;
+
+  color: #c00000;
+}
+
+.stores-count span {
+  font-size: 13px;
+
+  color: #777;
+}
+
+
+/* =========================================
+   ARAMA
+========================================= */
+
+.stores-search {
+  display: flex;
+  align-items: center;
+
+  width: 100%;
+  height: 52px;
+
+  margin-bottom: 30px;
+  padding: 0 17px;
+
+  box-sizing: border-box;
+
+  background: #fff;
+
+  border: 1px solid #eee;
+
+  border-radius: 14px;
+
+  box-shadow: 0 5px 15px rgba(0,0,0,.05);
+
+  gap: 10px;
+}
+
+.stores-search span {
+  font-size: 18px;
+}
+
+.stores-search input {
+  flex: 1;
+
+  width: 100%;
+
+  border: none;
+  outline: none;
+
+  background: transparent;
+
+  font-size: 15px;
+}
+
+
+/* =========================================
+   MAĞAZA GRID
+========================================= */
+
+.stores-grid {
+  display: grid;
+
+  grid-template-columns: repeat(5, 1fr);
+
+  gap: 20px;
+}
+
+
+/* =========================================
+   MAĞAZA KARTI
+========================================= */
+
+.stores-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  min-width: 0;
+
+  padding: 20px;
+
+  box-sizing: border-box;
+
+  background: #fff;
+
+  border-radius: 18px;
+
+  color: #222;
+
+  text-decoration: none;
+
+  box-shadow: 0 8px 20px rgba(0,0,0,.08);
+
+  transition: .25s;
+}
+
+.stores-card:hover {
+  transform: translateY(-6px);
+
+  box-shadow: 0 15px 35px rgba(0,0,0,.15);
+}
+
+
+/* =========================================
+   SADECE MAĞAZA KARTININ LOGOSU
+========================================= */
+
+.stores-card-logo {
+  width: 90px;
+  height: 90px;
+
+  margin-bottom: 15px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+}
+
+.stores-card-logo img {
+  display: block;
+
+  width: 90px;
+  height: 90px;
+
+  object-fit: cover;
+
+  border-radius: 50%;
+}
+
+.stores-card-no-logo {
+  width: 90px;
+  height: 90px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: #f1f1f1;
+
+  font-size: 34px;
+}
+
+
+/* =========================================
+   KART İÇERİĞİ
+========================================= */
+
+.stores-card-content {
+  width: 100%;
+
+  text-align: center;
+}
+
+.stores-card-content h2 {
+  margin: 10px 0;
+
+  font-size: 20px;
+  font-weight: 800;
+
+  color: #222;
+}
+
+.stores-card-city {
+  margin: 5px 0;
+
+  font-size: 15px;
+
+  color: #666;
+}
+
+.stores-card-description {
+  min-height: 40px;
+
+  margin: 8px 0;
+
+  font-size: 13px;
+
+  line-height: 1.5;
+
+  color: #777;
+}
+
+
+/* =========================================
+   BİLGİLER
+========================================= */
+
+.stores-card-info {
+  display: flex;
+
+  justify-content: center;
+
+  gap: 12px;
+
+  flex-wrap: wrap;
+
+  margin: 10px 0;
+
+  font-size: 14px;
+}
+
+
+/* =========================================
+   MAĞAZAYA GİT
+========================================= */
+
+.stores-card-button {
+  width: 100%;
+
+  margin-top: 15px;
+
+  padding: 12px;
+
+  box-sizing: border-box;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  border-radius: 12px;
+
+  background: #ff4d5a;
+
+  color: #fff;
+
+  font-size: 14px;
+
+  font-weight: 700;
+
+  transition: .25s;
+}
+
+.stores-card:hover .stores-card-button {
+  background: #e63b48;
+}
+
+
+/* =========================================
+   YÜKLENİYOR
+========================================= */
+
+.stores-loading {
+  padding: 70px 20px;
+
+  text-align: center;
+}
+
+.stores-loading-icon {
+  margin-bottom: 15px;
+
+  font-size: 45px;
+}
+
+.stores-loading h3 {
+  color: #444;
+}
+
+
+/* =========================================
+   MAĞAZA YOK
+========================================= */
+
+.stores-empty {
+  padding: 70px 20px;
+
+  text-align: center;
+}
+
+.stores-empty-icon {
+  margin-bottom: 15px;
+
+  font-size: 45px;
+}
+
+.stores-empty h3 {
+  margin-bottom: 8px;
+
+  color: #333;
+}
+
+.stores-empty p {
+  color: #777;
+}
+
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 1600px) {
+
+  .stores-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+}
+
+@media (max-width: 1200px) {
+
+  .stores-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+}
+
+@media (max-width: 800px) {
+
+  .stores-header {
+    flex-direction: column;
+
+    align-items: flex-start;
+
+    gap: 18px;
+  }
+
+  .stores-count {
+    width: 100%;
+
+    box-sizing: border-box;
+  }
+
+  .stores-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+}
+
+@media (max-width: 550px) {
+
+  .stores-container {
+    padding: 25px 15px 50px;
+  }
+
+  .stores-header h1 {
+    font-size: 28px;
+  }
+
+  .stores-grid {
+    grid-template-columns: 1fr;
+  }
+
+}
+.stores-container {
+  width: 100%;
+  max-width: 1850px;
+  margin: 0 auto;
+  padding: 35px 25px 70px;
+}
+
+.stores-home-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  margin-bottom: 25px;
+
+  color: #c00000;
+  text-decoration: none;
+
+  font-size: 16px;
+  font-weight: 700;
+
+  transition: .25s;
+}
+
+.stores-home-link:hover {
+  color: #ff6600;
+  transform: translateX(-4px);
+}
+
+.stores-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  margin-bottom: 30px;
+}
+
+.stores-badge {
+  display: inline-block;
+
+  margin-bottom: 10px;
+
+  color: #c00000;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.stores-header h1 {
+  margin: 0 0 8px;
+
+  font-size: 38px;
+  font-weight: 800;
+
+  color: #222;
+}
+
+.stores-header p {
+  margin: 0;
+
+  color: #777;
+  font-size: 16px;
+}
+
+.stores-count {
+  min-width: 130px;
+
+  padding: 20px;
+
+  background: #fff;
+
+  border-radius: 18px;
+
+  text-align: center;
+
+  box-shadow: 0 8px 25px rgba(0,0,0,.08);
+}
+
+.stores-count strong {
+  display: block;
+
+  font-size: 30px;
+  font-weight: 800;
+
+  color: #c00000;
+}
+
+.stores-count span {
+  color: #777;
+  font-size: 14px;
+}
+
+.stores-search {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  width: 100%;
+
+  margin-bottom: 35px;
+
+  padding: 0 18px;
+
+  height: 55px;
+
+  background: #fff;
+
+  border: 1px solid #eee;
+
+  border-radius: 15px;
+
+  box-shadow: 0 5px 18px rgba(0,0,0,.05);
+}
+
+.stores-search span {
+  font-size: 20px;
+}
+
+.stores-search input {
+  width: 100%;
+
+  border: none;
+  outline: none;
+
+  font-size: 16px;
+
+  background: transparent;
+}
+
+.stores-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(5, 1fr);
+
+  gap: 22px;
+}
+
+.store-card {
+  display: flex;
+  flex-direction: column;
+
+  background: #fff;
+
+  border-radius: 20px;
+
+  overflow: hidden;
+
+  text-decoration: none;
+  color: #222;
+
+  box-shadow:
+    0 8px 25px rgba(0,0,0,.08);
+
+  transition: .3s;
+}
+
+.store-card:hover {
+  transform: translateY(-7px);
+
+  box-shadow:
+    0 18px 40px rgba(0,0,0,.15);
+}
+
+.store-image-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  padding: 25px 20px 15px;
+
+  background: #fafafa;
+}
+
+.store-logo {
+  width: 105px;
+  height: 105px;
+
+  border-radius: 50%;
+
+  object-fit: cover;
+
+  border: 4px solid #fff;
+
+  box-shadow:
+    0 5px 15px rgba(0,0,0,.12);
+}
+
+.store-card-content {
+  padding: 18px;
+}
+
+.store-card-content h2 {
+  margin: 0 0 7px;
+
+  text-align: center;
+
+  font-size: 19px;
+  font-weight: 800;
+}
+
+.store-city {
+  margin: 0 0 10px;
+
+  text-align: center;
+
+  color: #777;
+
+  font-size: 14px;
+}
+
+.store-description {
+  min-height: 42px;
+
+  margin: 0 0 12px;
+
+  color: #777;
+
+  font-size: 13px;
+
+  line-height: 1.5;
+
+  text-align: center;
+}
+
+.store-info {
+  display: flex;
+
+  justify-content: center;
+
+  gap: 10px;
+
+  margin-bottom: 15px;
+
+  font-size: 13px;
+}
+
+.store-button {
+  display: flex;
+
+  justify-content: space-between;
+  align-items: center;
+
+  padding: 11px 13px;
+
+  background: #ff4d5a;
+
+  color: #fff;
+
+  border-radius: 11px;
+
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.stores-loading,
+.stores-empty {
+  padding: 80px 20px;
+
+  text-align: center;
+}
+
+.loading-icon,
+.stores-empty > div {
+  font-size: 50px;
+
+  margin-bottom: 15px;
+}
+
+.stores-loading h3,
+.stores-empty h3 {
+  margin-bottom: 8px;
+
+  font-size: 22px;
+}
+
+.stores-empty p {
+  color: #777;
+}
+
+@media (max-width: 1400px) {
+
+  .stores-grid {
+    grid-template-columns:
+      repeat(4, 1fr);
+  }
+
+}
+
+@media (max-width: 1100px) {
+
+  .stores-grid {
+    grid-template-columns:
+      repeat(3, 1fr);
+  }
+
+}
+
+@media (max-width: 800px) {
+
+  .stores-header {
+    flex-direction: column;
+
+    align-items: flex-start;
+
+    gap: 20px;
+  }
+
+  .stores-count {
+    width: 100%;
+  }
+
+  .stores-grid {
+    grid-template-columns:
+      repeat(2, 1fr);
+  }
+
+}
+
+@media (max-width: 550px) {
+
+  .stores-container {
+    padding:
+      25px 15px 50px;
+  }
+
+  .stores-header h1 {
+    font-size: 30px;
+  }
+
+  .stores-grid {
+    grid-template-columns: 1fr;
+  }
+
+}

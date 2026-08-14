@@ -1,0 +1,342 @@
+/* ==================================
+   AI HEDİYE ASİSTANI
+================================== */
+
+.gift-assistant {
+  width: 100%;
+
+  max-width: 1400px;
+
+  margin: 60px auto;
+
+  padding: 0 24px;
+}
+
+
+/* ==================================
+   ANA KUTU
+================================== */
+
+.assistant-box {
+  position: relative;
+
+  overflow: hidden;
+
+  background:
+    linear-gradient(135deg, #7c0020, #b00020 50%, #ff6b00);
+
+  border-radius: 22px;
+
+  padding: 42px 45px;
+
+  color: #ffffff;
+
+  text-align: center;
+
+  box-shadow:
+    0 18px 40px rgba(176, 0, 32, 0.22);
+}
+
+
+/* Dekoratif ışık */
+
+.assistant-box::before {
+  content: "";
+
+  position: absolute;
+
+  width: 280px;
+
+  height: 280px;
+
+  border-radius: 50%;
+
+  background: rgba(255, 255, 255, 0.08);
+
+  top: -150px;
+
+  right: -80px;
+
+  pointer-events: none;
+}
+
+.assistant-box::after {
+  content: "";
+
+  position: absolute;
+
+  width: 220px;
+
+  height: 220px;
+
+  border-radius: 50%;
+
+  background: rgba(255, 255, 255, 0.06);
+
+  bottom: -130px;
+
+  left: -70px;
+
+  pointer-events: none;
+}
+
+
+/* ==================================
+   BAŞLIK
+================================== */
+
+.assistant-box h2 {
+  position: relative;
+
+  z-index: 1;
+
+  margin: 0 0 10px;
+
+  font-size: 32px;
+
+  font-weight: 800;
+}
+
+.assistant-box p {
+  position: relative;
+
+  z-index: 1;
+
+  margin: 0 0 28px;
+
+  font-size: 15px;
+
+  opacity: 0.95;
+}
+
+
+/* ==================================
+   SEÇİMLER
+================================== */
+
+.assistant-grid {
+  position: relative;
+
+  z-index: 1;
+
+  display: grid;
+
+  grid-template-columns: 1fr 1fr;
+
+  gap: 14px;
+
+  margin-bottom: 16px;
+}
+
+.assistant-grid select {
+  width: 100%;
+
+  height: 50px;
+
+  border: 1px solid rgba(255, 255, 255, 0.3);
+
+  border-radius: 12px;
+
+  padding: 0 16px;
+
+  font-family: inherit;
+
+  font-size: 14px;
+
+  font-weight: 600;
+
+  outline: none;
+
+  background: #ffffff;
+
+  color: #333;
+
+  cursor: pointer;
+
+  transition: 0.2s;
+}
+
+.assistant-grid select:focus {
+  border-color: #ffffff;
+
+  box-shadow:
+    0 0 0 3px rgba(255, 255, 255, 0.18);
+}
+
+
+/* ==================================
+   MESAJ ALANI
+================================== */
+
+.assistant-box textarea {
+  position: relative;
+
+  z-index: 1;
+
+  display: block;
+
+  width: 100%;
+
+  height: 125px;
+
+  box-sizing: border-box;
+
+  border: 1px solid rgba(255, 255, 255, 0.3);
+
+  border-radius: 12px;
+
+  padding: 15px 16px;
+
+  margin: 0 0 18px;
+
+  font-family: inherit;
+
+  font-size: 14px;
+
+  line-height: 1.5;
+
+  resize: vertical;
+
+  outline: none;
+
+  background: #ffffff;
+
+  color: #333;
+
+  transition: 0.2s;
+}
+
+.assistant-box textarea:focus {
+  border-color: #ffffff;
+
+  box-shadow:
+    0 0 0 3px rgba(255, 255, 255, 0.18);
+}
+
+.assistant-box textarea::placeholder {
+  color: #888;
+}
+
+
+/* ==================================
+   BUTON
+================================== */
+
+.assistant-box button {
+  position: relative;
+
+  z-index: 1;
+
+  height: 48px;
+
+  padding: 0 30px;
+
+  border: none;
+
+  border-radius: 11px;
+
+  background: #ffffff;
+
+  color: #b00020;
+
+  font-size: 14px;
+
+  font-weight: 800;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 6px 18px rgba(0, 0, 0, 0.12);
+
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease;
+}
+
+.assistant-box button:hover {
+  background: #fff5f2;
+
+  transform: translateY(-2px);
+}
+
+.assistant-box button:active {
+  transform: translateY(0);
+}
+
+
+/* ==================================
+   TABLET
+================================== */
+
+@media (max-width: 768px) {
+
+  .gift-assistant {
+    margin: 45px auto;
+
+    padding: 0 14px;
+  }
+
+  .assistant-box {
+    padding: 30px 20px;
+
+    border-radius: 18px;
+  }
+
+  .assistant-box h2 {
+    font-size: 25px;
+  }
+
+  .assistant-box p {
+    font-size: 14px;
+
+    line-height: 1.5;
+  }
+
+  .assistant-grid {
+    grid-template-columns: 1fr;
+  }
+
+}
+
+
+/* ==================================
+   MOBİL
+================================== */
+
+@media (max-width: 500px) {
+
+  .assistant-box {
+    padding: 26px 15px;
+  }
+
+  .assistant-box h2 {
+    font-size: 22px;
+  }
+
+  .assistant-box p {
+    font-size: 13px;
+
+    margin-bottom: 20px;
+  }
+
+  .assistant-grid select {
+    height: 46px;
+
+    font-size: 13px;
+  }
+
+  .assistant-box textarea {
+    height: 115px;
+
+    font-size: 13px;
+  }
+
+  .assistant-box button {
+    width: 100%;
+
+    height: 46px;
+
+    font-size: 13px;
+  }
+
+}

@@ -1,0 +1,229 @@
+/* ===================================
+   GLOBAL BUTTONS
+=================================== */
+
+button{
+
+    font-family:inherit;
+
+    cursor:pointer;
+
+    transition:.25s;
+
+}
+
+/* ===================================
+   PRIMARY
+=================================== */
+
+.primary-btn{
+
+    height:46px;
+
+    padding:0 22px;
+
+    border:none;
+
+    border-radius:12px;
+
+    background:#ff6b00;
+
+    color:#fff;
+
+    font-weight:700;
+
+}
+
+.primary-btn:hover{
+
+    background:#ea5b00;
+
+    transform:translateY(-2px);
+
+}
+
+/* ===================================
+   SECONDARY
+=================================== */
+
+.secondary-btn{
+
+    height:46px;
+
+    padding:0 22px;
+
+    border:none;
+
+    border-radius:12px;
+
+    background:#111827;
+
+    color:#fff;
+
+    font-weight:700;
+
+}
+
+.secondary-btn:hover{
+
+    background:#000;
+
+}
+
+/* ===================================
+   OUTLINE
+=================================== */
+
+.outline-btn{
+
+    height:46px;
+
+    padding:0 22px;
+
+    border:2px solid #ff6b00;
+
+    background:#fff;
+
+    color:#ff6b00;
+
+    border-radius:12px;
+
+    font-weight:700;
+
+}
+
+.outline-btn:hover{
+
+    background:#ff6b00;
+
+    color:white;
+
+}
+
+/* ===================================
+   PRODUCT BUTTONS
+=================================== */
+
+.cart-btn{
+
+    flex:1;
+
+    height:42px;
+
+    border:none;
+
+    border-radius:12px;
+
+    background:#ff6b00;
+
+    color:#fff;
+
+    font-weight:700;
+
+}
+
+.cart-btn:hover{
+
+    background:#ea5b00;
+
+}
+
+.buy-btn{
+
+    flex:1;
+
+    height:42px;
+
+    border:none;
+
+    border-radius:12px;
+
+    background:#111827;
+
+    color:#fff;
+
+    font-weight:700;
+
+}
+
+.buy-btn:hover{
+
+    background:#000;
+
+}
+
+/* ===================================
+   ADMIN
+=================================== */
+
+.edit-btn{
+
+    flex:1;
+
+    height:40px;
+
+    border:none;
+
+    border-radius:10px;
+
+    background:#3b82f6;
+
+    color:white;
+
+}
+
+.edit-btn:hover{
+
+    background:#2563eb;
+
+}
+
+.delete-btn{
+
+    flex:1;
+
+    height:40px;
+
+    border:none;
+
+    border-radius:10px;
+
+    background:#ef4444;
+
+    color:white;
+
+}
+
+.delete-btn:hover{
+
+    background:#dc2626;
+
+}
+
+/* ===================================
+   LOGIN
+=================================== */
+
+.login-btn{
+
+    height:44px;
+
+    padding:0 20px;
+
+    border:none;
+
+    border-radius:12px;
+
+    background:#22c55e;
+
+    color:white;
+
+    font-weight:700;
+
+}
+
+.login-btn:hover{
+
+    background:#16a34a;
+
+}

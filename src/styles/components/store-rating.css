@@ -1,0 +1,149 @@
+/* ===================================
+   STORE RATING
+=================================== */
+
+.store-rating{
+
+width:100%;
+
+}
+
+.rating-card{
+
+background:#fff;
+
+border-radius:20px;
+
+padding:25px;
+
+box-shadow:0 8px 25px rgba(0,0,0,.08);
+
+display:flex;
+
+flex-direction:column;
+
+gap:18px;
+
+}
+
+.rating-card h2{
+
+margin:0;
+
+font-size:24px;
+
+font-weight:700;
+
+color:#222;
+
+}
+
+.rating-card p{
+
+margin:0;
+
+font-size:15px;
+
+color:#777;
+
+line-height:1.6;
+
+}
+
+.rating-stars{
+
+display:flex;
+
+flex-direction:column;
+
+gap:12px;
+
+}
+
+.rating-stars button{
+
+width:100%;
+
+padding:14px 18px;
+
+border:none;
+
+border-radius:14px;
+
+background:#f7f7f7;
+
+cursor:pointer;
+
+font-size:18px;
+
+font-weight:700;
+
+transition:.25s;
+
+text-align:left;
+
+}
+
+.rating-stars button:hover{
+
+background:#ffb400;
+
+color:#fff;
+
+transform:translateX(6px);
+
+}
+
+.rating-stars button.active{
+
+background:#ff5a5f;
+
+color:#fff;
+
+}
+
+.rating-success{
+
+padding:18px;
+
+background:#eafaf1;
+
+border:1px solid #b8e8ca;
+
+border-radius:14px;
+
+font-size:16px;
+
+font-weight:600;
+
+color:#239b56;
+
+text-align:center;
+
+}
+
+@media(max-width:768px){
+
+.rating-card{
+
+padding:20px;
+
+border-radius:16px;
+
+}
+
+.rating-card h2{
+
+font-size:20px;
+
+}
+
+.rating-stars button{
+
+font-size:16px;
+
+padding:12px 14px;
+
+}
+
+}

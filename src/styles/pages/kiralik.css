@@ -1,0 +1,603 @@
+```css
+/* =========================================
+   KİRALIK SAYFASI
+========================================= */
+
+.kiralik-page {
+  min-height: 100vh;
+  background: #f7f7f8;
+}
+
+
+/* =========================================
+   HERO
+========================================= */
+
+.kiralik-hero {
+  width: 100%;
+  background: linear-gradient(135deg, #7b0000, #c00000, #ff6b00);
+  color: #fff;
+  padding: 65px 25px;
+}
+
+.kiralik-hero-content {
+  max-width: 1400px;
+  margin: auto;
+}
+
+.kiralik-badge {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 8px 16px;
+  border-radius: 30px;
+  font-size: 13px;
+  font-weight: 800;
+  margin-bottom: 18px;
+}
+
+.kiralik-hero h1 {
+  margin: 0;
+  font-size: 48px;
+  font-weight: 900;
+  letter-spacing: -1px;
+}
+
+.kiralik-hero p {
+  max-width: 650px;
+  margin: 14px 0 30px;
+  font-size: 18px;
+  line-height: 1.7;
+  opacity: 0.95;
+}
+
+.kiralik-hero-stats {
+  display: flex;
+  gap: 45px;
+}
+
+.kiralik-hero-stats div {
+  display: flex;
+  flex-direction: column;
+}
+
+.kiralik-hero-stats strong {
+  font-size: 27px;
+  font-weight: 900;
+}
+
+.kiralik-hero-stats span {
+  font-size: 14px;
+  opacity: 0.85;
+}
+
+
+/* =========================================
+   CONTAINER
+========================================= */
+
+.kiralik-container {
+  max-width: 1800px;
+  margin: 0 auto;
+  padding: 35px 25px 80px;
+}
+
+
+/* =========================================
+   TOOLBAR
+========================================= */
+
+.kiralik-toolbar {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  justify-content: space-between;
+  background: #fff;
+  padding: 18px;
+  border-radius: 18px;
+  box-shadow: 0 7px 25px rgba(0, 0, 0, 0.06);
+  margin-bottom: 25px;
+}
+
+.kiralik-search {
+  flex: 1;
+  max-width: 700px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 18px;
+  background: #f5f5f6;
+  border-radius: 13px;
+}
+
+.kiralik-search span {
+  font-size: 19px;
+}
+
+.kiralik-search input {
+  width: 100%;
+  height: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 15px;
+  color: #333;
+}
+
+.kiralik-sort {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.kiralik-sort label {
+  font-size: 14px;
+  font-weight: 700;
+  color: #555;
+}
+
+.kiralik-sort select {
+  height: 50px;
+  min-width: 210px;
+  padding: 0 14px;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  background: #fff;
+  outline: none;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+
+/* =========================================
+   MAIN LAYOUT
+========================================= */
+
+.kiralik-layout {
+  display: grid;
+  grid-template-columns: 270px 1fr;
+  gap: 25px;
+  align-items: start;
+}
+
+
+/* =========================================
+   FILTERS
+========================================= */
+
+.kiralik-filters {
+  background: #fff;
+  border-radius: 18px;
+  padding: 22px;
+  box-shadow: 0 7px 25px rgba(0, 0, 0, 0.06);
+  position: sticky;
+  top: 20px;
+}
+
+.filter-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.filter-title h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.filter-title button {
+  border: none;
+  background: transparent;
+  color: #c00000;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.filter-group {
+  margin-bottom: 20px;
+}
+
+.filter-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #444;
+}
+
+.filter-group select,
+.filter-group input {
+  width: 100%;
+  height: 46px;
+  border: 1px solid #ddd;
+  border-radius: 11px;
+  padding: 0 12px;
+  background: #fff;
+  outline: none;
+  font-size: 14px;
+}
+
+.filter-group select:focus,
+.filter-group input:focus {
+  border-color: #c00000;
+}
+
+.filter-apply {
+  width: 100%;
+  height: 48px;
+  border: none;
+  border-radius: 12px;
+  background: #c00000;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: 0.25s;
+}
+
+.filter-apply:hover {
+  background: #a00000;
+  transform: translateY(-2px);
+}
+
+
+/* =========================================
+   RESULTS
+========================================= */
+
+.kiralik-results {
+  min-width: 0;
+}
+
+.results-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.results-header h2 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 900;
+  color: #222;
+}
+
+.results-header p {
+  margin: 7px 0 0;
+  color: #777;
+  font-size: 14px;
+}
+
+
+/* =========================================
+   PRODUCT GRID
+========================================= */
+
+.kiralik-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 22px;
+}
+
+
+/* =========================================
+   PRODUCT CARD
+========================================= */
+
+.kiralik-card {
+  display: block;
+  overflow: hidden;
+  background: #fff;
+  border-radius: 18px;
+  text-decoration: none;
+  color: #222;
+  box-shadow: 0 7px 22px rgba(0, 0, 0, 0.07);
+  transition: 0.3s;
+}
+
+.kiralik-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 38px rgba(0, 0, 0, 0.13);
+}
+
+.kiralik-image {
+  position: relative;
+  height: 250px;
+  overflow: hidden;
+  background: #f1f1f1;
+}
+
+.kiralik-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: 0.4s;
+}
+
+.kiralik-card:hover .kiralik-image img {
+  transform: scale(1.05);
+}
+
+
+/* =========================================
+   LABELS
+========================================= */
+
+.kiralik-label {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  padding: 7px 12px;
+  border-radius: 20px;
+  background: #c00000;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.featured-label {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  padding: 7px 12px;
+  border-radius: 20px;
+  background: #ff9f00;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+
+/* =========================================
+   CARD CONTENT
+========================================= */
+
+.kiralik-card-content {
+  padding: 18px;
+}
+
+.card-category {
+  display: inline-block;
+  color: #c00000;
+  font-size: 12px;
+  font-weight: 800;
+  margin-bottom: 7px;
+}
+
+.kiralik-card-content h3 {
+  margin: 0;
+  min-height: 48px;
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1.4;
+  color: #222;
+}
+
+.card-location {
+  margin: 10px 0 17px;
+  color: #777;
+  font-size: 13px;
+}
+
+.card-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid #eee;
+  padding-top: 14px;
+}
+
+.card-price {
+  display: flex;
+  flex-direction: column;
+}
+
+.card-price strong {
+  color: #c00000;
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.card-price span {
+  color: #888;
+  font-size: 11px;
+  margin-top: 2px;
+}
+
+.card-arrow {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #fff0f0;
+  color: #c00000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 20px;
+  font-weight: 900;
+  transition: 0.25s;
+}
+
+.kiralik-card:hover .card-arrow {
+  background: #c00000;
+  color: #fff;
+}
+
+
+/* =========================================
+   LOADING
+========================================= */
+
+.kiralik-loading {
+  background: #fff;
+  min-height: 400px;
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.loading-spinner {
+  font-size: 48px;
+  margin-bottom: 15px;
+}
+
+.kiralik-loading h3 {
+  margin: 0 0 8px;
+  font-size: 21px;
+}
+
+.kiralik-loading p {
+  margin: 0;
+  color: #777;
+}
+
+
+/* =========================================
+   EMPTY
+========================================= */
+
+.kiralik-empty {
+  background: #fff;
+  min-height: 400px;
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 30px;
+}
+
+.empty-icon {
+  font-size: 65px;
+  margin-bottom: 15px;
+}
+
+.kiralik-empty h3 {
+  margin: 0 0 10px;
+  font-size: 24px;
+}
+
+.kiralik-empty p {
+  margin: 0 0 22px;
+  color: #777;
+}
+
+.kiralik-empty button {
+  border: none;
+  border-radius: 12px;
+  padding: 13px 24px;
+  background: #c00000;
+  color: #fff;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 1400px) {
+  .kiralik-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1100px) {
+  .kiralik-layout {
+    grid-template-columns: 230px 1fr;
+  }
+
+  .kiralik-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .kiralik-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .kiralik-search {
+    max-width: none;
+  }
+
+  .kiralik-sort {
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 800px) {
+  .kiralik-hero {
+    padding: 45px 20px;
+  }
+
+  .kiralik-hero h1 {
+    font-size: 36px;
+  }
+
+  .kiralik-hero p {
+    font-size: 16px;
+  }
+
+  .kiralik-hero-stats {
+    gap: 25px;
+  }
+
+  .kiralik-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .kiralik-filters {
+    position: static;
+  }
+
+  .filter-title {
+    margin-bottom: 18px;
+  }
+}
+
+@media (max-width: 600px) {
+  .kiralik-container {
+    padding: 20px 15px 60px;
+  }
+
+  .kiralik-hero h1 {
+    font-size: 30px;
+  }
+
+  .kiralik-hero-stats {
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+
+  .kiralik-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .kiralik-image {
+    height: 270px;
+  }
+
+  .kiralik-sort {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .kiralik-sort select {
+    width: 100%;
+  }
+
+  .results-header h2 {
+    font-size: 23px;
+  }
+}
+```

@@ -1,0 +1,431 @@
+/* ==================================
+   ÖNE ÇIKAN MAĞAZALAR
+================================== */
+
+.featured-stores {
+  width: 100%;
+  max-width: 1850px;
+
+  margin: 55px auto;
+
+  padding: 0 24px;
+}
+
+
+/* ==================================
+   BAŞLIK
+================================== */
+
+.section-header {
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: center;
+
+  margin-bottom: 24px;
+}
+
+.section-header h2 {
+  margin: 0;
+
+  font-size: 30px;
+
+  font-weight: 800;
+
+  color: #222;
+}
+
+.see-all {
+  text-decoration: none;
+
+  font-size: 14px;
+
+  font-weight: 700;
+
+  color: #b00020;
+
+  transition: 0.2s;
+}
+
+.see-all:hover {
+  color: #8f001a;
+}
+
+
+/* ==================================
+   MAĞAZA GRID
+================================== */
+
+.stores-grid {
+  display: grid;
+
+  grid-template-columns: repeat(6, 1fr);
+
+  gap: 18px;
+}
+
+
+/* ==================================
+   MAĞAZA KARTI
+================================== */
+
+.store-card {
+  background: #ffffff;
+
+  border: 1px solid #eeeeee;
+
+  border-radius: 17px;
+
+  padding: 18px 16px;
+
+  min-height: 235px;
+
+  box-shadow:
+    0 7px 22px rgba(0, 0, 0, 0.08);
+
+  text-decoration: none;
+
+  color: #222;
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    border-color 0.25s ease;
+}
+
+.store-card:hover {
+  transform: translateY(-6px);
+
+  border-color: #e4e4e4;
+
+  box-shadow:
+    0 15px 32px rgba(0, 0, 0, 0.13);
+}
+
+
+/* ==================================
+   MAĞAZA LOGOSU
+================================== */
+
+.store-logo {
+  width: 82px;
+
+  height: 82px;
+
+  border-radius: 50%;
+
+  object-fit: cover;
+
+  margin-bottom: 10px;
+
+  border: 3px solid #f5f5f5;
+
+  background: #ffffff;
+}
+
+
+/* ==================================
+   MAĞAZA ADI
+================================== */
+
+.store-card h3 {
+  width: 100%;
+
+  margin: 5px 0 6px;
+
+  font-size: 18px;
+
+  line-height: 1.3;
+
+  font-weight: 800;
+
+  text-align: center;
+
+  white-space: nowrap;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+}
+
+
+/* ==================================
+   ŞEHİR
+================================== */
+
+.store-card p {
+  margin: 2px 0;
+
+  font-size: 13px;
+
+  color: #6b7280;
+
+  text-align: center;
+}
+
+
+/* ==================================
+   MAĞAZA İSTATİSTİKLERİ
+================================== */
+
+.store-info {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 10px;
+
+  flex-wrap: wrap;
+
+  margin: 10px 0;
+
+  font-size: 12px;
+
+  color: #666;
+}
+
+
+/* ==================================
+   MAĞAZAYA GİT
+================================== */
+
+.store-card button {
+  width: 100%;
+
+  margin-top: auto;
+
+  padding: 10px 12px;
+
+  border: none;
+
+  border-radius: 10px;
+
+  background: #b00020;
+
+  color: #ffffff;
+
+  font-size: 13px;
+
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.store-card button:hover {
+  background: #8f001a;
+
+  transform: translateY(-1px);
+}
+
+
+/* ==================================
+   1600px
+================================== */
+
+@media (max-width: 1600px) {
+
+  .stores-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+
+}
+
+
+/* ==================================
+   1300px
+================================== */
+
+@media (max-width: 1300px) {
+
+  .stores-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+}
+
+
+/* ==================================
+   1000px
+================================== */
+
+@media (max-width: 1000px) {
+
+  .stores-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+}
+
+
+/* ==================================
+   700px
+================================== */
+
+@media (max-width: 700px) {
+
+  .featured-stores {
+    margin: 40px auto;
+
+    padding: 0 14px;
+  }
+
+  .section-header h2 {
+    font-size: 23px;
+  }
+
+  .stores-grid {
+    grid-template-columns: repeat(2, 1fr);
+
+    gap: 12px;
+  }
+
+  .store-card {
+    min-height: 220px;
+
+    padding: 16px 12px;
+  }
+
+  .store-logo {
+    width: 72px;
+
+    height: 72px;
+  }
+
+  .store-card h3 {
+    font-size: 15px;
+  }
+
+}
+
+
+/* ==================================
+   KÜÇÜK TELEFON
+================================== */
+
+@media (max-width: 450px) {
+
+  .store-card {
+    min-height: 210px;
+  }
+
+  .store-logo {
+    width: 68px;
+
+    height: 68px;
+  }
+
+  .store-card h3 {
+    font-size: 14px;
+  }
+
+  .store-info {
+    gap: 6px;
+
+    font-size: 11px;
+  }
+
+  .store-card button {
+    font-size: 11px;
+
+    padding: 9px 6px;
+  }
+
+}
+ /* ==================================
+   ÖNE ÇIKAN MAĞAZALAR
+================================== */
+
+.featured-stores .store-card {
+  min-height: 340px;
+
+  padding: 25px 20px;
+
+  position: relative;
+}
+
+
+/* Logo */
+
+.featured-stores .store-logo {
+  width: 110px;
+
+  height: 110px;
+
+  margin-bottom: 18px;
+}
+
+
+/* Mağaza adı */
+
+.featured-stores .store-card h3 {
+  font-size: 21px;
+
+  margin: 12px 0;
+}
+
+
+/* Bilgiler */
+
+.featured-stores .store-info {
+  margin: 14px 0;
+
+  gap: 14px;
+}
+
+
+/* Butonu en alta sabitle */
+
+.featured-stores .store-card button {
+  margin-top: auto;
+}
+
+
+/* ==================================
+   PREMIUM ETİKET
+================================== */
+
+.featured-stores .store-card::before {
+  content: "⭐ ÖNE ÇIKAN MAĞAZA";
+
+  position: absolute;
+
+  top: 12px;
+
+  left: 12px;
+
+  padding: 6px 10px;
+
+  border-radius: 8px;
+
+  background: #ff6b00;
+
+  color: #fff;
+
+  font-size: 11px;
+
+  font-weight: 800;
+
+  z-index: 2;
+}
+
+
+/* Hover */
+
+.featured-stores .store-card:hover {
+  transform: translateY(-8px);
+
+  box-shadow: 0 18px 40px rgba(0,0,0,.16);
+}

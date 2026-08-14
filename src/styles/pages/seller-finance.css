@@ -1,0 +1,184 @@
+.section-title{
+margin:30px 0 15px;
+font-size:24px;
+font-weight:700;
+color:#222;
+}
+
+.finance-grid{
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:18px;
+margin-bottom:30px;
+}
+
+.finance-card{
+background:#fff;
+border-radius:18px;
+padding:22px;
+box-shadow:0 8px 25px rgba(0,0,0,.08);
+transition:.25s;
+border:1px solid #eee;
+position:relative;
+overflow:hidden;
+}
+
+.finance-card:hover{
+transform:translateY(-5px);
+box-shadow:0 18px 35px rgba(0,0,0,.12);
+}
+
+.finance-card h3{
+margin:0;
+font-size:16px;
+font-weight:600;
+color:#666;
+margin-bottom:15px;
+}
+
+.finance-card h1{
+margin:0;
+font-size:30px;
+font-weight:700;
+color:#111;
+}
+
+.finance-card p{
+margin-top:12px;
+font-size:13px;
+color:#888;
+}
+
+.finance-card.green{
+border-left:6px solid #16a34a;
+}
+
+.finance-card.blue{
+border-left:6px solid #2563eb;
+}
+
+.finance-card.red{
+border-left:6px solid #dc2626;
+}
+
+.finance-card.purple{
+border-left:6px solid #7c3aed;
+}
+
+.finance-card.orange{
+border-left:6px solid #ea580c;
+}
+
+.finance-card.cyan{
+border-left:6px solid #0891b2;
+}
+
+.finance-card.yellow{
+border-left:6px solid #ca8a04;
+}
+
+.finance-card.dark{
+border-left:6px solid #374151;
+}
+
+.finance-summary{
+
+margin-top:35px;
+
+background:#fff;
+
+border-radius:18px;
+
+padding:25px;
+
+box-shadow:0 8px 25px rgba(0,0,0,.08);
+
+}
+
+.finance-table{
+
+width:100%;
+
+border-collapse:collapse;
+
+}
+
+.finance-table th{
+
+background:#f8fafc;
+
+padding:15px;
+
+text-align:left;
+
+font-size:15px;
+
+border-bottom:1px solid #ddd;
+
+}
+
+.finance-table td{
+
+padding:16px;
+
+border-bottom:1px solid #eee;
+
+font-size:15px;
+
+}
+
+.finance-table tr:hover{
+
+background:#fafafa;
+
+}
+
+.finance-table .success{
+
+color:#16a34a;
+
+font-weight:700;
+
+font-size:18px;
+
+}
+
+@media(max-width:1200px){
+
+.finance-grid{
+
+grid-template-columns:repeat(2,1fr);
+
+}
+
+}
+
+@media(max-width:650px){
+
+.finance-grid{
+
+grid-template-columns:1fr;
+
+}
+
+.finance-card h1{
+
+font-size:24px;
+
+}
+
+.finance-summary{
+
+padding:15px;
+
+overflow:auto;
+
+}
+
+.finance-table{
+
+min-width:600px;
+
+}
+
+}

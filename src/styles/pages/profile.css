@@ -1,0 +1,25 @@
+/* ===================================
+   PROFILE
+=================================== */
+
+.profile-page{
+
+    max-width:1400px;
+
+    margin:auto;
+
+    padding:25px;
+
+}
+
+.profile-card{
+
+    background:#fff;
+
+    border-radius:20px;
+
+    padding:35px;
+
+    box-shadow:0 8px 25px rgba(0,0,0,.08);
+
+}

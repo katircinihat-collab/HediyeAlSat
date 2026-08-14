@@ -1,0 +1,247 @@
+/* ==================================
+   ÖZEL GÜNLER
+================================== */
+
+.special-days {
+  max-width: 1850px;
+
+  margin: 55px auto;
+
+  padding: 0 24px;
+}
+
+
+/* ==================================
+   BAŞLIK
+================================== */
+
+.special-days h2 {
+  margin: 0 0 24px;
+
+  font-size: 30px;
+
+  font-weight: 800;
+
+  color: #222;
+
+  text-align: left;
+}
+
+
+/* ==================================
+   GRID
+================================== */
+
+.days-grid {
+  display: grid;
+
+  grid-template-columns: repeat(4, 1fr);
+
+  gap: 18px;
+}
+
+
+/* ==================================
+   KART
+================================== */
+
+.day-card {
+  position: relative;
+
+  background: #ffffff;
+
+  border: 1px solid #eeeeee;
+
+  border-radius: 17px;
+
+  padding: 22px 18px;
+
+  min-height: 215px;
+
+  text-align: center;
+
+  box-shadow:
+    0 6px 20px rgba(0, 0, 0, 0.07);
+
+  display: flex;
+
+  flex-direction: column;
+
+  justify-content: space-between;
+
+  align-items: center;
+
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.day-card:hover {
+  transform: translateY(-5px);
+
+  box-shadow:
+    0 14px 30px rgba(0, 0, 0, 0.12);
+}
+
+
+/* ==================================
+   İKON
+================================== */
+
+.day-icon {
+  font-size: 48px;
+
+  line-height: 1;
+
+  margin: 4px 0 12px;
+}
+
+
+/* ==================================
+   BAŞLIK
+================================== */
+
+.day-card h3 {
+  margin: 0 0 15px;
+
+  font-size: 18px;
+
+  line-height: 1.3;
+
+  font-weight: 800;
+
+  color: #222;
+
+  min-height: auto;
+}
+
+
+/* ==================================
+   BUTON
+================================== */
+
+.day-card button {
+  width: 100%;
+
+  height: 42px;
+
+  border: none;
+
+  border-radius: 10px;
+
+  background: #b00020;
+
+  color: #ffffff;
+
+  font-size: 13px;
+
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.day-card button:hover {
+  background: #8f001a;
+
+  transform: translateY(-1px);
+}
+
+
+/* ==================================
+   TABLET
+================================== */
+
+@media (max-width: 1200px) {
+
+  .days-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+}
+
+
+/* ==================================
+   TABLET
+================================== */
+
+@media (max-width: 900px) {
+
+  .days-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+}
+
+
+/* ==================================
+   MOBİL
+================================== */
+
+@media (max-width: 600px) {
+
+  .special-days {
+    margin: 40px auto;
+
+    padding: 0 14px;
+  }
+
+  .special-days h2 {
+    font-size: 23px;
+
+    margin-bottom: 18px;
+  }
+
+  .days-grid {
+    grid-template-columns: repeat(2, 1fr);
+
+    gap: 12px;
+  }
+
+  .day-card {
+    min-height: 190px;
+
+    padding: 18px 12px;
+  }
+
+  .day-icon {
+    font-size: 40px;
+  }
+
+  .day-card h3 {
+    font-size: 15px;
+
+    margin-bottom: 12px;
+  }
+
+  .day-card button {
+    height: 38px;
+
+    font-size: 11px;
+  }
+
+}
+
+
+/* ==================================
+   ÇOK KÜÇÜK TELEFON
+================================== */
+
+@media (max-width: 400px) {
+
+  .day-card {
+    min-height: 180px;
+  }
+
+  .day-icon {
+    font-size: 36px;
+  }
+
+  .day-card h3 {
+    font-size: 14px;
+  }
+
+}

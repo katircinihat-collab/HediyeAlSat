@@ -1,0 +1,144 @@
+/* ==================================
+   FILTER BAR
+================================== */
+
+.filter-bar {
+  max-width: 1850px;
+
+  margin: 14px auto 28px;
+
+  padding: 0 24px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: flex-end;
+
+  gap: 10px;
+
+  flex-wrap: wrap;
+}
+
+
+/* ==================================
+   BUTON
+================================== */
+
+.filter-bar button {
+  height: 42px;
+
+  padding: 0 18px;
+
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 7px;
+
+  border: 1px solid #e5e7eb;
+
+  background: #ffffff;
+
+  color: #374151;
+
+  border-radius: 12px;
+
+  font-size: 13px;
+
+  font-weight: 700;
+
+  cursor: pointer;
+
+  white-space: nowrap;
+
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.04);
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+
+/* ==================================
+   HOVER
+================================== */
+
+.filter-bar button:hover {
+  background: #fff5f7;
+
+  color: #b00020;
+
+  border-color: #f3a6b5;
+
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 5px 14px rgba(176, 0, 32, 0.10);
+}
+
+
+/* ==================================
+   FAVORİ AKTİF
+================================== */
+
+.filter-bar button:last-child {
+  background: #ffffff;
+}
+
+
+/* Favoriler açıkken */
+.filter-bar button:last-child:hover {
+  background: #b00020;
+
+  color: #ffffff;
+
+  border-color: #b00020;
+}
+
+
+/* ==================================
+   MOBİL
+================================== */
+
+@media (max-width: 768px) {
+
+  .filter-bar {
+    justify-content: flex-start;
+
+    padding: 0 14px;
+
+    margin: 12px auto 22px;
+
+    gap: 8px;
+
+    overflow-x: auto;
+
+    flex-wrap: nowrap;
+
+    scrollbar-width: none;
+  }
+
+  .filter-bar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .filter-bar button {
+    flex: 0 0 auto;
+
+    height: 40px;
+
+    padding: 0 15px;
+
+    font-size: 12px;
+
+    border-radius: 10px;
+  }
+
+}

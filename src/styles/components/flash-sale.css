@@ -1,0 +1,243 @@
+/* ==============================
+   FLASH SALE
+============================== */
+
+.flash-sale {
+  max-width: 1850px;
+  margin: 32px auto;
+  padding: 24px 35px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #b91c1c 0%,
+      #dc2626 45%,
+      #f97316 100%
+    );
+
+  border-radius: 20px;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  color: #fff;
+
+  box-shadow:
+    0 12px 35px rgba(220, 38, 38, 0.22);
+
+  position: relative;
+  overflow: hidden;
+}
+
+/* Hafif parlama */
+
+.flash-sale::before {
+  content: "";
+
+  position: absolute;
+
+  width: 320px;
+  height: 320px;
+
+  right: 180px;
+  top: -220px;
+
+  background: rgba(255,255,255,0.12);
+
+  border-radius: 50%;
+
+  pointer-events: none;
+}
+
+/* ==============================
+   SOL TARAF
+============================== */
+
+.flash-left {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+
+  position: relative;
+  z-index: 2;
+}
+
+.flash-icon {
+  width: 62px;
+  height: 62px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(255,255,255,0.16);
+
+  border: 1px solid rgba(255,255,255,0.25);
+
+  border-radius: 16px;
+
+  font-size: 36px;
+
+  animation: pulse 1.5s infinite;
+}
+
+.flash-left h2 {
+  margin: 0;
+
+  font-size: 30px;
+
+  font-weight: 800;
+
+  letter-spacing: -0.5px;
+}
+
+.flash-left p {
+  margin: 6px 0 0;
+
+  font-size: 14px;
+
+  opacity: 0.9;
+}
+
+/* ==============================
+   SAYAÇ
+============================== */
+
+.flash-right {
+  display: flex;
+
+  align-items: center;
+
+  gap: 12px;
+
+  padding: 12px 20px;
+
+  background: rgba(0,0,0,0.16);
+
+  border: 1px solid rgba(255,255,255,0.18);
+
+  border-radius: 15px;
+
+  font-size: 19px;
+
+  font-weight: 700;
+
+  backdrop-filter: blur(8px);
+
+  position: relative;
+  z-index: 2;
+}
+
+.flash-right > span {
+  font-size: 22px;
+}
+
+.flash-right strong {
+  font-size: 34px;
+
+  letter-spacing: 2px;
+
+  font-variant-numeric: tabular-nums;
+}
+
+/* ==============================
+   ANİMASYON
+============================== */
+
+@keyframes pulse {
+
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.08);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+
+}
+
+/* ==============================
+   TABLET
+============================== */
+
+@media (max-width: 900px) {
+
+  .flash-sale {
+    margin: 25px 20px;
+
+    flex-direction: column;
+
+    gap: 20px;
+
+    text-align: center;
+  }
+
+  .flash-left {
+    justify-content: center;
+  }
+
+  .flash-left h2 {
+    font-size: 25px;
+  }
+
+  .flash-right {
+    width: auto;
+  }
+
+}
+
+/* ==============================
+   MOBİL
+============================== */
+
+@media (max-width: 600px) {
+
+  .flash-sale {
+    margin: 20px 12px;
+
+    padding: 18px;
+
+    border-radius: 16px;
+  }
+
+  .flash-left {
+    gap: 12px;
+  }
+
+  .flash-icon {
+    width: 48px;
+    height: 48px;
+
+    font-size: 27px;
+
+    border-radius: 13px;
+  }
+
+  .flash-left h2 {
+    font-size: 20px;
+  }
+
+  .flash-left p {
+    font-size: 12px;
+  }
+
+  .flash-right {
+    padding: 10px 16px;
+
+    gap: 8px;
+
+    font-size: 16px;
+  }
+
+  .flash-right strong {
+    font-size: 25px;
+
+    letter-spacing: 1px;
+  }
+
+}

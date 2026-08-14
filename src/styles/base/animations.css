@@ -1,0 +1,279 @@
+/* =====================================================
+   ANIMATIONS
+===================================================== */
+
+/* ---------- Fade ---------- */
+
+@keyframes fadeIn{
+
+    from{
+
+        opacity:0;
+
+        transform:translateY(20px);
+
+    }
+
+    to{
+
+        opacity:1;
+
+        transform:translateY(0);
+
+    }
+
+}
+
+.fade-in{
+
+    animation:fadeIn .45s ease forwards;
+
+}
+
+/* ---------- Fade Up ---------- */
+
+@keyframes fadeUp{
+
+    from{
+
+        opacity:0;
+
+        transform:translateY(40px);
+
+    }
+
+    to{
+
+        opacity:1;
+
+        transform:translateY(0);
+
+    }
+
+}
+
+.fade-up{
+
+    animation:fadeUp .55s ease forwards;
+
+}
+
+/* ---------- Zoom ---------- */
+
+@keyframes zoomIn{
+
+    from{
+
+        opacity:0;
+
+        transform:scale(.92);
+
+    }
+
+    to{
+
+        opacity:1;
+
+        transform:scale(1);
+
+    }
+
+}
+
+.zoom-in{
+
+    animation:zoomIn .35s ease forwards;
+
+}
+
+/* ---------- Slide ---------- */
+
+@keyframes slideLeft{
+
+    from{
+
+        opacity:0;
+
+        transform:translateX(-35px);
+
+    }
+
+    to{
+
+        opacity:1;
+
+        transform:translateX(0);
+
+    }
+
+}
+
+.slide-left{
+
+    animation:slideLeft .5s ease forwards;
+
+}
+
+@keyframes slideRight{
+
+    from{
+
+        opacity:0;
+
+        transform:translateX(35px);
+
+    }
+
+    to{
+
+        opacity:1;
+
+        transform:translateX(0);
+
+    }
+
+}
+
+.slide-right{
+
+    animation:slideRight .5s ease forwards;
+
+}
+
+/* ---------- Pulse ---------- */
+
+@keyframes pulse{
+
+    0%{
+
+        transform:scale(1);
+
+    }
+
+    50%{
+
+        transform:scale(1.04);
+
+    }
+
+    100%{
+
+        transform:scale(1);
+
+    }
+
+}
+
+.pulse:hover{
+
+    animation:pulse .7s ease;
+
+}
+
+/* ---------- Floating ---------- */
+
+@keyframes floating{
+
+    0%{
+
+        transform:translateY(0);
+
+    }
+
+    50%{
+
+        transform:translateY(-6px);
+
+    }
+
+    100%{
+
+        transform:translateY(0);
+
+    }
+
+}
+
+.floating{
+
+    animation:floating 3s ease infinite;
+
+}
+
+/* ---------- Hover Effects ---------- */
+
+.hover-up{
+
+    transition:transform .25s ease;
+
+}
+
+.hover-up:hover{
+
+    transform:translateY(-6px);
+
+}
+
+.hover-scale{
+
+    transition:transform .25s ease;
+
+}
+
+.hover-scale:hover{
+
+    transform:scale(1.04);
+
+}
+
+.hover-shadow{
+
+    transition:box-shadow .25s ease;
+
+}
+
+.hover-shadow:hover{
+
+    box-shadow:var(--shadow-lg);
+
+}
+
+/* ---------- Product Card ---------- */
+
+.card-hover{
+
+    transition:
+    transform .25s ease,
+    box-shadow .25s ease;
+
+}
+
+.card-hover:hover{
+
+    transform:translateY(-8px);
+
+    box-shadow:var(--shadow-lg);
+
+}
+
+/* ---------- Button ---------- */
+
+.button-animate{
+
+    transition:
+    transform .20s ease,
+    background .20s ease;
+
+}
+
+.button-animate:hover{
+
+    transform:translateY(-2px);
+
+}
+
+.button-animate:active{
+
+    transform:scale(.96);
+
+}

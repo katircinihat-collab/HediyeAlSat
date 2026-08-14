@@ -1,0 +1,79 @@
+/* ===== Seller Statistics ===== */
+
+.statistics-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:20px;
+  margin:20px 0 35px;
+}
+
+.statistics-card{
+  background:#fff;
+  border-radius:18px;
+  padding:22px;
+  text-align:center;
+  border:1px solid #e5e7eb;
+  box-shadow:0 6px 18px rgba(0,0,0,.08);
+  transition:.25s;
+}
+
+.statistics-card:hover{
+  transform:translateY(-4px);
+  box-shadow:0 12px 28px rgba(0,0,0,.12);
+}
+
+.statistics-card h3{
+  margin:0;
+  font-size:16px;
+  color:#6b7280;
+  font-weight:600;
+}
+
+.statistics-card h1{
+  margin:15px 0 8px;
+  font-size:32px;
+  font-weight:700;
+  color:#111827;
+}
+
+.statistics-card p{
+  margin:0;
+  color:#9ca3af;
+  font-size:13px;
+}
+
+.statistics-card.blue{
+  border-left:6px solid #2563eb;
+}
+
+.statistics-card.green{
+  border-left:6px solid #16a34a;
+}
+
+.statistics-card.purple{
+  border-left:6px solid #7c3aed;
+}
+
+.statistics-card.success{
+  border-left:6px solid #22c55e;
+}
+
+.statistics-card.danger{
+  border-left:6px solid #ef4444;
+}
+
+.statistics-card.warning{
+  border-left:6px solid #f59e0b;
+}
+
+.statistics-card.dark{
+  border-left:6px solid #374151;
+}
+
+@media(max-width:768px){
+
+.statistics-grid{
+  grid-template-columns:1fr;
+}
+
+}

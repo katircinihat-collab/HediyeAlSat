@@ -1,0 +1,210 @@
+/* ==================================
+   AD BANNER
+================================== */
+
+.ad-banner {
+  max-width: 1850px;
+
+  margin: 38px auto;
+
+  padding: 0 24px;
+
+  display: grid;
+
+  grid-template-columns: repeat(3, 1fr);
+
+  gap: 18px;
+}
+
+
+/* ==================================
+   REKLAM KARTI
+================================== */
+
+.ad-card {
+  position: relative;
+
+  min-height: 150px;
+
+  padding: 26px 28px;
+
+  display: flex;
+
+  flex-direction: column;
+
+  justify-content: center;
+
+  overflow: hidden;
+
+  color: #ffffff;
+
+  border-radius: 18px;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 10px 28px rgba(0, 0, 0, 0.10);
+
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+
+/* Dekoratif ışık */
+
+.ad-card::after {
+  content: "";
+
+  position: absolute;
+
+  width: 180px;
+
+  height: 180px;
+
+  right: -55px;
+
+  top: -70px;
+
+  background: rgba(255, 255, 255, 0.12);
+
+  border-radius: 50%;
+}
+
+
+/* ==================================
+   HOVER
+================================== */
+
+.ad-card:hover {
+  transform: translateY(-5px);
+
+  box-shadow:
+    0 16px 35px rgba(0, 0, 0, 0.16);
+}
+
+
+/* ==================================
+   BAŞLIK
+================================== */
+
+.ad-card h3 {
+  position: relative;
+
+  z-index: 2;
+
+  margin: 0 0 8px;
+
+  font-size: 23px;
+
+  line-height: 1.2;
+
+  font-weight: 800;
+}
+
+
+/* ==================================
+   AÇIKLAMA
+================================== */
+
+.ad-card p {
+  position: relative;
+
+  z-index: 2;
+
+  margin: 0;
+
+  max-width: 380px;
+
+  font-size: 14px;
+
+  line-height: 1.5;
+
+  opacity: 0.95;
+}
+
+
+/* ==================================
+   RENKLER
+================================== */
+
+.red {
+  background:
+    linear-gradient(
+      135deg,
+      #b00020,
+      #e63946
+    );
+}
+
+.orange {
+  background:
+    linear-gradient(
+      135deg,
+      #f05a00,
+      #ff9f1c
+    );
+}
+
+.chocolate {
+  background:
+    linear-gradient(
+      135deg,
+      #4b260f,
+      #8a4d20
+    );
+}
+
+
+/* ==================================
+   TABLET
+================================== */
+
+@media (max-width: 1000px) {
+
+  .ad-banner {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .ad-card:last-child {
+    grid-column: 1 / -1;
+  }
+
+}
+
+
+/* ==================================
+   MOBİL
+================================== */
+
+@media (max-width: 650px) {
+
+  .ad-banner {
+    grid-template-columns: 1fr;
+
+    gap: 12px;
+
+    margin: 28px auto;
+
+    padding: 0 14px;
+  }
+
+  .ad-card:last-child {
+    grid-column: auto;
+  }
+
+  .ad-card {
+    min-height: 125px;
+
+    padding: 22px;
+  }
+
+  .ad-card h3 {
+    font-size: 20px;
+  }
+
+  .ad-card p {
+    font-size: 13px;
+  }
+
+}

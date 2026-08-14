@@ -1,0 +1,321 @@
+/* ==================================
+   PRODUCT SLIDER
+================================== */
+
+.product-slider-section {
+  max-width: 1850px;
+
+  margin: 55px auto;
+
+  padding: 0 24px;
+}
+
+
+/* ==================================
+   BAŞLIK
+================================== */
+
+.slider-header {
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: flex-end;
+
+  margin-bottom: 20px;
+}
+
+.slider-header h2 {
+  margin: 0;
+
+  font-size: 28px;
+
+  line-height: 1.2;
+
+  font-weight: 800;
+
+  color: #222;
+}
+
+.slider-header p {
+  margin: 6px 0 0;
+
+  font-size: 14px;
+
+  color: #777;
+}
+
+
+/* ==================================
+   TÜMÜNÜ GÖR
+================================== */
+
+.all-button {
+  border: none;
+
+  background: #b00020;
+
+  color: #fff;
+
+  padding: 10px 18px;
+
+  border-radius: 10px;
+
+  font-size: 13px;
+
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition: 0.25s;
+}
+
+.all-button:hover {
+  background: #8f001a;
+
+  transform: translateY(-2px);
+}
+
+
+/* ==================================
+   SLIDER WRAPPER
+================================== */
+
+.slider-wrapper {
+  position: relative;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 10px;
+
+  min-width: 0;
+}
+
+
+/* ==================================
+   ÜRÜNLER
+================================== */
+
+.slider-products {
+  display: flex;
+
+  gap: 16px;
+
+  width: 100%;
+
+  min-width: 0;
+
+  overflow-x: auto;
+
+  scroll-behavior: smooth;
+
+  padding: 8px 4px 16px;
+
+  scrollbar-width: none;
+
+  cursor: grab;
+}
+
+.slider-products::-webkit-scrollbar {
+  display: none;
+}
+
+.slider-products:active {
+  cursor: grabbing;
+}
+
+
+/* ==================================
+   ÜRÜN GENİŞLİĞİ
+================================== */
+
+.slider-item {
+  width: 220px;
+
+  min-width: 220px;
+
+  flex: 0 0 220px;
+}
+
+
+/* ==================================
+   OKLAR
+================================== */
+
+.slider-arrow {
+  width: 44px;
+
+  height: 44px;
+
+  flex: 0 0 44px;
+
+  border: 1px solid #eeeeee;
+
+  border-radius: 50%;
+
+  background: #ffffff;
+
+  color: #333;
+
+  box-shadow:
+    0 5px 16px rgba(0, 0, 0, 0.10);
+
+  font-size: 18px;
+
+  font-weight: 700;
+
+  cursor: pointer;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.slider-arrow:hover {
+  background: #b00020;
+
+  color: #fff;
+
+  border-color: #b00020;
+
+  transform: scale(1.08);
+
+  box-shadow:
+    0 8px 20px rgba(176, 0, 32, 0.20);
+}
+
+
+/* ==================================
+   1400px
+================================== */
+
+@media (max-width: 1400px) {
+
+  .slider-item {
+    width: 210px;
+
+    min-width: 210px;
+
+    flex-basis: 210px;
+  }
+
+}
+
+
+/* ==================================
+   1100px
+================================== */
+
+@media (max-width: 1100px) {
+
+  .slider-item {
+    width: 200px;
+
+    min-width: 200px;
+
+    flex-basis: 200px;
+  }
+
+  .slider-arrow {
+    width: 40px;
+
+    height: 40px;
+
+    flex-basis: 40px;
+
+    font-size: 16px;
+  }
+
+}
+
+
+/* ==================================
+   TABLET
+================================== */
+
+@media (max-width: 768px) {
+
+  .product-slider-section {
+    margin: 40px auto;
+
+    padding: 0 14px;
+  }
+
+  .slider-header {
+    align-items: flex-start;
+
+    gap: 12px;
+  }
+
+  .slider-header h2 {
+    font-size: 23px;
+  }
+
+  .slider-header p {
+    font-size: 13px;
+  }
+
+  .slider-arrow {
+    display: none;
+  }
+
+  .slider-item {
+    width: 190px;
+
+    min-width: 190px;
+
+    flex-basis: 190px;
+  }
+
+  .slider-products {
+    gap: 12px;
+
+    padding-bottom: 12px;
+  }
+
+  .all-button {
+    padding: 9px 14px;
+
+    font-size: 12px;
+  }
+
+}
+
+
+/* ==================================
+   MOBİL
+================================== */
+
+@media (max-width: 480px) {
+
+  .product-slider-section {
+    margin: 32px auto;
+  }
+
+  .slider-header h2 {
+    font-size: 20px;
+  }
+
+  .slider-header p {
+    font-size: 12px;
+  }
+
+  .slider-item {
+    width: 175px;
+
+    min-width: 175px;
+
+    flex-basis: 175px;
+  }
+
+}
