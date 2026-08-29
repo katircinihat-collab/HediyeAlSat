@@ -1,11 +1,21 @@
+
 import { Helmet } from "react-helmet-async";
+
 import ProductGallery from "../components/ProductGallery";
 import SellerCard from "../components/seller/SellerCard";
 import MessageBox from "../components/MessageBox";
 import OrderBox from "../components/OrderBox";
 
-import { Link, useParams, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import {
+  Link,
+  useParams,
+  useNavigate
+} from "react-router-dom";
+
+import {
+  useEffect,
+  useState
+} from "react";
 
 import {
   doc,
@@ -23,10 +33,17 @@ import { auth, db } from "../firebase";
 
 import "../App.css";
 
+
 function DetailPage() {
 
   const { id } = useParams();
+
   const navigate = useNavigate();
+
+
+  /* =========================
+     STATE
+  ========================= */
 
   const [ilan, setIlan] = useState(null);
 
@@ -38,7 +55,15 @@ function DetailPage() {
 
   const [yorum, setYorum] = useState("");
 
+  const [yorumGonderiliyor, setYorumGonderiliyor] =
+    useState(false);
+
   const [takipEdiyor] = useState(false);
+
+
+  /* =========================
+     İLANI GETİR
+  ========================= */
 
   useEffect(() => {
 
@@ -46,442 +71,932 @@ function DetailPage() {
 
   }, [id]);
 
+
   async function getir() {
-
-    const ref = doc(db, "ilanlar", id);
-
-    const snap = await getDoc(ref);
-
-    if (!snap.exists()) return;
 
     try {
 
-      await updateDoc(ref, {
+      const ref = doc(
+        db,
+        "ilanlar",
+        id
+      );
 
-        goruntulenme: increment(1)
+      const snap = await getDoc(ref);
 
-      });
+      if (!snap.exists()) {
 
-    } catch (e) {}
+        return;
 
-    const data = {
+      }
 
-      id: snap.id,
 
-      ...snap.data()
+      /* GÖRÜNTÜLENME */
 
-    };
+      try {
 
-    setIlan(data);
+        await updateDoc(
+          ref,
+          {
+            goruntulenme: increment(1)
+          }
+        );
 
-    const yorumQuery = query(
+      } catch (e) {
 
-      collection(db, "yorumlar"),
+        console.log(
+          "Görüntülenme güncellenemedi:",
+          e
+        );
 
-      where("ilanId", "==", id)
+      }
 
-    );
 
-    const yorumSnap = await getDocs(yorumQuery);
+      const data = {
 
-    setYorumlar(
+        id: snap.id,
 
-      yorumSnap.docs.map(d => ({
+        ...snap.data()
 
-        id: d.id,
+      };
 
-        ...d.data()
 
-      }))
+      setIlan(data);
 
-    );
+
+      /* YORUMLARI GETİR */
+
+      await yorumlariGetir();
+
+    } catch (error) {
+
+      console.error(
+        "İlan yükleme hatası:",
+        error
+      );
+
+    }
 
   }
+
+
+  /* =========================
+     YORUMLARI GETİR
+  ========================= */
+
+  async function yorumlariGetir() {
+
+    try {
+
+      const yorumQuery = query(
+
+        collection(
+          db,
+          "yorumlar"
+        ),
+
+        where(
+          "ilanId",
+          "==",
+          id
+        )
+
+      );
+
+
+      const yorumSnap =
+        await getDocs(
+          yorumQuery
+        );
+
+
+      const liste =
+        yorumSnap.docs.map(
+          (d) => ({
+
+            id: d.id,
+
+            ...d.data()
+
+          })
+        );
+
+
+      /* YENİ YORUMLAR ÜSTTE */
+
+      liste.sort(
+        (a, b) => {
+
+          const tarihA =
+            a.tarih?.toDate
+              ? a.tarih.toDate()
+              : new Date(
+                  a.tarih || 0
+                );
+
+
+          const tarihB =
+            b.tarih?.toDate
+              ? b.tarih.toDate()
+              : new Date(
+                  b.tarih || 0
+                );
+
+
+          return (
+            tarihB - tarihA
+          );
+
+        }
+      );
+
+
+      setYorumlar(liste);
+
+
+      return liste;
+
+    } catch (error) {
+
+      console.error(
+        "Yorumlar alınamadı:",
+        error
+      );
+
+      setYorumlar([]);
+
+      return [];
+
+    }
+
+  }
+
+
+  /* =========================
+     MESAJ GÖNDER
+  ========================= */
 
   async function mesajGonder() {
 
     if (!auth.currentUser) {
 
-      alert("Önce giriş yap");
+      alert(
+        "Önce giriş yapmalısınız."
+      );
 
       return;
 
     }
+
 
     if (!mesaj.trim()) {
 
-      alert("Mesaj yaz");
+      alert(
+        "Lütfen mesaj yazınız."
+      );
 
       return;
 
     }
 
-    await addDoc(
 
-      collection(db, "mesajlar"),
+    try {
 
-      {
+      await addDoc(
 
-        gonderen: auth.currentUser.email,
+        collection(
+          db,
+          "mesajlar"
+        ),
 
-        alan: ilan.sahip,
+        {
 
-        ilanId: ilan.id,
+          gonderen:
+            auth.currentUser.email,
 
-        ilanNo: ilan.ilanNo,
+          alan:
+            ilan.sahip,
 
-        ilanBaslik: ilan.baslik,
+          ilanId:
+            ilan.id,
 
-        mesaj,
+          ilanNo:
+            ilan.ilanNo || "",
 
-        tarih: new Date(),
+          ilanBaslik:
+            ilan.baslik,
 
-        okundu: false
+          mesaj:
+            mesaj.trim(),
 
-      }
+          tarih:
+            new Date(),
 
-    );
+          okundu:
+            false
 
-    alert("Mesaj gönderildi ✅");
+        }
 
-    setMesaj("");
+      );
+
+
+      alert(
+        "Mesaj gönderildi ✅"
+      );
+
+
+      setMesaj("");
+
+    } catch (error) {
+
+      console.error(
+        "Mesaj gönderme hatası:",
+        error
+      );
+
+      alert(
+        "Mesaj gönderilemedi."
+      );
+
+    }
 
   }
+
+
+  /* =========================
+     YORUM + PUAN GÖNDER
+  ========================= */
+
   async function yorumGonder() {
+
+    if (yorumGonderiliyor) {
+
+      return;
+
+    }
+
 
     if (!auth.currentUser) {
 
-      alert("Önce giriş yap.");
+      alert(
+        "Önce giriş yapmalısınız."
+      );
 
       return;
 
     }
 
-    if (yorum.trim() === "") {
 
-      alert("Yorum yaz.");
+    if (!yorum.trim()) {
+
+      alert(
+        "Lütfen yorumunuzu yazın."
+      );
 
       return;
 
     }
 
-    await addDoc(
 
-      collection(db, "yorumlar"),
+    if (yorum.trim().length < 3) {
 
-      {
+      alert(
+        "Yorum en az 3 karakter olmalıdır."
+      );
 
-        ilanId: id,
+      return;
 
-        kullanici: auth.currentUser.email,
+    }
 
-        puan,
 
-        yorum,
+    try {
 
-        tarih: new Date()
+      setYorumGonderiliyor(true);
+
+
+      /* =========================
+         YORUMU FIREBASE'E KAYDET
+      ========================= */
+
+      await addDoc(
+
+        collection(
+          db,
+          "yorumlar"
+        ),
+
+        {
+
+          ilanId:
+            id,
+
+          kullanici:
+            auth.currentUser.email,
+
+          kullaniciAdi:
+            auth.currentUser.displayName ||
+            "HediyeAlSat Kullanıcısı",
+
+          puan:
+            Number(puan),
+
+          yorum:
+            yorum.trim(),
+
+          tarih:
+            new Date()
+
+        }
+
+      );
+
+
+      /* =========================
+         YORUMLARI YENİDEN GETİR
+      ========================= */
+
+      const yeniYorumlar =
+        await yorumlariGetir();
+
+
+      /* =========================
+         ORTALAMA PUAN
+      ========================= */
+
+      const toplamPuan =
+        yeniYorumlar.reduce(
+
+          (toplam, item) => {
+
+            return (
+              toplam +
+              Number(
+                item.puan || 0
+              )
+            );
+
+          },
+
+          0
+
+        );
+
+
+      const yorumSayisi =
+        yeniYorumlar.length;
+
+
+      const ortalama =
+        yorumSayisi > 0
+
+          ? Number(
+              (
+                toplamPuan /
+                yorumSayisi
+              ).toFixed(1)
+            )
+
+          : 0;
+
+
+      /* =========================
+         İLAN PUANINI GÜNCELLE
+      ========================= */
+
+      try {
+
+        await updateDoc(
+
+          doc(
+            db,
+            "ilanlar",
+            id
+          ),
+
+          {
+
+            puan:
+              ortalama,
+
+            yorumSayisi:
+              yorumSayisi
+
+          }
+
+        );
+
+      } catch (error) {
+
+        console.error(
+          "Ürün puanı güncellenemedi:",
+          error
+        );
 
       }
 
-    );
 
-    setYorum("");
+      /* =========================
+         EKRANDAKİ İLANI GÜNCELLE
+      ========================= */
 
-    setPuan(5);
+      setIlan(
+        (eski) => ({
 
-    const yorumQuery = query(
+          ...eski,
 
-      collection(db, "yorumlar"),
+          puan:
+            ortalama,
 
-      where("ilanId", "==", id)
+          yorumSayisi:
+            yorumSayisi
 
-    );
+        })
+      );
 
-    const yorumSnap = await getDocs(yorumQuery);
 
-    setYorumlar(
+      /* =========================
+         FORMU TEMİZLE
+      ========================= */
 
-      yorumSnap.docs.map((d) => ({
+      setYorum("");
 
-        id: d.id,
+      setPuan(5);
 
-        ...d.data()
 
-      }))
+      alert(
+        "⭐ Değerlendirmeniz başarıyla gönderildi."
+      );
 
-    );
+
+    } catch (error) {
+
+      console.error(
+        "Yorum gönderme hatası:",
+        error
+      );
+
+      alert(
+        "Yorum gönderilirken bir hata oluştu."
+      );
+
+    } finally {
+
+      setYorumGonderiliyor(false);
+
+    }
 
   }
+
+
+  /* =========================
+     SEPETE EKLE
+  ========================= */
 
   async function sepeteEkle() {
 
     if (!auth.currentUser) {
 
-      alert("Önce giriş yap");
+      alert(
+        "Önce giriş yapmalısınız."
+      );
 
       return;
 
     }
 
-    if (auth.currentUser.email === ilan.sahip) {
 
-      alert("Kendi ürününü sepete ekleyemezsin.");
+    if (
+      auth.currentUser.email ===
+      ilan.sahip
+    ) {
 
-      return;
-
-    }
-
-    const q = query(
-
-      collection(db, "sepet"),
-
-      where("kullanici", "==", auth.currentUser.email),
-
-      where("ilanId", "==", ilan.id)
-
-    );
-
-    const snap = await getDocs(q);
-
-    if (!snap.empty) {
-
-      alert("Bu ürün zaten sepetinizde.");
+      alert(
+        "Kendi ürününüzü sepete ekleyemezsiniz."
+      );
 
       return;
 
     }
 
-    const fiyat =
 
-      parseFloat(
+    try {
 
-        String(ilan.fiyat)
+      const q = query(
 
-          .replace(/[^\d.,]/g, "")
+        collection(
+          db,
+          "sepet"
+        ),
 
-          .replace(",", ".")
+        where(
+          "kullanici",
+          "==",
+          auth.currentUser.email
+        ),
 
-      ) || 0;
+        where(
+          "ilanId",
+          "==",
+          ilan.id
+        )
 
-    await addDoc(
+      );
 
-      collection(db, "sepet"),
 
-      {
+      const snap =
+        await getDocs(q);
 
-        kullanici: auth.currentUser.email,
 
-        ilanId: ilan.id,
+      if (!snap.empty) {
 
-        baslik: ilan.baslik,
+        alert(
+          "Bu ürün zaten sepetinizde."
+        );
 
-        fiyat,
-
-        resim: ilan.resim || "",
-
-        satici: ilan.sahip,
-
-        adet: 1,
-
-        eklenmeTarihi: new Date()
+        return;
 
       }
 
-    );
 
-    alert("🛒 Ürün sepete eklendi.");
+      const fiyat =
+
+        parseFloat(
+
+          String(
+            ilan.fiyat || 0
+          )
+
+            .replace(
+              /[^\d.,]/g,
+              ""
+            )
+
+            .replace(
+              ",",
+              "."
+            )
+
+        ) || 0;
+
+
+      await addDoc(
+
+        collection(
+          db,
+          "sepet"
+        ),
+
+        {
+
+          kullanici:
+            auth.currentUser.email,
+
+          ilanId:
+            ilan.id,
+
+          baslik:
+            ilan.baslik,
+
+          fiyat:
+            fiyat,
+
+          resim:
+            ilan.resim || "",
+
+          satici:
+            ilan.sahip || "",
+
+          adet:
+            1,
+
+          eklenmeTarihi:
+            new Date()
+
+        }
+
+      );
+
+
+      alert(
+        "🛒 Ürün sepete eklendi."
+      );
+
+    } catch (error) {
+
+      console.error(
+        "Sepet hatası:",
+        error
+      );
+
+      alert(
+        "Ürün sepete eklenemedi."
+      );
+
+    }
 
   }
+
+
+  /* =========================
+     SATIN AL
+  ========================= */
+
   async function satinAl() {
 
     if (!auth.currentUser) {
 
-      alert("Önce giriş yap");
+      alert(
+        "Önce giriş yapmalısınız."
+      );
 
       return;
 
     }
 
-    if (auth.currentUser.email === ilan.sahip) {
 
-      alert("Kendi ilanınızı satın alamazsınız.");
+    if (
+      auth.currentUser.email ===
+      ilan.sahip
+    ) {
+
+      alert(
+        "Kendi ilanınızı satın alamazsınız."
+      );
 
       return;
 
     }
 
-    const fiyat =
-      parseFloat(
-        String(ilan.fiyat)
-          .replace(/[^\d.,]/g, "")
-          .replace(",", ".")
-      ) || 0;
 
-    const komisyon = fiyat * 0.05;
+    try {
 
-    const netTutar = fiyat - komisyon;
+      const fiyat =
 
-    const siparisRef = await addDoc(
+        parseFloat(
 
-      collection(db, "siparisler"),
+          String(
+            ilan.fiyat || 0
+          )
 
-      {
+            .replace(
+              /[^\d.,]/g,
+              ""
+            )
 
-        ilanId: ilan.id,
+            .replace(
+              ",",
+              "."
+            )
 
-        ilanBaslik: ilan.baslik,
+        ) || 0;
 
-        magazaId: ilan.magazaId || "",
 
-        satici: ilan.sahip,
+      const komisyon =
+        fiyat * 0.05;
 
-        alici: auth.currentUser.email,
 
-        fiyat,
+      const netTutar =
+        fiyat - komisyon;
 
-        komisyon,
 
-        netTutar,
+      const siparisRef =
+        await addDoc(
 
-        durum: "Ödeme Bekleniyor",
+          collection(
+            db,
+            "siparisler"
+          ),
 
-        odemeDurumu: false,
+          {
 
-        kargoNo: "",
+            ilanId:
+              ilan.id,
 
-        teslimEdildi: false,
+            ilanBaslik:
+              ilan.baslik,
 
-        olusturmaTarihi: new Date()
+            magazaId:
+              ilan.magazaId || "",
 
-      }
+            satici:
+              ilan.sahip,
 
-    );
+            alici:
+              auth.currentUser.email,
 
-    navigate(`/odeme?siparisId=${siparisRef.id}`);
+            fiyat:
+              fiyat,
+
+            komisyon:
+              komisyon,
+
+            netTutar:
+              netTutar,
+
+            durum:
+              "Ödeme Bekleniyor",
+
+            odemeDurumu:
+              false,
+
+            kargoNo:
+              "",
+
+            teslimEdildi:
+              false,
+
+            olusturmaTarihi:
+              new Date()
+
+          }
+
+        );
+
+
+      navigate(
+        `/odeme?siparisId=${siparisRef.id}`
+      );
+
+    } catch (error) {
+
+      console.error(
+        "Satın alma hatası:",
+        error
+      );
+
+      alert(
+        "Satın alma işlemi başlatılamadı."
+      );
+
+    }
 
   }
+
+
+  /* =========================
+     TAKİP
+  ========================= */
 
   function takipEt() {
 
-    alert("Takip sistemi sonraki aşamada bağlanacak.");
+    alert(
+      "Takip sistemi sonraki aşamada bağlanacak."
+    );
 
   }
+
 
   function takipBirak() {
 
-    alert("Takip sistemi sonraki aşamada bağlanacak.");
+    alert(
+      "Takip sistemi sonraki aşamada bağlanacak."
+    );
 
   }
+
+
+  /* =========================
+     YÜKLENİYOR
+  ========================= */
 
   if (!ilan) {
 
-    return <h2>İlan yükleniyor...</h2>;
+    return (
+
+      <div className="page">
+
+        <h2>
+          İlan yükleniyor...
+        </h2>
+
+      </div>
+
+    );
 
   }
-const fiyat =
-  parseFloat(
-    String(ilan?.fiyat || 0)
-      .replace(/[^\d.,]/g, "")
-      .replace(",", ".")
-  ) || 0;
+
+
+  /* =========================
+     FİYAT
+  ========================= */
+
+  const fiyat =
+
+    parseFloat(
+
+      String(
+        ilan.fiyat || 0
+      )
+
+        .replace(
+          /[^\d.,]/g,
+          ""
+        )
+
+        .replace(
+          ",",
+          "."
+        )
+
+    ) || 0;
+
+
+  /* =========================
+     PUAN HESAPLA
+  ========================= */
+
+  const hesaplananPuan =
+
+    yorumlar.length > 0
+
+      ? (
+          yorumlar.reduce(
+            (toplam, item) =>
+              toplam +
+              Number(
+                item.puan || 0
+              ),
+            0
+          ) /
+          yorumlar.length
+        ).toFixed(1)
+
+      : Number(
+          ilan.puan || 0
+        ).toFixed(1);
+
+
+  const toplamDegerlendirme =
+    yorumlar.length;
+
+
+  /* =========================
+     SAYFA
+  ========================= */
+
   return (
 
     <>
 
       <Helmet>
 
-        <title>{ilan.baslik} | HediyeAlSat</title>
+        <title>
+          {ilan.baslik} | HediyeAlSat
+        </title>
+
 
         <meta
-
           name="description"
-
           content={
-
             ilan.aciklama ||
-
             `${ilan.baslik} uygun fiyatla HediyeAlSat'ta`
-
           }
-
         />
 
-        <meta
 
+        <meta
           name="keywords"
-
-          content={`${ilan.baslik}, ${ilan.kategori}, hediye`}
-
+          content={
+            `${ilan.baslik}, ${ilan.kategori}, hediye`
+          }
         />
 
-        <link
-
-          rel="canonical"
-
-          href={`https://hediyealsat.com/ilan/${ilan.id}`}
-
-        />
-
-        <meta property="og:type" content="product" />
-
-        <meta property="og:title" content={ilan.baslik} />
 
         <meta
+          property="og:type"
+          content="product"
+        />
 
+
+        <meta
+          property="og:title"
+          content={ilan.baslik}
+        />
+
+
+        <meta
           property="og:description"
-
-          content={ilan.aciklama || ilan.baslik}
-
+          content={
+            ilan.aciklama ||
+            ilan.baslik
+          }
         />
 
-        <meta
 
+        <meta
           property="og:image"
-
-          content={ilan.resimler?.[0] || ilan.resim}
-
-        />
-
-        <meta
-
-          property="og:url"
-
-          content={`https://hediyealsat.com/ilan/${ilan.id}`}
-
-        />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "Product",
-              name: ilan.baslik,
-              image: ilan.resimler?.length
-                ? ilan.resimler
-                : [ilan.resim],
-              description: ilan.aciklama || "",
-              sku: ilan.ilanNo || ilan.id,
-              brand: {
-                "@type": "Brand",
-                name: "HediyeAlSat"
-              },
-              offers: {
-                "@type": "Offer",
-                price: Number(ilan.fiyat),
-                priceCurrency: "TRY",
-                availability:
-                  ilan.stok > 0
-                    ? "https://schema.org/InStock"
-                    : "https://schema.org/OutOfStock",
-                url: `https://hediyealsat.com/ilan/${ilan.id}`
-              }
-            })
-          }}
+          content={
+            ilan.resimler?.[0] ||
+            ilan.resim ||
+            ""
+          }
         />
 
       </Helmet>
 
+
       <div className="page">
+
 
         <Link to="/">
 
@@ -489,33 +1004,71 @@ const fiyat =
 
         </Link>
 
+
         <div className="detail-container">
 
-          <ProductGallery ilan={ilan} />
+
+          <ProductGallery
+            ilan={ilan}
+          />
+
 
           <div className="detail-info">
 
-            <h1>{ilan.baslik}</h1>
+
+            <h1>
+              {ilan.baslik}
+            </h1>
+
+
+            {/* FİYAT */}
 
             <div className="price-box">
 
               <h2>
-  ₺{fiyat.toLocaleString("tr-TR")}
-</h2>
+
+                ₺
+                {fiyat.toLocaleString(
+                  "tr-TR"
+                )}
+
+              </h2>
 
             </div>
 
+
+            {/* BİLGİLER */}
+
             <div className="info-badges">
-
-              <span>⭐ {ilan.puan || 5}</span>
-
-              <span>👁 {ilan.goruntulenme || 0}</span>
-
-              <span>❤️ {ilan.favoriSayisi || 0}</span>
 
               <span>
 
-                {ilan.stok > 0
+                ⭐ {hesaplananPuan}
+
+              </span>
+
+
+              <span>
+
+                👁{" "}
+                {ilan.goruntulenme || 0}
+
+              </span>
+
+
+              <span>
+
+                ❤️{" "}
+                {ilan.favoriSayisi || 0}
+
+              </span>
+
+
+              <span>
+
+                {Number(
+                  ilan.stok || 0
+                ) > 0
 
                   ? "🟢 Stokta"
 
@@ -525,129 +1078,491 @@ const fiyat =
 
             </div>
 
-            <p>📍 Konum: {ilan.sehir}</p>
 
-            <p>📦 Kategori: {ilan.kategori}</p>
+            <p>
 
-            <p>🏷️ Tür: {ilan.tip}</p>
+              📍 Konum:
+              {" "}
+              {ilan.sehir}
 
-            <SellerCard
-              ilan={ilan}
-              takipEdiyor={takipEdiyor}
-              takipEt={takipEt}
-              takipBirak={takipBirak}
-            />
+            </p>
 
-            <MessageBox
-              mesaj={mesaj}
-              setMesaj={setMesaj}
-              mesajGonder={mesajGonder}
-            />
-            <hr />
 
-            <h3>⭐ Ürün Değerlendirmeleri</h3>
+            <p>
 
-            <div className="yorum-ekle">
+              📦 Kategori:
+              {" "}
+              {ilan.kategori}
 
-              <select
-                value={puan}
-                onChange={(e) => setPuan(Number(e.target.value))}
-              >
-                <option value={5}>⭐⭐⭐⭐⭐</option>
-                <option value={4}>⭐⭐⭐⭐</option>
-                <option value={3}>⭐⭐⭐</option>
-                <option value={2}>⭐⭐</option>
-                <option value={1}>⭐</option>
-              </select>
+            </p>
 
-              <textarea
-                placeholder="Ürün hakkında yorum yaz..."
-                value={yorum}
-                onChange={(e) => setYorum(e.target.value)}
-              />
 
-              <button onClick={yorumGonder}>
-                Yorum Yap
-              </button>
+            <p>
 
-            </div>
+              🏷️ Tür:
+              {" "}
+              {ilan.tip}
 
-            <div className="yorum-listesi">
+            </p>
 
-              {
 
-                yorumlar.length === 0
+            {/* =========================
+                SATICININ ÜRÜN AÇIKLAMASI
+            ========================= */}
 
-                  ? (
+            {ilan.aciklama &&
+              ilan.aciklama.trim() && (
+
+              <section className="urun-aciklama">
+
+                <div className="urun-aciklama-baslik">
+
+                  <div className="aciklama-icon">
+                    📝
+                  </div>
+
+                  <div>
+
+                    <h3>
+                      Ürün Açıklaması
+                    </h3>
 
                     <p>
-
-                      Henüz yorum yapılmamış.
-
+                      Satıcının ürün hakkında yazdığı bilgiler
                     </p>
 
-                  )
+                  </div>
 
-                  : (
+                </div>
 
-                    yorumlar.map((y) => (
 
-                      <div
-                        key={y.id}
-                        className="yorum-karti"
-                      >
+                <div className="urun-aciklama-metin">
 
-                        <h4>
+                  {ilan.aciklama}
 
-                          {"⭐".repeat(y.puan)}
+                </div>
 
-                        </h4>
+              </section>
 
-                        <p>
+            )}
 
-                          {y.yorum}
 
-                        </p>
+            {/* SATICI */}
 
-                        <small>
+            <SellerCard
 
-                          {y.kullanici}
+              ilan={ilan}
 
-                        </small>
-
-                      </div>
-
-                    ))
-
-                  )
-
+              takipEdiyor={
+                takipEdiyor
               }
 
-            </div>
-            <h3>📅 İlan Tarihi</h3>
+              takipEt={
+                takipEt
+              }
+
+              takipBirak={
+                takipBirak
+              }
+
+            />
+
+
+            {/* MESAJ */}
+
+            <MessageBox
+
+              mesaj={mesaj}
+
+              setMesaj={
+                setMesaj
+              }
+
+              mesajGonder={
+                mesajGonder
+              }
+
+            />
+
+
+            <hr />
+
+
+            {/* =========================
+                ÜRÜN DEĞERLENDİRMELERİ
+            ========================= */}
+
+            <section className="urun-degerlendirmeleri">
+
+
+              <div className="yorum-baslik">
+
+                <div>
+
+                  <h3>
+
+                    ⭐ Ürün Değerlendirmeleri
+
+                  </h3>
+
+
+                  <p>
+
+                    Müşterilerin gerçek
+                    deneyimlerini inceleyin.
+
+                  </p>
+
+                </div>
+
+
+                <div className="ortalama-puan">
+
+                  <strong>
+
+                    {hesaplananPuan}
+
+                  </strong>
+
+                  <span>
+                    / 5
+                  </span>
+
+                </div>
+
+              </div>
+
+
+              {/* DEĞERLENDİRME SAYISI */}
+
+              <div className="degerlendirme-sayisi">
+
+                <strong>
+
+                  {toplamDegerlendirme}
+
+                </strong>
+
+                {" "}
+                değerlendirme
+
+              </div>
+
+
+              {/* YORUM FORMU */}
+
+              <div className="yorum-formu">
+
+
+                <h4>
+
+                  Bu ürünü değerlendirin
+
+                </h4>
+
+
+                <p>
+
+                  Deneyiminizi diğer
+                  müşterilerle paylaşın.
+
+                </p>
+
+
+                {/* PUAN */}
+
+                <div className="puan-secimi">
+
+                  {[1, 2, 3, 4, 5].map(
+                    (sayi) => (
+
+                      <button
+
+                        key={sayi}
+
+                        type="button"
+
+                        className={
+                          sayi <= puan
+                            ? "puan-yildiz aktif"
+                            : "puan-yildiz"
+                        }
+
+                        onClick={() =>
+                          setPuan(sayi)
+                        }
+
+                      >
+
+                        ★
+
+                      </button>
+
+                    )
+                  )}
+
+
+                  <span>
+
+                    {puan} / 5
+
+                  </span>
+
+                </div>
+
+
+                {/* YORUM */}
+
+                <textarea
+
+                  value={yorum}
+
+                  onChange={(e) =>
+                    setYorum(
+                      e.target.value
+                    )
+                  }
+
+                  placeholder="Ürün hakkında deneyiminizi yazın..."
+
+                  maxLength={1000}
+
+                />
+
+
+                <div className="yorum-alt">
+
+                  <span>
+
+                    {yorum.length}/1000
+
+                  </span>
+
+
+                  <button
+
+                    type="button"
+
+                    onClick={
+                      yorumGonder
+                    }
+
+                    disabled={
+                      yorumGonderiliyor
+                    }
+
+                  >
+
+                    {yorumGonderiliyor
+
+                      ? "Gönderiliyor..."
+
+                      : "⭐ Yorum ve Puan Gönder"}
+
+                  </button>
+
+                </div>
+
+              </div>
+
+
+              {/* YORUMLAR */}
+
+              <div className="yorum-listesi">
+
+
+                {yorumlar.length === 0 ? (
+
+                  <div className="yorum-yok">
+
+                    <div>
+                      ⭐
+                    </div>
+
+                    <h4>
+                      Henüz değerlendirme yok
+                    </h4>
+
+                    <p>
+                      Bu ürünü ilk değerlendiren
+                      siz olun.
+                    </p>
+
+                  </div>
+
+                ) : (
+
+                  yorumlar.map(
+                    (item) => {
+
+                      const kullaniciAdi =
+                        item.kullaniciAdi ||
+                        (
+                          item.kullanici
+                            ? item.kullanici.split("@")[0]
+                            : "HediyeAlSat Kullanıcısı"
+                        );
+
+
+                      const tarih =
+                        item.tarih?.toDate
+
+                          ? item.tarih
+                              .toDate()
+                              .toLocaleDateString(
+                                "tr-TR"
+                              )
+
+                          : item.tarih
+
+                          ? new Date(
+                              item.tarih
+                            ).toLocaleDateString(
+                              "tr-TR"
+                            )
+
+                          : "";
+
+
+                      const itemPuan =
+                        Math.min(
+                          5,
+                          Math.max(
+                            0,
+                            Number(
+                              item.puan || 0
+                            )
+                          )
+                        );
+
+
+                      return (
+
+                        <div
+
+                          key={
+                            item.id
+                          }
+
+                          className="yorum-karti"
+
+                        >
+
+                          <div className="yorum-kullanici">
+
+                            <div className="kullanici-avatar">
+
+                              {kullaniciAdi
+                                .charAt(0)
+                                .toUpperCase()}
+
+                            </div>
+
+
+                            <div>
+
+                              <strong>
+
+                                {kullaniciAdi}
+
+                              </strong>
+
+
+                              <div className="yorum-yildizlari">
+
+                                {"★".repeat(
+                                  itemPuan
+                                )}
+
+                                {"☆".repeat(
+                                  5 - itemPuan
+                                )}
+
+                              </div>
+
+                            </div>
+
+                          </div>
+
+
+                          <p className="yorum-metni">
+
+                            {item.yorum}
+
+                          </p>
+
+
+                          <small>
+
+                            {tarih}
+
+                          </small>
+
+                        </div>
+
+                      );
+
+                    }
+
+                  )
+
+                )}
+
+              </div>
+
+            </section>
+
+
+            {/* İLAN TARİHİ */}
+
+            <h3>
+              📅 İlan Tarihi
+            </h3>
+
 
             <p>
 
               {ilan.tarih?.toDate
-                ? ilan.tarih.toDate().toLocaleDateString("tr-TR")
+
+                ? ilan.tarih
+                    .toDate()
+                    .toLocaleDateString(
+                      "tr-TR"
+                    )
+
                 : "Yeni"}
 
             </p>
 
+
+            {/* SİPARİŞ */}
+
             <OrderBox
+
               ilan={ilan}
-              satinAl={satinAl}
-              sepeteEkle={sepeteEkle}
+
+              satinAl={
+                satinAl
+              }
+
+              sepeteEkle={
+                sepeteEkle
+              }
+
             />
+
 
           </div>
 
         </div>
 
       </div>
+
     </>
 
   );
 
 }
+
+
 export default DetailPage;
