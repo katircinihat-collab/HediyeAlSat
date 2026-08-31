@@ -285,6 +285,8 @@ function AdminWalletRelease() {
 
             }
 
+        // Initial load only; `getir` is intentionally not a reactive dependency.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
         }, []);
 
 

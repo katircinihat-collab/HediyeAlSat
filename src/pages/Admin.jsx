@@ -4,12 +4,12 @@ import {
   collection,
   getDocs,
   updateDoc,
-  deleteDoc,
   doc
 } from "firebase/firestore";
 
 import { db } from "../firebase";
 import { Link } from "react-router-dom";
+import { adminApi } from "../config/adminApi";
 
 import "../styles/pages/admin.css";
 function fiyatFormat(fiyat) {
@@ -50,8 +50,8 @@ function Admin() {
   const [saticiyaOdenecek, setSaticiyaOdenecek] = useState(0);
 
   const [toplamSiparis, setToplamSiparis] = useState(0);
-  const [odenenSiparis, setOdenenSiparis] = useState(0);
-  const [bekleyenSiparis, setBekleyenSiparis] = useState(0);
+  const [, setOdenenSiparis] = useState(0);
+  const [, setBekleyenSiparis] = useState(0);
 
   const [toplamMagaza, setToplamMagaza] = useState(0);
   const [toplamKullanici, setToplamKullanici] = useState(0);
@@ -186,35 +186,20 @@ function Admin() {
 
   }, []);
 
-  async function onayla(id) {
-async function ozellikDegistir(id, alan, deger){
+  async function ozellikDegistir(id, alan, deger){
 
-  await updateDoc(
-
-    doc(db,"ilanlar",id),
-
-    {
-
-      [alan]:deger
-
-    }
-
-  );
+  await adminApi(`/listings/${id}/flags`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ alan, deger })
+  });
 
   getir();
 
-}
-    await updateDoc(
+  }
 
-      doc(db, "ilanlar", id),
-
-      {
-
-        onay: true
-
-      }
-
-    );
+  async function onayla(id) {
+    await adminApi(`/listings/${id}/approve`, { method: "PUT" });
 
     getir();
 
@@ -224,47 +209,11 @@ async function ozellikDegistir(id, alan, deger){
 
     if (!window.confirm("İlan silinsin mi?")) return;
 
-    await deleteDoc(
-
-      doc(db, "ilanlar", id)
-
-    );
+    await adminApi(`/listings/${id}`, { method: "DELETE" });
 
     getir();
 
     dashboardGetir();
-
-  }
-
-  async function ilanNumaralariniDuzenle() {
-
-    const snap = await getDocs(
-
-      collection(db, "ilanlar")
-
-    );
-
-    let sira = 1;
-
-    for (const d of snap.docs) {
-
-      await updateDoc(
-
-        doc(db, "ilanlar", d.id),
-
-        {
-
-          ilanNo: String(sira).padStart(6, "0")
-
-        }
-
-      );
-
-      sira++;
-
-    }
-
-    getir();
 
   }
 

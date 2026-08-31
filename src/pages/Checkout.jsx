@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { auth, db } from "../firebase";
+import { useLocation } from "react-router-dom";
+import { apiUrl } from "../config/api";
 import "../styles/pages/checkout.css";
 
 import {
@@ -12,462 +14,1037 @@ import {
 
 function Checkout() {
 
+  const location = useLocation();
+
+  // ==================================================
+  // SPONSOR ÖDEME KONTROLÜ
+  // ==================================================
+
+  const sponsorData = location.state?.sponsor
+    ? location.state
+    : null;
+
+  const sponsorOdeme = Boolean(sponsorData);
+
+  // ==================================================
+  // NORMAL SEPET
+  // ==================================================
+
   const [urunler, setUrunler] = useState([]);
+
   const [loading, setLoading] = useState(false);
 
-  const [adSoyad,setAdSoyad]=useState("");
-  const [telefon,setTelefon]=useState("");
-  const [adres,setAdres]=useState("");
-  const [il,setIl]=useState("");
-  const [ilce,setIlce]=useState("");
-  const [kargo,setKargo]=useState("MNG");
-  const [not,setNot]=useState("");
-  const [kupon,setKupon]=useState("");
+  // ==================================================
+  // TESLİMAT / İLETİŞİM BİLGİLERİ
+  // ==================================================
 
-  useEffect(()=>{
+  const [adSoyad, setAdSoyad] = useState(
+    sponsorData?.yetkiliAdi || ""
+  );
 
-    if(auth.currentUser){
+  const [telefon, setTelefon] = useState(
+    sponsorData?.telefon || ""
+  );
 
+  const [adres, setAdres] = useState("");
+
+  const [il, setIl] = useState("");
+
+  const [ilce, setIlce] = useState("");
+
+  const [kargo, setKargo] = useState("MNG");
+
+  const [not, setNot] = useState("");
+
+  const [kupon, setKupon] = useState("");
+
+  // ==================================================
+  // NORMAL SEPETİ GETİR
+  // ==================================================
+
+  useEffect(() => {
+
+    if (
+      auth.currentUser &&
+      !sponsorOdeme
+    ) {
       sepetiGetir();
-
     }
 
-  },[]);
+  }, [sponsorOdeme]);
 
-  async function sepetiGetir(){
+  async function sepetiGetir() {
 
-    const q=query(
+    try {
 
-      collection(db,"sepet"),
+      if (!auth.currentUser) {
+        return;
+      }
 
-      where("kullanici","==",auth.currentUser.email)
+      const q = query(
+        collection(db, "sepet"),
+        where(
+          "kullanici",
+          "==",
+          auth.currentUser.email
+        )
+      );
 
-    );
+      const snap = await getDocs(q);
 
-    const snap=await getDocs(q);
+      setUrunler(
+        snap.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data()
+        }))
+      );
 
-    setUrunler(
+    } catch (error) {
 
-      snap.docs.map(doc=>({
+      console.error(
+        "Sepet alınamadı:",
+        error
+      );
 
-        id:doc.id,
-
-        ...doc.data()
-
-      }))
-
-    );
+    }
 
   }
 
-  const araToplam=urunler.reduce(
+  // ==================================================
+  // NORMAL SİPARİŞ HESAPLARI
+  // ==================================================
 
-    (t,u)=>t+(u.fiyat*u.adet),
-
+  const araToplam = urunler.reduce(
+    (t, u) =>
+      t +
+      (
+        Number(u.fiyat || 0) *
+        Number(u.adet || 0)
+      ),
     0
-
   );
 
-  const indirim=
+  const indirim =
+    kupon.trim().toUpperCase() === "HEDIYE10"
+      ? araToplam * 0.10
+      : 0;
 
-    kupon==="HEDIYE10"
+  const kargoUcreti =
+    araToplam > 1000
+      ? 0
+      : 79.90;
 
-    ? araToplam*0.10
-
-    :0;
-
-  const kargoUcreti=
-
-    araToplam>1000
-
-    ?0
-
-    :79.90;
-
-  const genelToplam=
-
-    araToplam-
-
-    indirim+
-
+  const normalGenelToplam =
+    araToplam -
+    indirim +
     kargoUcreti;
-  async function odemeYap(){
 
-    if(!auth.currentUser){
+  // ==================================================
+  // SPONSOR PAKET FİYATI
+  // ==================================================
 
-      alert("Lütfen giriş yapınız.");
+  const sponsorFiyat =
+    sponsorData?.fiyat
+      ? Number(sponsorData.fiyat)
+      : 0;
+
+  // ==================================================
+  // ÖDENECEK TUTAR
+  // ==================================================
+
+  const genelToplam = sponsorOdeme
+    ? sponsorFiyat
+    : normalGenelToplam;
+
+  // ==================================================
+  // ÖDEME
+  // ==================================================
+
+  async function odemeYap() {
+
+    if (!auth.currentUser) {
+
+      alert(
+        "Lütfen önce giriş yapınız."
+      );
 
       return;
-
     }
 
-    if(urunler.length===0){
+    if (loading) {
+      return;
+    }
 
-      alert("Sepetiniz boş.");
+    // ==================================================
+    // SPONSOR ÖDEMESİ
+    // ==================================================
+
+    if (sponsorOdeme) {
+
+      if (!sponsorData.sponsorBasvuruId) {
+
+        alert(
+          "Sponsor başvuru bilgisi bulunamadı."
+        );
+
+        return;
+      }
+
+      if (!sponsorData.fiyat) {
+
+        alert(
+          "Sponsor paket fiyatı bulunamadı."
+        );
+
+        return;
+      }
+
+      setLoading(true);
+
+      try {
+
+        const adParcalari =
+          (
+            sponsorData.yetkiliAdi ||
+            auth.currentUser.displayName ||
+            "Müşteri"
+          )
+            .trim()
+            .split(/\s+/);
+
+        const buyerName =
+          adParcalari.shift() ||
+          "Müşteri";
+
+        const buyerSurname =
+          adParcalari.join(" ") ||
+          "-";
+
+        const response = await fetch(
+          apiUrl("/api/payment"),
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+
+              sponsor: true,
+
+              sponsorBasvuruId:
+                sponsorData.sponsorBasvuruId,
+
+              paketId:
+                sponsorData.paketId,
+
+              paketAdi:
+                sponsorData.paketAdi,
+
+              sure:
+                sponsorData.sure,
+
+              price:
+                Number(sponsorFiyat).toFixed(2),
+
+              buyerName,
+
+              buyerSurname,
+
+              email:
+                sponsorData.email ||
+                auth.currentUser.email,
+
+              productName:
+                `HediyeAlSat ${sponsorData.paketAdi}`,
+
+              basketItems: [
+                {
+                  id:
+                    `SPONSOR-${sponsorData.paketId}`,
+
+                  name:
+                    sponsorData.paketAdi,
+
+                  category1:
+                    "Sponsor Mağaza",
+
+                  category2:
+                    "Reklam",
+
+                  itemType:
+                    "VIRTUAL",
+
+                  price:
+                    Number(
+                      sponsorFiyat
+                    ).toFixed(2)
+                }
+              ]
+            })
+          }
+        );
+
+        const data =
+          await response.json();
+
+        console.log(
+          "Sponsor ödeme cevabı:",
+          data
+        );
+
+        if (data.paymentPageUrl) {
+
+          window.location.href =
+            data.paymentPageUrl;
+
+        } else {
+
+          console.error(
+            "Sponsor ödeme oluşturulamadı:",
+            data
+          );
+
+          alert(
+            data.error ||
+            data.message ||
+            "Sponsor ödeme sayfası oluşturulamadı."
+          );
+        }
+
+      } catch (error) {
+
+        console.error(
+          "Sponsor ödeme hatası:",
+          error
+        );
+
+        alert(
+          "Sponsor ödeme sırasında bir hata oluştu."
+        );
+
+      } finally {
+
+        setLoading(false);
+
+      }
 
       return;
+    }
 
+    // ==================================================
+    // NORMAL ÜRÜN ÖDEMESİ
+    // ==================================================
+
+    if (urunler.length === 0) {
+
+      alert(
+        "Sepetiniz boş."
+      );
+
+      return;
+    }
+
+    if (!adSoyad.trim()) {
+
+      alert(
+        "Lütfen Ad Soyad bilgilerinizi giriniz."
+      );
+
+      return;
+    }
+
+    if (!telefon.trim()) {
+
+      alert(
+        "Lütfen telefon numaranızı giriniz."
+      );
+
+      return;
+    }
+
+    if (!il.trim()) {
+
+      alert(
+        "Lütfen ilinizi giriniz."
+      );
+
+      return;
+    }
+
+    if (!ilce.trim()) {
+
+      alert(
+        "Lütfen ilçenizi giriniz."
+      );
+
+      return;
+    }
+
+    if (!adres.trim()) {
+
+      alert(
+        "Lütfen teslimat adresinizi giriniz."
+      );
+
+      return;
     }
 
     setLoading(true);
 
-try{
+    try {
 
-  const adParcalari = adSoyad.trim().split(" ");
+      const adParcalari =
+        adSoyad
+          .trim()
+          .split(/\s+/);
 
-  const buyerName = adParcalari.shift() || "";
+      const buyerName =
+        adParcalari.shift() ||
+        "";
 
-  const buyerSurname = adParcalari.join(" ") || "-";
+      const buyerSurname =
+        adParcalari.join(" ") ||
+        "-";
 
-  const siparisler=[];
+      const siparisler = [];
 
-  for(const urun of urunler){
+      // ==================================================
+      // SİPARİŞLERİ FIREBASE'E KAYDET
+      // ==================================================
 
-        const ref=await addDoc(
+      for (const urun of urunler) {
 
-          collection(db,"siparisler"),
+        const ref =
+          await addDoc(
+            collection(
+              db,
+              "siparisler"
+            ),
+            {
 
-          {
+              alici:
+                auth.currentUser.email,
 
-            alici:auth.currentUser.email,
+              satici:
+                urun.satici,
 
-            satici:urun.satici,
+              ilanId:
+                urun.ilanId,
 
-            ilanId:urun.ilanId,
+              ilanBaslik:
+                urun.baslik,
 
-            ilanBaslik:urun.baslik,
+              fiyat:
+                Number(urun.fiyat),
 
-            fiyat:urun.fiyat,
+              adet:
+                Number(urun.adet),
 
-            adet:urun.adet,
+              toplam:
+                Number(urun.fiyat) *
+                Number(urun.adet),
 
-            toplam:urun.fiyat*urun.adet,
+              adSoyad,
 
-            adSoyad,
+              telefon,
 
-            telefon,
+              adres,
 
-            adres,
+              il,
 
-            il,
+              ilce,
 
-            ilce,
+              kargo,
 
-            kargo,
+              siparisNotu:
+                not,
 
-            siparisNotu:not,
+              durum:
+                "Ödeme Bekleniyor",
 
-            durum:"Ödeme Bekleniyor",
+              odemeDurumu:
+                false,
 
-            odemeDurumu:false,
+              tarih:
+                new Date()
+            }
+          );
 
-            tarih:new Date()
-
-          }
-
+        siparisler.push(
+          ref.id
         );
-
-        siparisler.push(ref.id);
-
       }
 
-      const response=await fetch(
+      // ==================================================
+      // NORMAL İYZICO ÖDEMESİ
+      // ==================================================
 
-        "http://localhost:5000/api/payment",
+      const response =
+        await fetch(
+          apiUrl("/api/payment"),
+          {
+            method: "POST",
 
-        {
+            headers: {
+              "Content-Type":
+                "application/json"
+            },
 
-          method:"POST",
+            body: JSON.stringify({
 
-          headers: {
-  "Content-Type": "application/json"
-},
+              sponsor: false,
 
-body: JSON.stringify({
+              siparisIds:
+                siparisler,
 
-  siparisIds: siparisler,
+              price:
+                Number(
+                  genelToplam
+                ).toFixed(2),
 
-  price: Number(genelToplam).toFixed(2),
+              buyerName,
 
-  buyerName: buyerName,
+              buyerSurname,
 
-  buyerSurname: buyerSurname,
+              email:
+                auth.currentUser.email,
 
-  email: auth.currentUser.email,
-productName: "HediyeAlSat Siparişi",
+              productName:
+                "HediyeAlSat Siparişi",
 
-basketItems: [
+              basketItems: [
 
-  ...urunler.map(u => ({
+                ...urunler.map(
+                  (u) => ({
 
-    id: u.id,
+                    id:
+                      u.id,
 
-    name: u.baslik,
+                    name:
+                      u.baslik,
 
-    category1: "Genel",
+                    category1:
+                      "Genel",
 
-    itemType: "PHYSICAL",
+                    itemType:
+                      "PHYSICAL",
 
-    price: String((u.fiyat * u.adet).toFixed(2))
+                    price:
+                      (
+                        Number(u.fiyat) *
+                        Number(u.adet)
+                      ).toFixed(2)
+                  })
+                ),
 
-  })),
+                ...(kargoUcreti > 0
+                  ? [
+                      {
+                        id:
+                          "KARGO",
 
-  ...(kargoUcreti > 0
-    ? [{
-        id: "KARGO",
-        name: "Kargo Ücreti",
-        category1: "Kargo",
-        itemType: "VIRTUAL",
-        price: String(Number(kargoUcreti).toFixed(2))
-      }]
-    : [])
+                        name:
+                          "Kargo Ücreti",
 
-]
-})
+                        category1:
+                          "Kargo",
 
-}
+                        itemType:
+                          "VIRTUAL",
 
-);
+                        price:
+                          Number(
+                            kargoUcreti
+                          ).toFixed(2)
+                      }
+                    ]
+                  : [])
+              ]
+            })
+          }
+        );
 
-const data = await response.json();
+      const data =
+        await response.json();
 
-if (data.paymentPageUrl) {
+      console.log(
+        "Ödeme cevabı:",
+        data
+      );
 
-    window.location.href = data.paymentPageUrl;
+      if (data.paymentPageUrl) {
 
-} else {
+        window.location.href =
+          data.paymentPageUrl;
 
-    alert("Ödeme oluşturulamadı.");
+      } else {
 
-}            
-    }catch(e){
+        console.error(
+          "Ödeme oluşturulamadı:",
+          data
+        );
 
-      console.error(e);
+        alert(
+          data.error ||
+          data.message ||
+          "Ödeme oluşturulamadı."
+        );
+      }
 
-      alert("Ödeme sırasında hata oluştu.");
+    } catch (error) {
 
-    }finally{
+      console.error(
+        "Ödeme hatası:",
+        error
+      );
+
+      alert(
+        "Ödeme sırasında hata oluştu."
+      );
+
+    } finally {
 
       setLoading(false);
-
     }
-
   }
 
-  return(
-<div className="checkout-page">
+  // ==================================================
+  // EKRAN
+  // ==================================================
+
+  return (
+
+    <div className="checkout-page">
+
+      <h1>
+        {sponsorOdeme
+          ? "🏪 Sponsor Mağaza Ödemesi"
+          : "💳 Güvenli Ödeme"}
+      </h1>
+
+      {/* =================================================
+          SPONSOR ÖDEME EKRANI
+      ================================================= */}
+
+      {sponsorOdeme ? (
+
+        <div className="checkout-layout">
+
+          <div className="checkout-left">
+
+            <div className="checkout-box">
+
+              <h2>
+                👑 Sponsor Paketiniz
+              </h2>
+
+              <div
+                style={{
+                  padding: "20px",
+                  borderRadius: "14px",
+                  background: "#fff7ed",
+                  border: "1px solid #fed7aa"
+                }}
+              >
 
-<h1>💳 Güvenli Ödeme</h1>
+                <h2 style={{ marginTop: 0 }}>
+                  {sponsorData.paketAdi}
+                </h2>
 
-{
+                <p>
+                  ⏱ Sponsor Süresi:{" "}
+                  <strong>
+                    {sponsorData.sure} gün
+                  </strong>
+                </p>
 
-urunler.length===0
+                <p>
+                  🏪 Mağaza:{" "}
+                  <strong>
+                    {sponsorData.magazaAdi}
+                  </strong>
+                </p>
 
-?
+                <p>
+                  👤 Yetkili:{" "}
+                  <strong>
+                    {sponsorData.yetkiliAdi}
+                  </strong>
+                </p>
 
-<h2>Sepetiniz boş.</h2>
+              </div>
 
-:
+            </div>
 
-<div className="checkout-layout">
+            <div className="checkout-box">
 
-<div className="checkout-left">
+              <h2>
+                👤 İletişim Bilgileri
+              </h2>
 
-<div className="checkout-box">
+              <input
+                placeholder="Ad Soyad"
+                value={adSoyad}
+                onChange={(e) =>
+                  setAdSoyad(e.target.value)
+                }
+              />
 
-<h2>📦 Teslimat Bilgileri</h2>
+              <input
+                placeholder="Telefon"
+                value={telefon}
+                onChange={(e) =>
+                  setTelefon(e.target.value)
+                }
+              />
 
-<input
-placeholder="Ad Soyad"
-value={adSoyad}
-onChange={(e)=>setAdSoyad(e.target.value)}
-/>
+              <input
+                placeholder="E-posta"
+                value={
+                  sponsorData.email ||
+                  auth.currentUser?.email ||
+                  ""
+                }
+                readOnly
+              />
+
+            </div>
 
-<input
-placeholder="Telefon"
-value={telefon}
-onChange={(e)=>setTelefon(e.target.value)}
-/>
+          </div>
 
-<input
-placeholder="İl"
-value={il}
-onChange={(e)=>setIl(e.target.value)}
-/>
+          <div className="checkout-right">
 
-<input
-placeholder="İlçe"
-value={ilce}
-onChange={(e)=>setIlce(e.target.value)}
-/>
+            <div className="checkout-summary">
 
-<textarea
-placeholder="Teslimat Adresi"
-rows="4"
-value={adres}
-onChange={(e)=>setAdres(e.target.value)}
-/>
+              <h2>
+                📋 Ödeme Özeti
+              </h2>
 
-</div>
+              <div className="summary-row">
 
-<div className="checkout-box">
+                <span>
+                  Paket
+                </span>
 
-<h2>🚚 Kargo Firması</h2>
+                <b>
+                  {sponsorData.paketAdi}
+                </b>
 
-<select
-value={kargo}
-onChange={(e)=>setKargo(e.target.value)}
->
+              </div>
 
-<option>MNG</option>
+              <div className="summary-row">
 
-<option>Aras</option>
+                <span>
+                  Sponsor Süresi
+                </span>
 
-<option>Yurtiçi</option>
+                <b>
+                  {sponsorData.sure} gün
+                </b>
 
-<option>Sürat</option>
+              </div>
 
-<option>PTT</option>
+              <hr />
 
-</select>
+              <div className="summary-row total">
 
-</div>
+                <span>
+                  Ödenecek Tutar
+                </span>
 
-<div className="checkout-box">
+                <b>
+                  {sponsorFiyat.toLocaleString(
+                    "tr-TR",
+                    {
+                      minimumFractionDigits: 2
+                    }
+                  )} TL
+                </b>
 
-<h2>📝 Sipariş Notu</h2>
+              </div>
 
-<textarea
+              <div className="secure-box">
 
-rows="3"
+                <p>
+                  🛡 SSL Güvenlik Sertifikası
+                </p>
 
-placeholder="Satıcıya notunuz"
+                <p>
+                  💳 iyzico Güvenli Ödeme
+                </p>
 
-value={not}
+                <p>
+                  🏪 Sponsor Mağaza Hizmeti
+                </p>
 
-onChange={(e)=>setNot(e.target.value)}
+              </div>
 
-/>
+              <button
+                className="checkout-btn"
+                disabled={loading}
+                onClick={odemeYap}
+              >
 
-</div>
+                {loading
+                  ? "⏳ Ödeme Hazırlanıyor..."
+                  : `💳 ${sponsorFiyat.toLocaleString(
+                      "tr-TR"
+                    )} TL Güvenli Ödeme`
+                }
 
-</div>
+              </button>
 
-<div className="checkout-right">
+              <p
+                style={{
+                  marginTop: "15px",
+                  fontSize: "13px",
+                  color: "#777",
+                  textAlign: "center"
+                }}
+              >
+                Ödeme işleminiz iyzico güvenli
+                ödeme altyapısı üzerinden
+                gerçekleştirilecektir.
+              </p>
 
-<div className="checkout-summary">
+            </div>
 
-<h2>📋 Sipariş Özeti</h2>
+          </div>
 
-<div className="summary-row">
+        </div>
 
-<span>Ara Toplam</span>
+      ) : (
 
-<b>{araToplam.toFixed(2)} TL</b>
+        // =================================================
+        // NORMAL SEPET ÖDEME EKRANI
+        // =================================================
 
-</div>
+        urunler.length === 0 ? (
 
-<div className="summary-row">
+          <h2>
+            Sepetiniz boş.
+          </h2>
 
-<span>Kargo</span>
+        ) : (
 
-<b>
+          <div className="checkout-layout">
 
-{kargoUcreti===0
+            <div className="checkout-left">
 
-?
+              <div className="checkout-box">
 
-"Ücretsiz"
+                <h2>
+                  📦 Teslimat Bilgileri
+                </h2>
 
-:
+                <input
+                  placeholder="Ad Soyad"
+                  value={adSoyad}
+                  onChange={(e) =>
+                    setAdSoyad(e.target.value)
+                  }
+                />
 
-kargoUcreti.toFixed(2)+" TL"}
+                <input
+                  placeholder="Telefon"
+                  value={telefon}
+                  onChange={(e) =>
+                    setTelefon(e.target.value)
+                  }
+                />
 
-</b>
+                <input
+                  placeholder="İl"
+                  value={il}
+                  onChange={(e) =>
+                    setIl(e.target.value)
+                  }
+                />
 
-</div>
+                <input
+                  placeholder="İlçe"
+                  value={ilce}
+                  onChange={(e) =>
+                    setIlce(e.target.value)
+                  }
+                />
 
-<div className="summary-row">
+                <textarea
+                  placeholder="Teslimat Adresi"
+                  rows="4"
+                  value={adres}
+                  onChange={(e) =>
+                    setAdres(e.target.value)
+                  }
+                />
 
-<span>İndirim</span>
+              </div>
 
-<b style={{color:"green"}}>
+              <div className="checkout-box">
 
--{indirim.toFixed(2)} TL
+                <h2>
+                  🚚 Kargo Firması
+                </h2>
 
-</b>
+                <select
+                  value={kargo}
+                  onChange={(e) =>
+                    setKargo(e.target.value)
+                  }
+                >
 
-</div>
-<div className="coupon-box">
+                  <option>MNG</option>
+                  <option>Aras</option>
+                  <option>Yurtiçi</option>
+                  <option>Sürat</option>
+                  <option>PTT</option>
 
-<input
-placeholder="🎁 İndirim Kodu"
-value={kupon}
-onChange={(e)=>setKupon(e.target.value)}
-/>
+                </select>
 
-</div>
+              </div>
 
-<hr />
+              <div className="checkout-box">
 
-<div className="summary-row total">
+                <h2>
+                  📝 Sipariş Notu
+                </h2>
 
-<span>Genel Toplam</span>
+                <textarea
+                  rows="3"
+                  placeholder="Satıcıya notunuz"
+                  value={not}
+                  onChange={(e) =>
+                    setNot(e.target.value)
+                  }
+                />
 
-<b>{genelToplam.toFixed(2)} TL</b>
+              </div>
 
-</div>
+            </div>
 
-<div className="secure-box">
+            <div className="checkout-right">
 
-<p>🛡 SSL Güvenlik Sertifikası</p>
+              <div className="checkout-summary">
 
-<p>💳 iyzico Güvenli Ödeme</p>
+                <h2>
+                  📋 Sipariş Özeti
+                </h2>
 
-<p>🚚 Ücretsiz Kargo</p>
+                <div className="summary-row">
 
-<p>↩ 14 Gün Kolay İade</p>
+                  <span>
+                    Ara Toplam
+                  </span>
 
-</div>
+                  <b>
+                    {araToplam.toFixed(2)} TL
+                  </b>
 
-<button
+                </div>
 
-className="checkout-btn"
+                <div className="summary-row">
 
-disabled={loading}
+                  <span>
+                    Kargo
+                  </span>
 
-onClick={odemeYap}
+                  <b>
+                    {kargoUcreti === 0
+                      ? "Ücretsiz"
+                      : `${kargoUcreti.toFixed(2)} TL`
+                    }
+                  </b>
 
->
+                </div>
 
-{
+                <div className="summary-row">
 
-loading
+                  <span>
+                    İndirim
+                  </span>
 
-?
+                  <b
+                    style={{
+                      color: "green"
+                    }}
+                  >
+                    -{indirim.toFixed(2)} TL
+                  </b>
 
-"Ödeme Hazırlanıyor..."
+                </div>
 
-:
+                <div className="coupon-box">
 
-"💳 Güvenli Ödemeye Geç"
+                  <input
+                    placeholder="🎁 İndirim Kodu"
+                    value={kupon}
+                    onChange={(e) =>
+                      setKupon(e.target.value)
+                    }
+                  />
 
-}
+                </div>
 
-</button>
+                <hr />
 
-</div>
+                <div className="summary-row total">
 
-</div>
+                  <span>
+                    Genel Toplam
+                  </span>
 
-</div>
+                  <b>
+                    {genelToplam.toFixed(2)} TL
+                  </b>
 
-}
+                </div>
 
-</div>
+                <div className="secure-box">
 
-);
+                  <p>
+                    🛡 SSL Güvenlik Sertifikası
+                  </p>
 
+                  <p>
+                    💳 iyzico Güvenli Ödeme
+                  </p>
+
+                  <p>
+                    🚚 Ücretsiz Kargo
+                  </p>
+
+                  <p>
+                    ↩ 14 Gün Kolay İade
+                  </p>
+
+                </div>
+
+                <button
+                  className="checkout-btn"
+                  disabled={loading}
+                  onClick={odemeYap}
+                >
+
+                  {loading
+                    ? "⏳ Ödeme Hazırlanıyor..."
+                    : "💳 Güvenli Ödemeye Geç"
+                  }
+
+                </button>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        )
+      )}
+
+    </div>
+  );
 }
 
 export default Checkout;

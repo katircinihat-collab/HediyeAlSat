@@ -297,7 +297,7 @@ className="buy-again-btn"
 </div>
 </div>
 
-))
+  )))
 
 }
 

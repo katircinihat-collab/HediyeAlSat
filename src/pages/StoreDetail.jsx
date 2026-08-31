@@ -20,11 +20,7 @@ where,
 
 addDoc,
 
-deleteDoc,
-
-updateDoc,
-
-increment
+deleteDoc
 
 } from "firebase/firestore";
 
@@ -71,8 +67,11 @@ puanlariGetir();
 
 yorumlariGetir();
 
-goruntulenmeArtir();
+// TODO: Mağaza görüntülenme sayacı güvenilir bir backend işlemi veya
+// Cloud Function üzerinden atomik olarak artırılmalı.
 
+// Store detail data is reloaded only when the route id changes.
+// eslint-disable-next-line react-hooks/exhaustive-deps
 },[id]);
 async function getir(){
 
@@ -98,7 +97,9 @@ const q=query(
 
 collection(db,"ilanlar"),
 
-where("magazaId","==",id)
+where("magazaId","==",id),
+
+where("onay","==",true)
 
 );
 
@@ -110,26 +111,6 @@ setIlanlar(
     id: doc.id
   }))
 );
-
-}
-
-async function goruntulenmeArtir(){
-
-try{
-
-await updateDoc(
-
-doc(db,"magazalar",id),
-
-{
-
-goruntulenme:increment(1)
-
-}
-
-);
-
-}catch(e){}
 
 }
 
@@ -185,17 +166,8 @@ tarih:new Date()
 
 );
 
-await updateDoc(
-
-doc(db,"magazalar",id),
-
-{
-
-takipci:increment(1)
-
-}
-
-);
+// TODO: Takipçi sayacı backend transaction veya Cloud Function ile
+// takip belgelerinden güvenilir biçimde hesaplanmalı.
 
 setTakipEdiyor(true);
 
@@ -215,17 +187,8 @@ doc(db,"takipciler",takipDoc)
 
 );
 
-await updateDoc(
-
-doc(db,"magazalar",id),
-
-{
-
-takipci:increment(-1)
-
-}
-
-);
+// TODO: Takipçi sayacı backend transaction veya Cloud Function ile
+// takip belgelerinden güvenilir biçimde hesaplanmalı.
 
 setTakipEdiyor(false);
 

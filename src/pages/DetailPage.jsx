@@ -20,8 +20,6 @@ import {
 import {
   doc,
   getDoc,
-  updateDoc,
-  increment,
   addDoc,
   collection,
   query,
@@ -69,6 +67,8 @@ function DetailPage() {
 
     getir();
 
+  // Reload only when the route id changes; `getir` is scoped to this render.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
 
@@ -91,25 +91,8 @@ function DetailPage() {
       }
 
 
-      /* GÖRÜNTÜLENME */
-
-      try {
-
-        await updateDoc(
-          ref,
-          {
-            goruntulenme: increment(1)
-          }
-        );
-
-      } catch (e) {
-
-        console.log(
-          "Görüntülenme güncellenemedi:",
-          e
-        );
-
-      }
+      // TODO: Görüntülenme sayacı güvenilir bir backend işlemi veya
+      // Cloud Function üzerinden atomik olarak artırılmalı.
 
 
       const data = {
@@ -459,40 +442,8 @@ function DetailPage() {
           : 0;
 
 
-      /* =========================
-         İLAN PUANINI GÜNCELLE
-      ========================= */
-
-      try {
-
-        await updateDoc(
-
-          doc(
-            db,
-            "ilanlar",
-            id
-          ),
-
-          {
-
-            puan:
-              ortalama,
-
-            yorumSayisi:
-              yorumSayisi
-
-          }
-
-        );
-
-      } catch (error) {
-
-        console.error(
-          "Ürün puanı güncellenemedi:",
-          error
-        );
-
-      }
+      // TODO: İlan puanı ve yorum sayısı güvenilir bir backend işlemi veya
+      // Cloud Function tarafından yorum belgelerinden hesaplanmalı.
 
 
       /* =========================

@@ -6,8 +6,6 @@ getDoc,
 updateDoc
 } from "firebase/firestore";
 
-import { useRef } from "react";
-
 import {db} from "../firebase";
 
 import { auth } from "../firebase";
@@ -68,6 +66,8 @@ id:snap.id,
 
 }
 getir();
+// Preserve the existing route-id-based authorization/load behavior.
+// eslint-disable-next-line react-hooks/exhaustive-deps
 },[id]);
 
 

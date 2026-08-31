@@ -36,6 +36,13 @@ const walletRoutes =
 const walletReleaseRoutes =
     require("./routes/walletReleaseRoutes");
 
+// AI HEDİYE ASİSTANI
+const aiRoutes =
+    require("./routes/aiRoutes");
+
+const adminRoutes =
+    require("./routes/adminRoutes");
+
 
 // =====================================================
 // API ROUTELARI
@@ -78,19 +85,26 @@ app.use(
 // WALLET RELEASE
 // /api/wallet-release
 // -----------------------------------------------------
-//
-// İyzico blokaj süresi dolan satışların:
-//
-// pending
-//    ↓
-// balance
-//
-// olarak aktarılmasını yönetir.
-//
 
 app.use(
     "/api/wallet-release",
     walletReleaseRoutes
+);
+
+
+// -----------------------------------------------------
+// AI HEDİYE ASİSTANI
+// /api/ai
+// -----------------------------------------------------
+
+app.use(
+    "/api/ai",
+    aiRoutes
+);
+
+app.use(
+    "/api/admin",
+    adminRoutes
 );
 
 
@@ -140,7 +154,7 @@ app.use((req, res) => {
 // GENEL HATA
 // =====================================================
 
-app.use((err, req, res, next) => {
+app.use((err, req, res, _next) => {
 
     console.error(
         "SERVER HATASI:",
@@ -198,6 +212,10 @@ app.listen(
 
         console.log(
             "🔓 Wallet Release API: /api/wallet-release"
+        );
+
+        console.log(
+            "🤖 AI API: /api/ai"
         );
 
         console.log(

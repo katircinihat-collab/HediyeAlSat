@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "../firebase";
 import ProductCard from "./ProductCard";
 
@@ -11,16 +11,16 @@ function TrendingProducts() {
 
     async function getir() {
 
-      const snap = await getDocs(collection(db, "ilanlar"));
+      const snap = await getDocs(
+        query(collection(db, "ilanlar"), where("onay", "==", true))
+      );
 
       const trend = snap.docs
         .map(doc => ({
           id: doc.id,
           ...doc.data()
         }))
-        .filter(
-          item => item.onay === true && item.oneCikan === true
-        );
+        .filter(item => item.oneCikan === true);
 
       setUrunler(trend);
 

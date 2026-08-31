@@ -1,11 +1,24 @@
+import SponsorApplication from "./pages/SponsorApplication";
+import FlashSalePage from "./pages/FlashSalePage";
+
+import GiftIdeasPage from "./pages/GiftIdeasPage";
+import SponsorStorePage from "./pages/SponsorStorePage";
 import AdminWithdraw from "./pages/AdminWithdraw";
+
 import MyOrders from "./pages/MyOrders";
 import Seller from "./pages/Seller";
 import Cart from "./pages/Cart";
 import SellerOrders from "./pages/SellerOrders";
+import Kategori from "./pages/Kategori";
+import Hakkimizda from "./pages/Hakkimizda";
+import TeslimatIade from "./pages/TeslimatIade";
+import Gizlilik from "./pages/Gizlilik";
+import MesafeliSatis from "./pages/MesafeliSatis";
+import Iletisim from "./pages/Iletisim";
+
+import SpecialDay from "./pages/SpecialDay";
 
 import PaymentSuccess from "./pages/PaymentSuccess";
-import Store from "./pages/Store";
 import MyStore from "./pages/MyStore";
 import PaymentFail from "./pages/PaymentFail";
 import Profile from "./pages/Profile";
@@ -20,7 +33,9 @@ import Login from "./pages/Login";
 import Listings from "./pages/Listings";
 
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+
 import "./styles/pages/messages.css";
+
 import Messages from "./pages/Messages";
 import Home from "./pages/Home";
 import AddListingPage from "./pages/AddListingPage";
@@ -30,6 +45,8 @@ import Stores from "./pages/Stores";
 import CreateStore from "./pages/CreateStore";
 import StoreDetail from "./pages/StoreDetail";
 import Checkout from "./pages/Checkout";
+import NotFound from "./pages/NotFound";
+import AdminRoute from "./components/AdminRoute";
 
 
 /* ==============================
@@ -79,7 +96,7 @@ import "./styles/pages/checkout.css";
 import "./styles/pages/admin.css";
 import "./styles/pages/profile.css";
 import "./styles/pages/login.css";
-
+import "./styles/pages/special-day.css";
 
 function App() {
 
@@ -97,6 +114,16 @@ function App() {
         <Route
           path="/"
           element={<Home />}
+        />
+
+
+        {/* =========================
+            KATEGORİ
+        ========================= */}
+
+        <Route
+          path="/kategori/:kategori"
+          element={<Kategori />}
         />
 
 
@@ -147,6 +174,33 @@ function App() {
         <Route
           path="/ilanlar/kiralik"
           element={<Kiralik />}
+        />
+
+
+        {/* =========================
+            ÖZEL GÜNLER
+        ========================= */}
+<Route
+  path="/gunun-firsatlari"
+  element={<FlashSalePage />}
+/>
+
+<Route
+  path="/hediye-fikirleri"
+  element={<GiftIdeasPage />}
+/>
+
+<Route
+  path="/sponsor-magaza"
+  element={<SponsorStorePage />}
+/>
+<Route
+  path="/sponsor-basvuru"
+  element={<SponsorApplication />}
+/>
+        <Route
+          path="/ozel-gun/:gun"
+          element={<SpecialDay />}
         />
 
 
@@ -216,6 +270,36 @@ function App() {
 
 
         {/* =========================
+            KURUMSAL SAYFALAR
+        ========================= */}
+
+        <Route
+          path="/hakkimizda"
+          element={<Hakkimizda />}
+        />
+
+        <Route
+          path="/teslimat-iade"
+          element={<TeslimatIade />}
+        />
+
+        <Route
+          path="/gizlilik"
+          element={<Gizlilik />}
+        />
+
+        <Route
+          path="/mesafeli-satis"
+          element={<MesafeliSatis />}
+        />
+
+        <Route
+          path="/iletisim"
+          element={<Iletisim />}
+        />
+
+
+        {/* =========================
             KULLANICI
         ========================= */}
 
@@ -281,18 +365,24 @@ function App() {
 
         <Route
           path="/admin"
-          element={<Admin />}
-        />
-
-        <Route
-          path="/admin/:id"
-          element={<AdminDetail />}
+          element={<AdminRoute><Admin /></AdminRoute>}
         />
 
         <Route
           path="/admin/withdraw"
-          element={<AdminWithdraw />}
+          element={<AdminRoute><AdminWithdraw /></AdminRoute>}
         />
+
+        <Route
+          path="/admin/:id"
+          element={<AdminRoute><AdminDetail /></AdminRoute>}
+        />
+
+        <Route
+          path="*"
+          element={<NotFound />}
+        />
+
 
       </Routes>
 
@@ -301,5 +391,6 @@ function App() {
   );
 
 }
+
 
 export default App;

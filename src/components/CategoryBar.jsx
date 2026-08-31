@@ -1,18 +1,15 @@
-import { useState } from "react";
 import "../styles/components/category-bar.css";
 import categories from "../data/categories";
+import { useNavigate } from "react-router-dom";
 
 function CategoryBar({
-
+  kategori,
   setKategori,
-
   favoriler,
-
   setFavoriler
-
 }) {
 
-  const [aktifKategori, setAktifKategori] = useState("");
+  const navigate = useNavigate();
 
   const ikonlar = {
 
@@ -28,130 +25,146 @@ function CategoryBar({
 
   };
 
-  function kategoriSec(kategori){
 
-    setAktifKategori(kategori);
+  const sluglar = {
 
-    setKategori(kategori);
+    "Çiçek": "cicek",
+    "Takı & Aksesuar": "taki-aksesuar",
+    "El Yapımı": "el-yapimi",
+    "2. El Hediyelik": "2-el-hediyelik",
+    "Kişiye Özel": "kisiye-ozel",
+    "Organizasyon": "organizasyon",
+    "Ev Dekorasyonu": "ev-dekorasyonu",
+    "Oyuncak": "oyuncak",
+    "Hediye Kutuları": "hediye-kutulari"
+
+  };
+
+
+  function kategoriSec(yeniKategori) {
+
+    console.log(
+      "Kategori seçildi:",
+      yeniKategori
+    );
+
+
+    if (!yeniKategori) {
+
+      setKategori("");
+
+      navigate("/");
+
+      return;
+
+    }
+
+
+    setKategori(yeniKategori);
+
+
+    const slug =
+      sluglar[yeniKategori];
+
+
+    if (slug) {
+
+      navigate(
+        `/kategori/${slug}`
+      );
+
+    }
 
   }
+
 
   return (
 
     <section className="categories">
 
       <button
-
+        type="button"
         className={
-
-          aktifKategori===""
-
-          ?
-
-          "category-item active"
-
-          :
-
-          "category-item"
-
+          kategori === ""
+            ? "category-item active"
+            : "category-item"
         }
-
-        onClick={()=>kategoriSec("")}
-
+        onClick={() =>
+          kategoriSec("")
+        }
       >
-
         🌍 Tümü
-
       </button>
 
-      {
 
-        Object.keys(categories).map((kategori)=>(
+      {Object.keys(categories).map(
+        (kategoriAdi) => (
 
           <button
-
-            key={kategori}
-
+            type="button"
+            key={kategoriAdi}
             className={
-
-              aktifKategori===kategori
-
-              ?
-
-              "category-item active"
-
-              :
-
-              "category-item"
-
+              kategori === kategoriAdi
+                ? "category-item active"
+                : "category-item"
             }
-
-            onClick={()=>kategoriSec(kategori)}
-
+            onClick={() =>
+              kategoriSec(kategoriAdi)
+            }
           >
 
-            {ikonlar[kategori] || "📦"} {kategori}
+            {ikonlar[kategoriAdi] || "📦"}{" "}
+
+            {kategoriAdi}
 
           </button>
 
-        ))
+        )
+      )}
 
-      }
 
       <button
-
+        type="button"
         className="category-item"
+        onClick={() => {
 
-        onClick={()=>{
-
-          alert("📍 Yakında konuma göre filtreleme eklenecek.");
+          alert(
+            "📍 Yakında konuma göre filtreleme eklenecek."
+          );
 
         }}
-
       >
-
         📍 Konum
-
       </button>
 
+
       <button
-
+        type="button"
         className="category-item"
+        onClick={() => {
 
-        onClick={()=>{
-
-          alert("☎️ Telefon filtresi yakında eklenecek.");
+          alert(
+            "☎️ Telefon filtresi yakında eklenecek."
+          );
 
         }}
-
       >
-
         ☎️ Tel
-
       </button>
 
+
       <button
-
+        type="button"
         className={
-
           favoriler
-
-          ?
-
-          "category-item active"
-
-          :
-
-          "category-item"
-
+            ? "category-item active"
+            : "category-item"
         }
-
-        onClick={()=>setFavoriler(!favoriler)}
-
+        onClick={() =>
+          setFavoriler(!favoriler)
+        }
       >
-
         ❤️ Favorilerim
-
       </button>
 
     </section>

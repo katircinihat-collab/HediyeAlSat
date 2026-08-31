@@ -1,0 +1,306 @@
+/* =====================================================
+   SPECIAL DAY PAGE
+===================================================== */
+
+.special-day-page {
+  min-height: 100vh;
+  background: #f8f9fc;
+  padding-bottom: 60px;
+}
+
+.special-day-container {
+  width: min(1200px, 92%);
+  margin: 0 auto;
+  padding-top: 25px;
+}
+
+/* =====================================================
+   GERİ BUTONU
+===================================================== */
+
+.special-day-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  margin-bottom: 25px;
+  padding: 10px 18px;
+
+  background: white;
+  color: #333;
+
+  border-radius: 12px;
+  text-decoration: none;
+
+  font-weight: 600;
+
+  box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+
+  transition: 0.2s;
+}
+
+.special-day-back:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+}
+
+/* =====================================================
+   HEADER
+===================================================== */
+
+.special-day-header {
+  text-align: center;
+
+  background: white;
+
+  border-radius: 24px;
+
+  padding: 40px 20px;
+
+  margin-bottom: 35px;
+
+  box-shadow: 0 5px 25px rgba(0,0,0,0.07);
+}
+
+.special-day-big-emoji {
+  font-size: 64px;
+  margin-bottom: 10px;
+}
+
+.special-day-header h1 {
+  margin: 0;
+
+  font-size: 38px;
+
+  color: #222;
+}
+
+.special-day-header p {
+  margin: 12px auto 0;
+
+  max-width: 650px;
+
+  color: #777;
+
+  font-size: 17px;
+
+  line-height: 1.6;
+}
+
+/* =====================================================
+   PRODUCTS
+===================================================== */
+
+.special-day-products {
+  margin-top: 20px;
+}
+
+.special-day-products-header {
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: center;
+
+  margin-bottom: 20px;
+}
+
+.special-day-products-header h2 {
+  margin: 0;
+
+  font-size: 25px;
+
+  color: #222;
+}
+
+.special-day-products-header p {
+  margin: 5px 0 0;
+
+  color: #777;
+}
+
+.special-day-count {
+  background: white;
+
+  padding: 10px 16px;
+
+  border-radius: 20px;
+
+  font-weight: 600;
+
+  color: #555;
+
+  box-shadow: 0 3px 10px rgba(0,0,0,0.07);
+}
+
+/* =====================================================
+   PRODUCT GRID
+===================================================== */
+
+.special-day-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+
+  gap: 20px;
+}
+
+/* =====================================================
+   LOADING
+===================================================== */
+
+.special-day-loading {
+  background: white;
+
+  border-radius: 20px;
+
+  padding: 60px 20px;
+
+  text-align: center;
+
+  box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+}
+
+.special-day-spinner {
+  font-size: 45px;
+
+  margin-bottom: 15px;
+}
+
+.special-day-loading p {
+  color: #777;
+
+  margin: 0;
+}
+
+/* =====================================================
+   EMPTY
+===================================================== */
+
+.special-day-empty,
+.special-day-not-found {
+  background: white;
+
+  border-radius: 24px;
+
+  padding: 70px 20px;
+
+  text-align: center;
+
+  box-shadow: 0 5px 25px rgba(0,0,0,0.07);
+
+  margin-top: 30px;
+}
+
+.special-day-empty-icon {
+  font-size: 60px;
+
+  margin-bottom: 15px;
+}
+
+.special-day-empty h3,
+.special-day-not-found h1 {
+  margin: 0 0 10px;
+
+  color: #222;
+}
+
+.special-day-empty p,
+.special-day-not-found p {
+  color: #777;
+
+  margin-bottom: 25px;
+}
+
+/* =====================================================
+   ANA SAYFAYA DÖN
+===================================================== */
+
+.special-day-back-button {
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  padding: 12px 22px;
+
+  background: #222;
+
+  color: white;
+
+  border-radius: 12px;
+
+  text-decoration: none;
+
+  font-weight: 600;
+
+  transition: 0.2s;
+}
+
+.special-day-back-button:hover {
+  transform: translateY(-2px);
+
+  opacity: 0.9;
+}
+
+/* =====================================================
+   MOBİL
+===================================================== */
+
+@media (max-width: 1000px) {
+
+  .special-day-grid {
+    grid-template-columns:
+      repeat(3, minmax(0, 1fr));
+  }
+
+}
+
+@media (max-width: 700px) {
+
+  .special-day-container {
+    width: 94%;
+  }
+
+  .special-day-header {
+    padding: 30px 15px;
+  }
+
+  .special-day-big-emoji {
+    font-size: 50px;
+  }
+
+  .special-day-header h1 {
+    font-size: 30px;
+  }
+
+  .special-day-header p {
+    font-size: 15px;
+  }
+
+  .special-day-products-header {
+    flex-direction: column;
+
+    align-items: flex-start;
+
+    gap: 12px;
+  }
+
+  .special-day-grid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+
+    gap: 12px;
+  }
+
+}
+
+@media (max-width: 450px) {
+
+  .special-day-grid {
+    grid-template-columns: 1fr;
+  }
+
+}

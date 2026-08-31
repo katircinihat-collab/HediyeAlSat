@@ -2,6 +2,8 @@ import "../styles/layout/navbar.css";
 
 import {
   collection,
+  doc,
+  getDoc,
   query,
   where,
   getDocs
@@ -29,377 +31,1022 @@ import {
   signOut
 } from "firebase/auth";
 
+
 function Navbar() {
 
   const navigate = useNavigate();
-
   const menuRef = useRef(null);
+  const searchRef = useRef(null);
 
   const [user, setUser] = useState(undefined);
   const [magazaId, setMagazaId] = useState(null);
 
   const [menuAcik, setMenuAcik] = useState(false);
-
   const [arama, setArama] = useState("");
+  const [aramaAcik, setAramaAcik] = useState(false);
 
-  const ADMIN_EMAIL = "alper54nihat@hediyealsat.com";
+  const [scrollY, setScrollY] = useState(0);
+
+  const ADMIN_EMAIL =
+    "alper54nihat@hediyealsat.com";
+
+
+  /* =========================================
+     KULLANICI KONTROLÜ
+  ========================================= */
+
   useEffect(() => {
 
-    const unsub = onAuthStateChanged(auth, async (currentUser) => {
+    const unsub = onAuthStateChanged(
+      auth,
+      async (currentUser) => {
 
-      setUser(currentUser);
+        setUser(currentUser);
 
-      if (currentUser) {
+        if (!currentUser) {
 
-        const q = query(
+          setMagazaId(null);
 
-          collection(db, "magazalar"),
+          return;
 
-          where("sahip", "==", currentUser.email)
+        }
 
-        );
+        try {
 
-        const snap = await getDocs(q);
+          const uidQuery = query(
 
-        if (!snap.empty) {
+            collection(
+              db,
+              "magazalar"
+            ),
 
-          setMagazaId(snap.docs[0].id);
+            where(
+              "sahipUid",
+              "==",
+              currentUser.uid
+            )
 
-        } else {
+          );
+
+          const uidSnap = await getDocs(uidQuery);
+
+          const emailSnap = uidSnap.empty
+            ? await getDocs(query(
+              collection(db, "magazalar"),
+              where("sahip", "==", currentUser.email)
+            ))
+            : null;
+
+          let bulunanMagazaId = !uidSnap.empty
+            ? uidSnap.docs[0].id
+            : emailSnap?.docs[0]?.id;
+
+          if (!bulunanMagazaId) {
+            const legacySnap = await getDoc(
+              doc(db, "magazalar", currentUser.email)
+            );
+
+            if (legacySnap.exists()) bulunanMagazaId = legacySnap.id;
+          }
+
+          if (bulunanMagazaId) {
+
+            setMagazaId(bulunanMagazaId);
+
+          } else {
+
+            setMagazaId(null);
+
+          }
+
+        } catch (error) {
+
+          console.error(
+            "Mağaza kontrolü hatası:",
+            error
+          );
 
           setMagazaId(null);
 
         }
 
-      } else {
-
-        setMagazaId(null);
-
       }
-
-    });
+    );
 
     return () => unsub();
 
   }, []);
+
+
+  /* =========================================
+     DIŞARI TIKLAYINCA MENÜ KAPAT
+  ========================================= */
 
   useEffect(() => {
 
     function kapat(e) {
 
       if (
-
         menuRef.current &&
-
         !menuRef.current.contains(e.target)
-
       ) {
 
         setMenuAcik(false);
 
       }
 
+      if (
+        searchRef.current &&
+        !searchRef.current.contains(e.target)
+      ) {
+
+        setAramaAcik(false);
+
+      }
+
     }
 
-    document.addEventListener("mousedown", kapat);
+    document.addEventListener(
+      "mousedown",
+      kapat
+    );
 
     return () => {
 
-      document.removeEventListener("mousedown", kapat);
+      document.removeEventListener(
+        "mousedown",
+        kapat
+      );
 
     };
 
   }, []);
 
+
+  /* =========================================
+     SCROLL
+  ========================================= */
+
+  useEffect(() => {
+
+    function scrollKontrol() {
+
+      setScrollY(window.scrollY);
+
+    }
+
+    window.addEventListener(
+      "scroll",
+      scrollKontrol
+    );
+
+    return () => {
+
+      window.removeEventListener(
+        "scroll",
+        scrollKontrol
+      );
+
+    };
+
+  }, []);
+
+
+  /* =========================================
+     ÇIKIŞ
+  ========================================= */
+
   async function cikis() {
 
-    await signOut(auth);
+    try {
 
-    navigate("/login");
+      await signOut(auth);
+
+      setMenuAcik(false);
+
+      navigate("/login");
+
+    } catch (error) {
+
+      console.error(
+        "Çıkış hatası:",
+        error
+      );
+
+    }
 
   }
+
+
+  /* =========================================
+     ARAMA
+  ========================================= */
 
   function ara(e) {
 
     e.preventDefault();
 
-    if (!arama.trim()) return;
+    const temizArama =
+      arama.trim();
+
+    if (!temizArama) {
+
+      navigate("/");
+
+      return;
+
+    }
+
+    setAramaAcik(false);
 
     navigate(
+      "/?arama=" +
+      encodeURIComponent(
+        temizArama
+      )
+    );
 
-      "/?arama=" + encodeURIComponent(arama)
+  }
+
+
+  /* =========================================
+     ARAMA TEMİZLE
+  ========================================= */
+
+  function aramayiTemizle() {
+
+    setArama("");
+
+    navigate("/");
+
+  }
+
+
+  /* =========================================
+     MENÜ KAPAT
+  ========================================= */
+
+  function menuKapat() {
+
+    setMenuAcik(false);
+
+  }
+
+
+  /* =========================================
+     KULLANICI ADI
+  ========================================= */
+
+  function kullaniciAdi() {
+
+    if (!user?.email) {
+
+      return "Hesabım";
+
+    }
+
+    return user.email
+      .split("@")[0];
+
+  }
+
+
+  /* =========================================
+     YÜKLENİYOR
+  ========================================= */
+
+  if (user === undefined) {
+
+    return (
+
+      <header className="navbar navbar-loading">
+
+        <div className="navbar-top">
+
+          <Link
+            to="/"
+            className="navbar-logo"
+          >
+
+            <span className="logo-icon">
+              🎁
+            </span>
+
+            <div className="logo-text">
+
+              <span>
+                Hediye
+              </span>
+
+              <b>
+                AlSat
+              </b>
+
+            </div>
+
+          </Link>
+
+        </div>
+
+      </header>
 
     );
 
   }
 
-  if (user === undefined) {
 
-    return null;
+  return (
 
-  }
-return (
-
-<header className="navbar">
-
-  <div className="navbar-top">
-
-    <Link
-      to="/"
-      className="navbar-logo"
+    <header
+      className={
+        `navbar ${
+          scrollY > 20
+            ? "navbar-scrolled"
+            : ""
+        }`
+      }
     >
 
-      🎁
+      {/* =====================================
+          ÜST SATIR
+      ===================================== */}
 
-      <div className="logo-text">
+      <div className="navbar-top">
 
-        <span>Hediye</span>
 
-        <b>AlSat</b>
+        {/* LOGO */}
 
-      </div>
+        <Link
+          to="/"
+          className="navbar-logo"
+          aria-label="HediyeAlSat Ana Sayfa"
+        >
 
-    </Link>
+          <span className="logo-icon">
+            🎁
+          </span>
 
-    <form
-      className="navbar-search"
-      onSubmit={ara}
-    >
+          <div className="logo-text">
 
-      <input
-        type="text"
-        placeholder="🎁 Hediye, oyuncak, çiçek ara..."
-        value={arama}
-        onChange={(e)=>setArama(e.target.value)}
-      />
+            <span>
+              Hediye
+            </span>
 
-      <button type="submit">
+            <b>
+              AlSat
+            </b>
 
-        🔍
-
-      </button>
-
-    </form>
-
-    <div className="navbar-right">
-
-      <Link className="nav-icon" to="/favoriler">
-
-        ❤️
-
-      </Link>
-
-      <Link className="nav-icon" to="/sepet">
-
-        🛒
-
-      </Link>
-
-      <Link className="nav-icon" to="/mesajlar">
-
-        💬
-
-      </Link>
-
-      {user?.email===ADMIN_EMAIL && (
-
-        <Link to="/admin">
-
-          <button className="admin-btn">
-
-            👑 Admin
-
-          </button>
+          </div>
 
         </Link>
 
-      )}
 
-      {user ? (
+        {/* =================================
+            ARAMA
+        ================================= */}
 
-        <div
-          className="navbar-user"
-          ref={menuRef}
+        <form
+          className={
+            `navbar-search ${
+              aramaAcik
+                ? "search-active"
+                : ""
+            }`
+          }
+          onSubmit={ara}
+          ref={searchRef}
         >
 
-          <button
-            className="user-btn"
-            onClick={()=>setMenuAcik(!menuAcik)}
-          >
+          <span className="search-icon">
+            🔍
+          </span>
 
-            👤 {user.email.split("@")[0]} ▼
+          <input
+            type="text"
+            placeholder="Hediye, oyuncak, çiçek, takı ara..."
+            value={arama}
+            onFocus={() =>
+              setAramaAcik(true)
+            }
+            onChange={(e) =>
+              setArama(
+                e.target.value
+              )
+            }
+            aria-label="Ürün ara"
+          />
 
-          </button>
-          {menuAcik && (
+          {arama && (
 
-            <div className="user-dropdown">
-
-              <Link
-                to="/profil"
-                onClick={()=>setMenuAcik(false)}
-              >
-
-                👤 Profilim
-
-              </Link>
-
-              <Link
-                to="/ilanlarim"
-                onClick={()=>setMenuAcik(false)}
-              >
-
-                📦 İlanlarım
-
-              </Link>
-
-              <Link
-                to="/favoriler"
-                onClick={()=>setMenuAcik(false)}
-              >
-
-                ❤️ Favorilerim
-
-              </Link>
-
-              <Link
-                to="/siparislerim"
-                onClick={()=>setMenuAcik(false)}
-              >
-
-                📋 Siparişlerim
-
-              </Link>
-
-              <Link
-                to="/ayarlar"
-                onClick={()=>setMenuAcik(false)}
-              >
-
-                ⚙️ Ayarlar
-
-              </Link>
-
-              <hr/>
-
-              {magazaId ? (
-
-                <>
-
-                  <Link
-                    to={`/magaza/${magazaId}`}
-                    onClick={()=>setMenuAcik(false)}
-                  >
-
-                    🏪 Mağazam
-
-                  </Link>
-
-                  <Link
-                    to="/seller"
-                    onClick={()=>setMenuAcik(false)}
-                  >
-
-                    📊 Satıcı Paneli
-
-                  </Link>
-
-                </>
-
-              ) : (
-
-                <Link
-                  to="/magaza-olustur"
-                  onClick={()=>setMenuAcik(false)}
-                >
-
-                  🏪 Mağaza Oluştur
-
-                </Link>
-
-              )}
-
-              <hr/>
-
-              <button
-                className="logout-btn"
-                onClick={cikis}
-              >
-
-                🚪 Çıkış Yap
-
-              </button>
-
-            </div>
+            <button
+              type="button"
+              className="search-clear"
+              onClick={
+                aramayiTemizle
+              }
+              aria-label="Aramayı temizle"
+              title="Temizle"
+            >
+              ×
+            </button>
 
           )}
 
-        </div>
+          <button
+            type="submit"
+            className="search-button"
+            aria-label="Ara"
+          >
 
-      ) : (
-
-        <Link to="/login">
-
-          <button className="login-btn">
-
-            Giriş Yap
+            Ara
 
           </button>
 
-        </Link>
+        </form>
 
-      )}
 
-      <Link to="/ilan-ver">
+        {/* =================================
+            SAĞ TARAF
+        ================================= */}
 
-        <button className="add-btn">
+        <div className="navbar-right">
 
-          + İlan Ver
 
-        </button>
+          {/* FAVORİLER */}
 
-      </Link>
+          <Link
+            className="nav-icon"
+            to="/favoriler"
+            title="Favorilerim"
+            aria-label="Favorilerim"
+          >
 
-    </div>
+            <span>
+              ❤️
+            </span>
 
-  </div>
-  <nav className="navbar-menu">
+          </Link>
 
-    <NavLink to="/">
 
-      Ana Sayfa
+          {/* SEPET */}
 
-    </NavLink>
+          <Link
+            className="nav-icon"
+            to="/sepet"
+            title="Sepetim"
+            aria-label="Sepetim"
+          >
 
-    <NavLink to="/ilanlar">
+            <span>
+              🛒
+            </span>
 
-      İlanlar
+          </Link>
 
-    </NavLink>
 
-    <NavLink to="/magazalar">
+          {/* MESAJLAR */}
 
-      Mağazalar
+          <Link
+            className="nav-icon"
+            to="/mesajlar"
+            title="Mesajlar"
+            aria-label="Mesajlar"
+          >
 
-    </NavLink>
+            <span>
+              💬
+            </span>
 
-    <NavLink to="/mesajlar">
+          </Link>
 
-      Mesajlar
 
-    </NavLink>
+          {/* ADMIN */}
 
-    <NavLink to="/ilanlar/kiralik">
+          {user?.email === ADMIN_EMAIL && (
 
-      Kiralık
+            <Link
+              to="/admin"
+              className="admin-link"
+              title="Yönetim Paneli"
+            >
 
-    </NavLink>
+              <button
+                className="admin-btn"
+              >
 
-  </nav>
+                👑
+                <span>
+                  Admin
+                </span>
 
-</header>
+              </button>
 
-);
+            </Link>
+
+          )}
+
+
+          {/* =================================
+              KULLANICI
+          ================================= */}
+
+          {user ? (
+
+            <div
+              className="navbar-user"
+              ref={menuRef}
+            >
+
+              <button
+                className={
+                  `user-btn ${
+                    menuAcik
+                      ? "user-btn-active"
+                      : ""
+                  }`
+                }
+                onClick={() =>
+                  setMenuAcik(
+                    !menuAcik
+                  )
+                }
+                aria-expanded={
+                  menuAcik
+                }
+              >
+
+                <span className="user-avatar">
+                  👤
+                </span>
+
+                <span className="user-name">
+                  {kullaniciAdi()}
+                </span>
+
+                <span
+                  className={
+                    `user-arrow ${
+                      menuAcik
+                        ? "arrow-up"
+                        : ""
+                    }`
+                  }
+                >
+                  ▼
+                </span>
+
+              </button>
+
+
+              {/* DROPDOWN */}
+
+              {menuAcik && (
+
+                <div
+                  className="user-dropdown"
+                >
+
+
+                  {/* PROFİL BAŞLIK */}
+
+                  <div className="dropdown-user-header">
+
+                    <div className="dropdown-avatar">
+                      👤
+                    </div>
+
+                    <div className="dropdown-user-info">
+
+                      <strong>
+                        {kullaniciAdi()}
+                      </strong>
+
+                      <small>
+                        {user.email}
+                      </small>
+
+                    </div>
+
+                  </div>
+
+
+                  <div className="dropdown-divider" />
+
+
+                  {/* PROFİL */}
+
+                  <Link
+                    to="/profil"
+                    onClick={
+                      menuKapat
+                    }
+                  >
+
+                    <span>
+                      👤
+                    </span>
+
+                    <div>
+                      <strong>
+                        Profilim
+                      </strong>
+
+                      <small>
+                        Hesap bilgilerin
+                      </small>
+                    </div>
+
+                  </Link>
+
+
+                  {/* İLANLARIM */}
+
+                  <Link
+                    to="/ilanlarim"
+                    onClick={
+                      menuKapat
+                    }
+                  >
+
+                    <span>
+                      📦
+                    </span>
+
+                    <div>
+                      <strong>
+                        İlanlarım
+                      </strong>
+
+                      <small>
+                        Ürünlerini yönet
+                      </small>
+                    </div>
+
+                  </Link>
+
+
+                  {/* FAVORİLER */}
+
+                  <Link
+                    to="/favoriler"
+                    onClick={
+                      menuKapat
+                    }
+                  >
+
+                    <span>
+                      ❤️
+                    </span>
+
+                    <div>
+                      <strong>
+                        Favorilerim
+                      </strong>
+
+                      <small>
+                        Kaydettiğin ürünler
+                      </small>
+                    </div>
+
+                  </Link>
+
+
+                  {/* SİPARİŞLER */}
+
+                  <Link
+                    to="/siparislerim"
+                    onClick={
+                      menuKapat
+                    }
+                  >
+
+                    <span>
+                      📋
+                    </span>
+
+                    <div>
+                      <strong>
+                        Siparişlerim
+                      </strong>
+
+                      <small>
+                        Siparişlerini takip et
+                      </small>
+                    </div>
+
+                  </Link>
+
+
+                  {/* AYARLAR */}
+
+                  <Link
+                    to="/ayarlar"
+                    onClick={
+                      menuKapat
+                    }
+                  >
+
+                    <span>
+                      ⚙️
+                    </span>
+
+                    <div>
+                      <strong>
+                        Ayarlar
+                      </strong>
+
+                      <small>
+                        Hesap ayarları
+                      </small>
+                    </div>
+
+                  </Link>
+
+
+                  <div className="dropdown-divider" />
+
+
+                  {/* MAĞAZA */}
+
+                  {magazaId ? (
+
+                    <>
+
+                      <Link
+                        to={
+                          `/magaza/${magazaId}`
+                        }
+                        onClick={
+                          menuKapat
+                        }
+                        className="store-menu-link"
+                      >
+
+                        <span>
+                          🏪
+                        </span>
+
+                        <div>
+                          <strong>
+                            Mağazam
+                          </strong>
+
+                          <small>
+                            Mağazanı görüntüle
+                          </small>
+                        </div>
+
+                      </Link>
+
+
+                      <Link
+                        to="/seller"
+                        onClick={
+                          menuKapat
+                        }
+                        className="seller-menu-link"
+                      >
+
+                        <span>
+                          📊
+                        </span>
+
+                        <div>
+                          <strong>
+                            Satıcı Paneli
+                          </strong>
+
+                          <small>
+                            Satışlarını yönet
+                          </small>
+                        </div>
+
+                      </Link>
+
+                    </>
+
+                  ) : (
+
+                    <Link
+                      to="/magaza-olustur"
+                      onClick={
+                        menuKapat
+                      }
+                      className="create-store-link"
+                    >
+
+                      <span>
+                        🏪
+                      </span>
+
+                      <div>
+                        <strong>
+                          Mağaza Oluştur
+                        </strong>
+
+                        <small>
+                          Kendi mağazanı aç
+                        </small>
+                      </div>
+
+                    </Link>
+
+                  )}
+
+
+                  <div className="dropdown-divider" />
+
+
+                  {/* ÇIKIŞ */}
+
+                  <button
+                    className="logout-btn"
+                    onClick={
+                      cikis
+                    }
+                  >
+
+                    <span>
+                      🚪
+                    </span>
+
+                    <div>
+                      <strong>
+                        Çıkış Yap
+                      </strong>
+
+                      <small>
+                        Hesabından çık
+                      </small>
+                    </div>
+
+                  </button>
+
+
+                </div>
+
+              )}
+
+            </div>
+
+          ) : (
+
+            /* GİRİŞ */
+
+            <Link
+              to="/login"
+              className="login-link"
+            >
+
+              <button
+                className="login-btn"
+              >
+
+                <span>
+                  👤
+                </span>
+
+                Giriş Yap
+
+              </button>
+
+            </Link>
+
+          )}
+
+
+          {/* =================================
+              İLAN VER
+          ================================= */}
+
+          <Link
+            to="/ilan-ver"
+            className="add-link"
+          >
+
+            <button
+              className="add-btn"
+            >
+
+              <span>
+                ＋
+              </span>
+
+              <strong>
+                İlan Ver
+              </strong>
+
+            </button>
+
+          </Link>
+
+
+        </div>
+
+      </div>
+
+
+      {/* =====================================
+          ALT MENÜ
+      ===================================== */}
+
+      <nav
+        className="navbar-menu"
+        aria-label="Ana navigasyon"
+      >
+
+        <NavLink
+          to="/"
+          end
+        >
+
+          🏠
+          <span>
+            Ana Sayfa
+          </span>
+
+        </NavLink>
+
+
+        <NavLink
+          to="/ilanlar"
+        >
+
+          🛍️
+          <span>
+            İlanlar
+          </span>
+
+        </NavLink>
+
+
+        <NavLink
+          to="/magazalar"
+        >
+
+          🏪
+          <span>
+            Mağazalar
+          </span>
+
+        </NavLink>
+
+
+        <NavLink
+          to="/mesajlar"
+        >
+
+          💬
+          <span>
+            Mesajlar
+          </span>
+
+        </NavLink>
+
+
+        <NavLink
+          to="/ilanlar/kiralik"
+        >
+
+          🔑
+          <span>
+            Kiralık
+          </span>
+
+        </NavLink>
+
+
+        <NavLink
+          to="/gunun-firsatlari"
+        >
+
+          🔥
+          <span>
+            Günün Fırsatları
+          </span>
+
+        </NavLink>
+
+
+        <NavLink
+          to="/hediye-fikirleri"
+        >
+
+          💡
+          <span>
+            Hediye Fikirleri
+          </span>
+
+        </NavLink>
+
+      </nav>
+
+
+    </header>
+
+  );
 
 }
+
 
 export default Navbar;

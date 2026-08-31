@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { auth } from "../../firebase";
 import { onAuthStateChanged } from "firebase/auth";
+import { apiUrl } from "../../config/api";
 
 function BankAccount() {
 
@@ -49,9 +50,9 @@ function BankAccount() {
 
 
           const url =
-            `http://localhost:5000/api/wallet/${encodeURIComponent(
+            apiUrl(`/api/wallet/${encodeURIComponent(
               user.email
-            )}`;
+            )}`);
 
 
           console.log(
@@ -265,7 +266,7 @@ function BankAccount() {
 
       const response =
         await fetch(
-          "http://localhost:5000/api/wallet/save-iban",
+          apiUrl("/api/wallet/save-iban"),
           {
 
             method: "POST",

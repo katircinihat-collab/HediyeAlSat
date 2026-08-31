@@ -1,5 +1,7 @@
+
 import "../styles/components/flash-sale.css";
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 
 function FlashSale() {
 
@@ -17,16 +19,20 @@ function FlashSale() {
 
       const diff = finish - now;
 
-      const saat = Math.floor(diff / 1000 / 60 / 60);
+      const saat = Math.floor(
+        diff / 1000 / 60 / 60
+      );
 
-      const dakika = Math.floor((diff / 1000 / 60) % 60);
+      const dakika = Math.floor(
+        (diff / 1000 / 60) % 60
+      );
 
-      const saniye = Math.floor((diff / 1000) % 60);
+      const saniye = Math.floor(
+        (diff / 1000) % 60
+      );
 
       setTime(
-
         `${String(saat).padStart(2, "0")}:${String(dakika).padStart(2, "0")}:${String(saniye).padStart(2, "0")}`
-
       );
 
     }, 1000);
@@ -37,31 +43,50 @@ function FlashSale() {
 
   return (
 
-    <section className="flash-sale">
+    <Link
+      to="/gunun-firsatlari"
+      className="flash-sale"
+      style={{
+        textDecoration: "none",
+        color: "inherit",
+        display: "flex"
+      }}
+    >
 
       <div className="flash-left">
 
-        <span className="flash-icon">⚡</span>
+        <span className="flash-icon">
+          ⚡
+        </span>
 
         <div>
 
-          <h2>Günün Fırsatları</h2>
+          <h2>
+            Günün Fırsatları
+          </h2>
 
-          <p>Gece 23:59'a kadar geçerli kampanyalar</p>
+          <p>
+            Gece 23:59'a kadar geçerli kampanyalar
+          </p>
 
         </div>
 
       </div>
 
+
       <div className="flash-right">
 
-        <span>⏰</span>
+        <span>
+          ⏰
+        </span>
 
-        <strong>{time}</strong>
+        <strong>
+          {time}
+        </strong>
 
       </div>
 
-    </section>
+    </Link>
 
   );
 

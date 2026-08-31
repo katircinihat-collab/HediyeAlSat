@@ -13,7 +13,24 @@ exports.getWallet = async (req, res) => {
     try {
 
         const email =
-    req.params.email;
+            req.user.email;
+
+
+        if (
+            req.params.email &&
+            req.params.email !== email
+        ) {
+
+            return res.status(403).json({
+
+                success: false,
+
+                error:
+                    "Bu cüzdana erişim yetkiniz yok."
+
+            });
+
+        }
 
 
         if (!email) {
@@ -74,11 +91,13 @@ exports.ibanKaydet = async (req, res) => {
     try {
 
         const {
-            email,
             iban,
             bankaAdi,
             hesapSahibi
         } = req.body;
+
+        const email =
+            req.user.email;
 
 
         const wallet =
@@ -137,9 +156,12 @@ exports.paraCek = async (req, res) => {
     try {
 
         const {
-            email,
-            tutar
+            tutar,
+            miktar
         } = req.body;
+
+        const email =
+            req.user.email;
 
 
         const sonuc =
@@ -147,7 +169,8 @@ exports.paraCek = async (req, res) => {
 
                 email,
 
-                tutar
+                tutar ||
+                miktar
 
             );
 
@@ -196,7 +219,29 @@ exports.taleplerim = async (
     try {
 
         const email =
+            req.user.email;
+
+
+        const requestedEmail =
+            req.params.email ||
             req.query.email;
+
+
+        if (
+            requestedEmail &&
+            requestedEmail !== email
+        ) {
+
+            return res.status(403).json({
+
+                success: false,
+
+                error:
+                    "Bu para çekme taleplerine erişim yetkiniz yok."
+
+            });
+
+        }
 
 
         const talepler =

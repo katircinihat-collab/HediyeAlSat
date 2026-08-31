@@ -3,20 +3,29 @@ import { useEffect, useMemo, useState } from "react";
 import {
   collection,
   query,
-  where,
   onSnapshot,
   addDoc,
   serverTimestamp,
   orderBy,
+  where,
   doc,
   updateDoc
 } from "firebase/firestore";
 
 import { db, auth } from "../firebase";
 
+import {
+  useNavigate,
+  useLocation
+} from "react-router-dom";
+
 import "../styles/pages/messages.css";
 
+
 function Messages() {
+
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const [mesajlar, setMesajlar] = useState([]);
   const [secili, setSecili] = useState(null);
@@ -25,33 +34,93 @@ function Messages() {
 
   const currentEmail = auth.currentUser?.email;
 
+
+  /*
+  ==========================================
+  GERİ BUTONU
+  ==========================================
+  */
+
+  function geriDon() {
+
+    if (location.key === "default") {
+
+      navigate("/");
+
+    } else {
+
+      navigate(-1);
+
+    }
+
+  }
+
+
   useEffect(() => {
 
     if (!currentEmail) return;
 
-    const q = query(
+    const gonderilenQuery = query(
       collection(db, "mesajlar"),
+      where("gonderen", "==", currentEmail),
       orderBy("tarih", "desc")
     );
 
-    const unsub = onSnapshot(q, (snap) => {
+    const alinanQuery = query(
+      collection(db, "mesajlar"),
+      where("alan", "==", currentEmail),
+      orderBy("tarih", "desc")
+    );
 
-      const liste = snap.docs
-        .map((item) => ({
-          id: item.id,
-          ...item.data()
-        }))
-        .filter(
-          (m) =>
-            m.gonderen === currentEmail ||
-            m.alan === currentEmail
-        );
+    let gonderilenMesajlar = [];
+    let alinanMesajlar = [];
+
+    function mesajlariBirlestir() {
+
+      const benzersizMesajlar = new Map();
+
+      [...gonderilenMesajlar, ...alinanMesajlar]
+        .forEach((mesaj) => {
+          benzersizMesajlar.set(mesaj.id, mesaj);
+        });
+
+      const liste = [...benzersizMesajlar.values()]
+        .sort((a, b) => {
+          const ta = a.tarih?.seconds || 0;
+          const tb = b.tarih?.seconds || 0;
+          return tb - ta;
+        });
 
       setMesajlar(liste);
 
+    }
+
+    const gonderilenUnsub = onSnapshot(gonderilenQuery, (snap) => {
+
+      gonderilenMesajlar = snap.docs.map((item) => ({
+        id: item.id,
+        ...item.data()
+      }));
+
+      mesajlariBirlestir();
+
     });
 
-    return () => unsub();
+    const alinanUnsub = onSnapshot(alinanQuery, (snap) => {
+
+      alinanMesajlar = snap.docs.map((item) => ({
+        id: item.id,
+        ...item.data()
+      }));
+
+      mesajlariBirlestir();
+
+    });
+
+    return () => {
+      gonderilenUnsub();
+      alinanUnsub();
+    };
 
   }, [currentEmail]);
 
@@ -339,23 +408,35 @@ function Messages() {
 
     return (
 
-      <div className="messages-login">
+      <div className="messages-page">
 
-        <div className="messages-login-card">
+        <button
+          type="button"
+          className="messages-back-button"
+          onClick={geriDon}
+        >
+          ← Geri
+        </button>
 
-          <div className="messages-login-icon">
-            💬
+        <div className="messages-login">
+
+          <div className="messages-login-card">
+
+            <div className="messages-login-icon">
+              💬
+            </div>
+
+            <h2>
+              Mesajlarınızı görmek için
+              giriş yapın
+            </h2>
+
+            <p>
+              Satıcılarla ve alıcılarla
+              güvenli şekilde iletişim kurun.
+            </p>
+
           </div>
-
-          <h2>
-            Mesajlarınızı görmek için
-            giriş yapın
-          </h2>
-
-          <p>
-            Satıcılarla ve alıcılarla
-            güvenli şekilde iletişim kurun.
-          </p>
 
         </div>
 
@@ -369,6 +450,17 @@ function Messages() {
   return (
 
     <div className="messages-page">
+
+      {/* GERİ BUTONU */}
+
+      <button
+        type="button"
+        className="messages-back-button"
+        onClick={geriDon}
+      >
+        ← Geri
+      </button>
+
 
       {/* SOL PANEL */}
 

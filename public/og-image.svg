@@ -1,0 +1,14 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="630" fill="#FFF7ED"/>
+  <rect x="70" y="70" width="1060" height="490" rx="36" fill="#FFFFFF"/>
+  <rect x="70" y="70" width="1060" height="490" rx="36" stroke="#F97316" stroke-width="6"/>
+  <circle cx="965" cy="172" r="78" fill="#16A34A" opacity="0.16"/>
+  <circle cx="213" cy="467" r="96" fill="#0EA5E9" opacity="0.14"/>
+  <path d="M229 214H386V371H229V214Z" fill="#F97316"/>
+  <path d="M307.5 214V371" stroke="#FFFFFF" stroke-width="18"/>
+  <path d="M229 292.5H386" stroke="#FFFFFF" stroke-width="18"/>
+  <path d="M278 214C235 168 281 139 307 184C333 139 379 168 336 214" stroke="#F97316" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="444" y="269" fill="#111827" font-family="Arial, Helvetica, sans-serif" font-size="78" font-weight="700">HediyeAlSat</text>
+  <text x="448" y="342" fill="#374151" font-family="Arial, Helvetica, sans-serif" font-size="34" font-weight="500">Türkiye'nin Hediye Alışveriş Platformu</text>
+  <text x="448" y="408" fill="#6B7280" font-family="Arial, Helvetica, sans-serif" font-size="27">Özel günler, butik mağazalar ve binlerce hediye seçeneği</text>
+</svg>

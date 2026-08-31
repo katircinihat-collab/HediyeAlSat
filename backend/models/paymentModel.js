@@ -1,15 +1,10 @@
+
 const { firestore, FieldValue } = require("../config/firebase");
 
 /*
 ==================================================
 PAYMENT MODEL
 ==================================================
-*/
-
-/*
-==========================================
-Ödeme Referansı
-==========================================
 */
 
 function paymentRef(conversationId) {
@@ -21,9 +16,9 @@ function paymentRef(conversationId) {
 }
 
 /*
-==========================================
-Ödeme Oku
-==========================================
+==================================================
+ÖDEME OKU
+==================================================
 */
 
 async function getPayment(conversationId) {
@@ -31,25 +26,20 @@ async function getPayment(conversationId) {
     const doc = await paymentRef(conversationId).get();
 
     if (!doc.exists) {
-
         return null;
-
     }
 
     return {
-
         id: doc.id,
-
         ...doc.data()
-
     };
 
 }
 
 /*
-==========================================
-Ödeme Oluştur
-==========================================
+==================================================
+ÖDEME OLUŞTUR
+==================================================
 */
 
 async function createPayment(data) {
@@ -71,9 +61,9 @@ async function createPayment(data) {
 }
 
 /*
-==========================================
-Ödeme Güncelle
-==========================================
+==================================================
+ÖDEME GÜNCELLE
+==================================================
 */
 
 async function updatePayment(conversationId, data) {
@@ -90,23 +80,24 @@ async function updatePayment(conversationId, data) {
 }
 
 /*
-==========================================
-Ödeme Var mı?
-==========================================
+==================================================
+ÖDEME VAR MI?
+==================================================
 */
 
 async function paymentExists(conversationId) {
 
-    const doc = await paymentRef(conversationId).get();
+    const doc =
+        await paymentRef(conversationId).get();
 
     return doc.exists;
 
 }
 
 /*
-==========================================
-Kullanıcının Ödemeleri
-==========================================
+==================================================
+KULLANICININ ÖDEMELERİ
+==================================================
 */
 
 async function getPaymentsByUser(email) {
@@ -119,7 +110,6 @@ async function getPaymentsByUser(email) {
     return snap.docs.map(doc => ({
 
         id: doc.id,
-
         ...doc.data()
 
     }));
@@ -127,22 +117,25 @@ async function getPaymentsByUser(email) {
 }
 
 /*
-==========================================
-Başarılı Ödemeler
-==========================================
+==================================================
+BAŞARILI ÖDEMELER
+==================================================
 */
 
 async function getSuccessfulPayments() {
 
     const snap = await firestore
         .collection("odemeler")
-        .where("paymentStatus", "==", "SUCCESS")
+        .where(
+            "paymentStatus",
+            "==",
+            "SUCCESS"
+        )
         .get();
 
     return snap.docs.map(doc => ({
 
         id: doc.id,
-
         ...doc.data()
 
     }));
@@ -150,22 +143,25 @@ async function getSuccessfulPayments() {
 }
 
 /*
-==========================================
-Bekleyen Ödemeler
-==========================================
+==================================================
+BEKLEYEN ÖDEMELER
+==================================================
 */
 
 async function getWaitingPayments() {
 
     const snap = await firestore
         .collection("odemeler")
-        .where("paymentStatus", "==", "WAITING")
+        .where(
+            "paymentStatus",
+            "==",
+            "WAITING"
+        )
         .get();
 
     return snap.docs.map(doc => ({
 
         id: doc.id,
-
         ...doc.data()
 
     }));
@@ -173,9 +169,79 @@ async function getWaitingPayments() {
 }
 
 /*
-==========================================
-Ödeme Sil
-==========================================
+==================================================
+GÜVENLİ SPONSOR TEST ÖDEMESİ TEMİZLEME
+==================================================
+
+SADECE:
+
+paymentStatus === "WAITING"
+
+VE
+
+sponsorBasvuruId mevcut
+
+olan kayıtları siler.
+
+SUCCESS olan sponsor ödemelerine dokunmaz.
+Normal sipariş ödemelerine dokunmaz.
+==================================================
+*/
+
+async function temizleBekleyenSponsorTestOdemeleri() {
+
+    const snap = await firestore
+        .collection("odemeler")
+        .where(
+            "paymentStatus",
+            "==",
+            "WAITING"
+        )
+        .get();
+
+    let silinen = 0;
+
+    const batch = firestore.batch();
+
+    snap.docs.forEach(doc => {
+
+        const data = doc.data();
+
+        /*
+        Sponsor ödemesi olduğunu kontrol ediyoruz.
+        */
+
+        const sponsorMu =
+            !!data.sponsorBasvuruId;
+
+        if (sponsorMu) {
+
+            batch.delete(doc.ref);
+
+            silinen++;
+
+        }
+
+    });
+
+    if (silinen > 0) {
+
+        await batch.commit();
+
+    }
+
+    console.log(
+        `Temizlenen bekleyen sponsor ödemesi: ${silinen}`
+    );
+
+    return silinen;
+
+}
+
+/*
+==================================================
+ÖDEME SİL
+==================================================
 */
 
 async function deletePayment(conversationId) {
@@ -183,6 +249,12 @@ async function deletePayment(conversationId) {
     await paymentRef(conversationId).delete();
 
 }
+
+/*
+==================================================
+EXPORT
+==================================================
+*/
 
 module.exports = {
 
@@ -202,6 +274,8 @@ module.exports = {
 
     getWaitingPayments,
 
-    deletePayment
+    deletePayment,
+
+    temizleBekleyenSponsorTestOdemeleri
 
 };

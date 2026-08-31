@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { auth } from "../firebase";
+import { apiUrl } from "../config/api";
 import "../styles/pages/wallet.css";
 
 function Wallet() {
@@ -33,9 +34,9 @@ function Wallet() {
             console.log("=================================");
 
             const response = await fetch(
-                `http://localhost:5000/api/wallet/${encodeURIComponent(
+                apiUrl(`/api/wallet/${encodeURIComponent(
                     user.email
-                )}`,
+                )}`),
                 {
                     method: "GET",
 
@@ -81,9 +82,9 @@ function Wallet() {
             const token = await user.getIdToken();
 
             const response = await fetch(
-                `http://localhost:5000/api/wallet/withdraw/${encodeURIComponent(
+                apiUrl(`/api/wallet/withdraw/${encodeURIComponent(
                     user.email
-                )}`,
+                )}`),
                 {
                     method: "GET",
 
@@ -214,7 +215,7 @@ function Wallet() {
             );
 
             const response = await fetch(
-                "http://localhost:5000/api/withdraw",
+                apiUrl("/api/withdraw"),
                 {
                     method: "POST",
 

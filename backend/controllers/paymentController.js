@@ -1,6 +1,9 @@
+
 console.log("paymentController yüklendi");
+
 const paymentService =
-require("../services/paymentService");
+    require("../services/paymentService");
+
 
 /*
 ==================================================
@@ -9,24 +12,43 @@ require("../services/paymentService");
 */
 
 exports.startPayment = async (req, res) => {
-console.log("POST /api/payment geldi");
-console.log(req.body);
+
+    console.log(
+        "POST /api/payment geldi"
+    );
+
+    console.log(
+        "Ödeme verisi:",
+        req.body
+    );
+
+
     try {
 
         const result =
-            await paymentService.createPayment(req.body);
+            await paymentService.createPayment(
+                req.body
+            );
+
 
         res.json(result);
 
+
     } catch (err) {
 
-        console.log(err);
+        console.log(
+            "Ödeme başlatma hatası:",
+            err
+        );
+
 
         res.status(500).json({
 
             success: false,
 
-            error: err.message
+            error:
+                err.message ||
+                "Ödeme oluşturulamadı."
 
         });
 
@@ -34,19 +56,40 @@ console.log(req.body);
 
 };
 
+
 /*
 ==================================================
 CALLBACK
 ==================================================
 */
 
-exports.paymentCallback = async (req, res) => {
+exports.paymentCallback = async (
+    req,
+    res
+) => {
 
     try {
 
-        const token = req.body.token;
+        console.log(
+            "=== CALLBACK GELDİ ==="
+        );
+
+        console.log(
+            "Callback body:",
+            req.body
+        );
+
+
+        const token =
+            req.body.token;
+
 
         if (!token) {
+
+            console.log(
+                "Callback token bulunamadı."
+            );
+
 
             return res.redirect(
 
@@ -57,19 +100,40 @@ exports.paymentCallback = async (req, res) => {
 
         }
 
+
         const result =
-            await paymentService.paymentCallback(token);
+
+            await paymentService.paymentCallback(
+
+                token
+
+            );
+
+
+        console.log(
+            "Callback ödeme sonucu:",
+            result
+        );
+
 
         return res.redirect(
 
             process.env.FRONTEND_URL +
-            result.redirect
+            (
+                result.redirect ||
+                "/payment-fail"
+            )
 
         );
 
+
     } catch (err) {
 
-        console.log(err);
+        console.log(
+            "Callback controller hatası:",
+            err
+        );
+
 
         return res.redirect(
 

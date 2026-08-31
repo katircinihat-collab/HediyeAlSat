@@ -17,11 +17,17 @@ function esc(e){
 
 if(e.key==="Escape") onClose();
 
-if(e.key==="ArrowRight")
-next();
+if(e.key==="ArrowRight") {
+  setIndex((currentIndex) =>
+    currentIndex === items.length - 1 ? 0 : currentIndex + 1
+  );
+}
 
-if(e.key==="ArrowLeft")
-prev();
+if(e.key==="ArrowLeft") {
+  setIndex((currentIndex) =>
+    currentIndex === 0 ? items.length - 1 : currentIndex - 1
+  );
+}
 
 }
 
@@ -29,7 +35,7 @@ window.addEventListener("keydown",esc);
 
 return ()=>window.removeEventListener("keydown",esc);
 
-},[index]);
+},[items.length, onClose, setIndex]);
 
 if(!open) return null;
 

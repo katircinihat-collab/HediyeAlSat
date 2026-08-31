@@ -5,38 +5,32 @@ const events = [
   {
     icon: "❤️",
     title: "Sevgililer Günü",
-    date: "14 Şubat",
-    button: "Hediyeleri Gör"
+    date: "14 Şubat"
   },
   {
     icon: "🌸",
     title: "Anneler Günü",
-    date: "Mayıs • 2. Pazar",
-    button: "Hediyeleri Gör"
+    date: "Mayıs • 2. Pazar"
   },
   {
     icon: "👔",
     title: "Babalar Günü",
-    date: "Haziran • 3. Pazar",
-    button: "Hediyeleri Gör"
+    date: "Haziran • 3. Pazar"
   },
   {
     icon: "🎂",
     title: "Doğum Günü",
-    date: "Her Zaman",
-    button: "Hediyeleri Gör"
+    date: "Her Zaman"
   },
   {
     icon: "🎓",
     title: "Mezuniyet",
-    date: "Haziran",
-    button: "Hediyeleri Gör"
+    date: "Haziran"
   },
   {
     icon: "🎄",
     title: "Yılbaşı",
-    date: "31 Aralık",
-    button: "Hediyeleri Gör"
+    date: "31 Aralık"
   }
 ];
 
@@ -45,10 +39,15 @@ function UpcomingEvents() {
   const navigate = useNavigate();
 
   function hediyeleriGor(gun) {
-    navigate(`/?ozelGun=${encodeURIComponent(gun)}`);
+
+    navigate(
+      `/ozel-gun/${encodeURIComponent(gun)}`
+    );
+
   }
 
   return (
+
     <section className="events-section">
 
       <h2 className="events-title">
@@ -78,9 +77,11 @@ function UpcomingEvents() {
 
             <button
               type="button"
-              onClick={() => hediyeleriGor(event.title)}
+              onClick={() =>
+                hediyeleriGor(event.title)
+              }
             >
-              {event.button}
+              Hediyeleri Gör
             </button>
 
           </div>
@@ -90,7 +91,9 @@ function UpcomingEvents() {
       </div>
 
     </section>
+
   );
+
 }
 
 export default UpcomingEvents;

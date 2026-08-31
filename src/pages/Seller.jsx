@@ -1,5 +1,4 @@
 import SellerWallet from "../components/seller/SellerWallet";
-import PaymentHistory from "../components/seller/PaymentHistory";
 import WithdrawRequest from "../components/seller/WithdrawRequest";
 import BankAccount from "../components/seller/BankAccount";
 import { useEffect, useState } from "react";

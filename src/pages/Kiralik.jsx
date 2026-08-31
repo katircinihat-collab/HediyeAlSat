@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, query, where } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 
 import { db } from "../firebase";
@@ -33,7 +33,7 @@ function Kiralik() {
       setYukleniyor(true);
 
       const snap = await getDocs(
-        collection(db, "ilanlar")
+        query(collection(db, "ilanlar"), where("onay", "==", true))
       );
 
       const liste = snap.docs
@@ -227,8 +227,7 @@ function Kiralik() {
 
     }
 
-    return
-      "https://via.placeholder.com/600x450?text=HediyeAlSat";
+    return "https://via.placeholder.com/600x450?text=HediyeAlSat";
 
   }
 

@@ -1,4 +1,6 @@
+
 import "../styles/components/ad-banner.css";
+import { Link } from "react-router-dom";
 
 function AdBanner() {
 
@@ -6,29 +8,58 @@ function AdBanner() {
 
     <section className="ad-banner">
 
-      <div className="ad-card red">
+      {/* SÜPER İNDİRİM */}
 
-        <h3>🔥 Süper İndirim</h3>
+      <Link
+        to="/gunun-firsatlari"
+        className="ad-card red"
+      >
 
-        <p>Bugüne özel fırsatları kaçırmayın.</p>
+        <h3>
+          🔥 Süper İndirim
+        </h3>
 
-      </div>
+        <p>
+          Bugüne özel fırsatları kaçırmayın.
+        </p>
 
-      <div className="ad-card orange">
+      </Link>
 
-        <h3>🎁 Hediye Fikirleri</h3>
 
-        <p>Sevdiklerinize en güzel hediyeler burada.</p>
+      {/* HEDİYE FİKİRLERİ */}
 
-      </div>
+      <Link
+        to="/hediye-fikirleri"
+        className="ad-card orange"
+      >
 
-      <div className="ad-card chocolate">
+        <h3>
+          🎁 Hediye Fikirleri
+        </h3>
 
-        <h3>🏪 Sponsor Mağaza</h3>
+        <p>
+          Sevdiklerinize en güzel hediyeler burada.
+        </p>
 
-        <p>Mağazanızı burada öne çıkarın.</p>
+      </Link>
 
-      </div>
+
+      {/* SPONSOR MAĞAZA */}
+
+      <Link
+        to="/sponsor-magaza"
+        className="ad-card chocolate"
+      >
+
+        <h3>
+          🏪 Sponsor Mağaza
+        </h3>
+
+        <p>
+          Mağazanızı burada öne çıkarın.
+        </p>
+
+      </Link>
 
     </section>
 

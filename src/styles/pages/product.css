@@ -1,5 +1,6 @@
 /* =========================================================
 HEDİYEALSAT - ÜRÜN / İLAN DETAY SAYFASI
+TEMİZ VE BUILD UYUMLU SÜRÜM
 ========================================================= */
 
 /* =========================================================
@@ -52,10 +53,6 @@ grid-template-columns: minmax(0, 1.08fr) minmax(420px, 0.92fr);
 gap: 42px;
 align-items: start;
 }
-
-/* =========================================================
-GALERİ ALANI
-========================================================= */
 
 .detail-container > :first-child {
 min-width: 0;
@@ -156,10 +153,6 @@ font-size: 14px;
 line-height: 1.55;
 }
 
-.detail-info > p strong {
-color: #222;
-}
-
 /* =========================================================
 BAŞLIK H3
 ========================================================= */
@@ -171,6 +164,70 @@ border-bottom: 1px solid #ececec;
 color: #222;
 font-size: 19px;
 font-weight: 850;
+}
+
+/* =========================================================
+ÜRÜN AÇIKLAMASI
+========================================================= */
+
+.urun-aciklama {
+margin: 24px 0;
+padding: 22px;
+background: #fafafa;
+border: 1px solid #e8e8e8;
+border-radius: 17px;
+box-sizing: border-box;
+}
+
+.urun-aciklama-baslik {
+display: flex;
+align-items: center;
+gap: 13px;
+margin-bottom: 16px;
+}
+
+.aciklama-icon {
+width: 44px;
+height: 44px;
+display: flex;
+align-items: center;
+justify-content: center;
+flex-shrink: 0;
+background: #fff;
+border: 1px solid #e6e6e6;
+border-radius: 12px;
+font-size: 22px;
+}
+
+.urun-aciklama-baslik h3 {
+margin: 0;
+padding: 0;
+border: 0;
+color: #222;
+font-size: 19px;
+font-weight: 850;
+}
+
+.urun-aciklama-baslik p {
+margin: 4px 0 0;
+padding: 0;
+background: transparent;
+color: #777;
+font-size: 12px;
+line-height: 1.5;
+}
+
+.urun-aciklama-metin {
+padding: 16px 17px;
+background: #fff;
+border: 1px solid #e7e7e7;
+border-radius: 12px;
+color: #444;
+font-size: 15px;
+line-height: 1.75;
+white-space: pre-wrap;
+overflow-wrap: anywhere;
+word-break: break-word;
 }
 
 /* =========================================================
@@ -187,7 +244,7 @@ margin-top: 25px;
 }
 
 /* =========================================================
-SATICI / MESAJ / SİPARİŞ ALANLARI
+SATICI / MESAJ / SİPARİŞ
 ========================================================= */
 
 .detail-info hr {
@@ -206,6 +263,7 @@ padding: 24px;
 background: #fafafa;
 border: 1px solid #ededed;
 border-radius: 18px;
+box-sizing: border-box;
 }
 
 /* =========================================================
@@ -522,11 +580,12 @@ font-size: 11px;
 }
 
 /* =========================================================
-GALERİ / RESİM GENEL GÜVENLİĞİ
+GALERİ / RESİM GÜVENLİĞİ
 ========================================================= */
 
 .detail-container img {
 max-width: 100%;
+height: auto;
 }
 
 /* =========================================================
@@ -534,6 +593,7 @@ HOVER EFEKTLERİ
 ========================================================= */
 
 .detail-info,
+.urun-aciklama,
 .urun-degerlendirmeleri,
 .yorum-formu,
 .yorum-karti {
@@ -597,6 +657,20 @@ gap: 7px;
 .info-badges span {
 font-size: 12px;
 padding: 7px 10px;
+}
+
+.urun-aciklama {
+padding: 17px;
+border-radius: 15px;
+}
+
+.urun-aciklama-baslik h3 {
+font-size: 18px;
+}
+
+.urun-aciklama-metin {
+padding: 14px;
+font-size: 14px;
 }
 
 .urun-degerlendirmeleri {
@@ -670,6 +744,37 @@ font-size: 11px;
 .detail-info > p {
 font-size: 13px;
 padding: 9px 10px;
+}
+
+.urun-aciklama {
+margin: 20px 0;
+padding: 13px;
+}
+
+.urun-aciklama-baslik {
+align-items: flex-start;
+gap: 10px;
+}
+
+.aciklama-icon {
+width: 38px;
+height: 38px;
+font-size: 19px;
+border-radius: 10px;
+}
+
+.urun-aciklama-baslik h3 {
+font-size: 17px;
+}
+
+.urun-aciklama-baslik p {
+font-size: 11px;
+}
+
+.urun-aciklama-metin {
+padding: 12px;
+font-size: 13px;
+line-height: 1.6;
 }
 
 .urun-degerlendirmeleri {

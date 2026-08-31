@@ -1,20 +1,26 @@
 import { useEffect, useState } from "react";
 import { auth, db } from "../firebase";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  updateDoc,
+  where
+} from "firebase/firestore";
 
 function MyStore() {
 
   const [magaza, setMagaza] = useState({
-    adi: "",
+    magazaAdi: "",
     logo: "",
-    banner: "",
+    kapak: "",
     telefon: "",
     sehir: "",
-    aciklama: "",
-    puan: 9.8,
-    takipci: 0,
-    satis: 0
+    aciklama: ""
   });
+  const [magazaId, setMagazaId] = useState(null);
 
   useEffect(() => {
 
@@ -26,25 +32,63 @@ function MyStore() {
 
     if (!auth.currentUser) return;
 
-    const ref = doc(db, "magazalar", auth.currentUser.email);
+    const uidSnap = await getDocs(query(
+      collection(db, "magazalar"),
+      where("sahipUid", "==", auth.currentUser.uid)
+    ));
 
-    const snap = await getDoc(ref);
+    const emailSnap = uidSnap.empty
+      ? await getDocs(query(
+        collection(db, "magazalar"),
+        where("sahip", "==", auth.currentUser.email)
+      ))
+      : null;
 
-    if (snap.exists()) {
+    let bulunanBelge = !uidSnap.empty ? uidSnap.docs[0] : emailSnap?.docs[0];
 
-      setMagaza(snap.data());
+    if (!bulunanBelge) {
+      const legacySnap = await getDoc(
+        doc(db, "magazalar", auth.currentUser.email)
+      );
 
+      if (legacySnap.exists()) bulunanBelge = legacySnap;
     }
+
+    if (!bulunanBelge) return;
+
+    const veri = bulunanBelge.data();
+
+    setMagazaId(bulunanBelge.id);
+    setMagaza({
+      magazaAdi: veri.magazaAdi || veri.adi || "",
+      logo: veri.logo || "",
+      kapak: veri.kapak || veri.banner || "",
+      telefon: veri.telefon || "",
+      sehir: veri.sehir || "",
+      aciklama: veri.aciklama || ""
+    });
 
   }
 
   async function kaydet() {
 
-    await setDoc(
+    if (!auth.currentUser || !magazaId) {
+      alert("Mağaza bulunamadı.");
+      return;
+    }
 
-      doc(db, "magazalar", auth.currentUser.email),
+    await updateDoc(
 
-      magaza
+      doc(db, "magazalar", magazaId),
+
+      {
+        magazaAdi: magaza.magazaAdi,
+        logo: magaza.logo,
+        kapak: magaza.kapak,
+        telefon: magaza.telefon,
+        sehir: magaza.sehir,
+        aciklama: magaza.aciklama
+      }
 
     );
 
@@ -60,8 +104,8 @@ function MyStore() {
 
       <input
         placeholder="Mağaza Adı"
-        value={magaza.adi}
-        onChange={(e)=>setMagaza({...magaza,adi:e.target.value})}
+        value={magaza.magazaAdi}
+        onChange={(e)=>setMagaza({...magaza,magazaAdi:e.target.value})}
       />
 
       <input
@@ -72,8 +116,8 @@ function MyStore() {
 
       <input
         placeholder="Banner URL"
-        value={magaza.banner}
-        onChange={(e)=>setMagaza({...magaza,banner:e.target.value})}
+        value={magaza.kapak}
+        onChange={(e)=>setMagaza({...magaza,kapak:e.target.value})}
       />
 
       <input

@@ -178,7 +178,7 @@ function AdminWithdraw() {
 
             const response =
                 await fetch(
-                    "/api/withdraw/admin/pending",
+                    "/api/withdraw/admin",
                     {
                         method: "GET",
 
@@ -222,13 +222,15 @@ function AdminWithdraw() {
     ==================================================
     */
 
-    useEffect(() => {
+        useEffect(() => {
         const kontrol = setTimeout(() => {
             talepleriGetir();
         }, 100);
 
         return () =>
             clearTimeout(kontrol);
+    // Initial load only; `talepleriGetir` is intentionally not reactive.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     /*
@@ -265,9 +267,9 @@ function AdminWithdraw() {
 
             const response =
                 await fetch(
-                    "/api/withdraw/admin/paid",
+                    `/api/withdraw/approve/${talepId}`,
                     {
-                        method: "POST",
+                        method: "PUT",
 
                         headers: {
                             "Content-Type":
@@ -278,9 +280,7 @@ function AdminWithdraw() {
                         },
 
                         body:
-                            JSON.stringify({
-                                talepId
-                            })
+                            JSON.stringify({})
                     }
                 );
 
@@ -351,9 +351,9 @@ function AdminWithdraw() {
 
             const response =
                 await fetch(
-                    "/api/withdraw/admin/reject",
+                    `/api/withdraw/reject/${talepId}`,
                     {
-                        method: "POST",
+                        method: "PUT",
 
                         headers: {
                             "Content-Type":
@@ -365,8 +365,7 @@ function AdminWithdraw() {
 
                         body:
                             JSON.stringify({
-                                talepId,
-                                aciklama:
+                                neden:
                                     aciklamaMetni
                             })
                     }

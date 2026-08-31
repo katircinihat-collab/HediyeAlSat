@@ -8,7 +8,7 @@ function SEO({
 
   canonical,
 
-  image = "https://hediyealsat.com/icons.svg"
+  image = "https://hediyealsat.com/og-image.svg"
 
 }){
 

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { auth, db } from "../firebase";
+import { apiUrl } from "../config/api";
 import "../styles/pages/withdraw.css";
 
 import {
@@ -232,13 +233,18 @@ function Withdraw() {
 
     try {
 
+      const token =
+        await auth.currentUser.getIdToken();
+
       const response = await fetch(
-        "http://localhost:5000/api/withdraw",
+        apiUrl("/api/withdraw"),
         {
           method: "POST",
 
           headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            Authorization:
+              `Bearer ${token}`
           },
 
           body: JSON.stringify({

@@ -5,21 +5,23 @@ const router = express.Router();
 const walletController =
     require("../controllers/walletController");
 
+const authMiddleware =
+    require("../middleware/authMiddleware");
+
+const adminMiddleware =
+    require("../middleware/adminMiddleware");
+
 
 // =====================================================
 // PARA ÇEKME TALEBİ OLUŞTUR
 // POST /api/withdraw
 // =====================================================
 
-router.post("/", walletController.paraCek);
-
-
-// =====================================================
-// KULLANICININ PARA ÇEKME TALEPLERİ
-// GET /api/withdraw/:email
-// =====================================================
-
-router.get("/:email", walletController.taleplerim);
+router.post(
+    "/",
+    authMiddleware,
+    walletController.paraCek
+);
 
 
 // =====================================================
@@ -29,7 +31,21 @@ router.get("/:email", walletController.taleplerim);
 
 router.get(
     "/admin",
+    authMiddleware,
+    adminMiddleware,
     walletController.adminTalepler
+);
+
+
+// =====================================================
+// KULLANICININ PARA ÇEKME TALEPLERİ
+// GET /api/withdraw/:email
+// =====================================================
+
+router.get(
+    "/:email",
+    authMiddleware,
+    walletController.taleplerim
 );
 
 
@@ -40,6 +56,8 @@ router.get(
 
 router.put(
     "/approve/:id",
+    authMiddleware,
+    adminMiddleware,
     walletController.onayla
 );
 
@@ -51,6 +69,8 @@ router.put(
 
 router.put(
     "/reject/:id",
+    authMiddleware,
+    adminMiddleware,
     walletController.reddet
 );
 

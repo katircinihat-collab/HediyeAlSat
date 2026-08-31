@@ -25,13 +25,16 @@ function Store() {
     getir();
     takipDurumu();
 
+  // Store data is reloaded only when the route id changes.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   async function getir() {
 
     const q = query(
       collection(db, "ilanlar"),
-      where("sahip", "==", id)
+      where("sahip", "==", id),
+      where("onay", "==", true)
     );
 
     const snap = await getDocs(q);

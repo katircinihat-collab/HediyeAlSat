@@ -16,13 +16,9 @@ s=>s.durum==="Teslim"
 
 ).length;
 
-const bronze=true;
-
 const silver=toplamKazanc>=50000;
 
 const gold=toplamKazanc>=250000;
-
-const platinum=toplamKazanc>=1000000;
 
 const enCokSatan=
 

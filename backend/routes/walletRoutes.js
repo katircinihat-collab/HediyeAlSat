@@ -8,6 +8,9 @@ const walletController =
 const authMiddleware =
     require("../middleware/authMiddleware");
 
+const adminMiddleware =
+    require("../middleware/adminMiddleware");
+
 
 // =====================================================
 // WALLET GETİR
@@ -65,6 +68,7 @@ router.get(
 router.get(
     "/admin/withdraw",
     authMiddleware,
+    adminMiddleware,
     walletController.adminTalepler
 );
 
@@ -77,6 +81,7 @@ router.get(
 router.put(
     "/admin/withdraw/approve/:id",
     authMiddleware,
+    adminMiddleware,
     walletController.onayla
 );
 
@@ -89,6 +94,7 @@ router.put(
 router.put(
     "/admin/withdraw/reject/:id",
     authMiddleware,
+    adminMiddleware,
     walletController.reddet
 );
 

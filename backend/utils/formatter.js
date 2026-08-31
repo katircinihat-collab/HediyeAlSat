@@ -60,7 +60,7 @@ function formatDate(tarih) {
 
         });
 
-    } catch (e) {
+    } catch {
 
         return "-";
 

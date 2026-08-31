@@ -152,3 +152,174 @@ background:#00a651;
 background:#16a34a;
 
 }
+/* =========================================
+   ÜRÜN YORUM - GÖNDER BUTONU
+========================================= */
+
+.yorum-alt {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 15px !important;
+  width: 100% !important;
+  margin-top: 12px !important;
+}
+
+.yorum-alt span {
+  font-size: 13px;
+  color: #666;
+}
+
+.yorum-alt button {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  min-width: 200px !important;
+  height: 46px !important;
+
+  padding: 0 20px !important;
+
+  border: none !important;
+  border-radius: 10px !important;
+
+  background: #c4002f !important;
+  color: white !important;
+
+  font-size: 14px !important;
+  font-weight: 700 !important;
+
+  cursor: pointer !important;
+
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.yorum-alt button:hover {
+  background: #a90028 !important;
+  transform: translateY(-1px);
+}
+
+.yorum-alt button:disabled {
+  background: #777 !important;
+  cursor: not-allowed !important;
+  opacity: 0.7 !important;
+}
+
+
+/* =========================================
+   YORUM FORMU
+========================================= */
+
+.yorum-formu {
+  width: 100%;
+  margin-top: 20px;
+  padding: 20px;
+
+  box-sizing: border-box;
+
+  border: 1px solid #ddd;
+  border-radius: 14px;
+
+  background: #fff;
+}
+
+.yorum-formu h4 {
+  margin: 0 0 6px;
+  font-size: 18px;
+}
+
+.yorum-formu p {
+  margin: 0 0 15px;
+  color: #666;
+}
+
+
+/* =========================================
+   YILDIZLAR
+========================================= */
+
+.puan-secimi {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  margin-bottom: 12px;
+}
+
+.puan-yildiz {
+  display: inline-flex !important;
+
+  align-items: center;
+  justify-content: center;
+
+  width: 34px !important;
+  height: 34px !important;
+
+  padding: 0 !important;
+
+  border: none !important;
+  background: transparent !important;
+
+  color: #ccc !important;
+
+  font-size: 27px !important;
+
+  cursor: pointer !important;
+}
+
+.puan-yildiz.aktif {
+  color: #f5b400 !important;
+}
+
+.puan-yildiz:hover {
+  color: #f5b400 !important;
+}
+
+
+/* =========================================
+   YORUM TEXTAREA
+========================================= */
+
+.yorum-formu textarea {
+  display: block;
+
+  width: 100%;
+
+  min-height: 120px;
+
+  box-sizing: border-box;
+
+  padding: 14px;
+
+  border: 1px solid #ddd;
+  border-radius: 10px;
+
+  resize: vertical;
+
+  font-family: inherit;
+  font-size: 14px;
+
+  outline: none;
+}
+
+.yorum-formu textarea:focus {
+  border-color: #c4002f;
+}
+
+
+/* =========================================
+   MOBİL
+========================================= */
+
+@media (max-width: 600px) {
+
+  .yorum-alt {
+    flex-direction: column;
+    align-items: stretch !important;
+  }
+
+  .yorum-alt button {
+    width: 100% !important;
+  }
+
+}

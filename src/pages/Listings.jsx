@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "../firebase";
 
 import Navbar from "../components/Navbar";
 import ProductCard from "../components/ProductCard";
 import Footer from "../components/Footer";
+import CategoryBar from "../components/CategoryBar";
 
 import "../styles/pages/product.css";
 
@@ -13,6 +14,12 @@ function Listings() {
   const [ilanlar, setIlanlar] = useState([]);
   const [yukleniyor, setYukleniyor] = useState(true);
 
+  // Seçilen kategori
+  const [kategori, setKategori] = useState("");
+
+  // Favoriler
+  const [favoriler, setFavoriler] = useState(false);
+
   useEffect(() => {
 
     async function getir() {
@@ -20,15 +27,14 @@ function Listings() {
       try {
 
         const snap = await getDocs(
-          collection(db, "ilanlar")
+          query(collection(db, "ilanlar"), where("onay", "==", true))
         );
 
         const veriler = snap.docs
           .map((doc) => ({
             id: doc.id,
             ...doc.data()
-          }))
-          .filter((ilan) => ilan.onay === true);
+          }));
 
         setIlanlar(veriler);
 
@@ -51,11 +57,56 @@ function Listings() {
 
   }, []);
 
+
+  /*
+  ================================================
+  FİLTRELEME
+  ================================================
+  */
+
+  const filtrelenmisIlanlar = ilanlar.filter((ilan) => {
+
+    // Kategori filtresi
+    if (
+      kategori &&
+      ilan.kategori !== kategori
+    ) {
+
+      return false;
+
+    }
+
+    // Favoriler filtresi
+    if (favoriler && !ilan.favori) {
+
+      return false;
+
+    }
+
+    return true;
+
+  });
+
+
   return (
 
     <>
 
       <Navbar />
+
+
+      {/* KATEGORİLER */}
+
+      <CategoryBar
+
+        setKategori={setKategori}
+
+        favoriler={favoriler}
+
+        setFavoriler={setFavoriler}
+
+      />
+
 
       <main
         style={{
@@ -64,6 +115,7 @@ function Listings() {
           padding: "0 20px"
         }}
       >
+
 
         <div
           style={{
@@ -82,8 +134,11 @@ function Listings() {
                 fontSize: "34px"
               }}
             >
+
               📦 Tüm İlanlar
+
             </h1>
+
 
             <p
               style={{
@@ -91,13 +146,18 @@ function Listings() {
                 marginTop: "8px"
               }}
             >
+
               HediyeAlSat'taki güncel ürünleri keşfet
+
             </p>
 
           </div>
 
+
           <strong>
-            {ilanlar.length} İlan
+
+            {filtrelenmisIlanlar.length} İlan
+
           </strong>
 
         </div>
@@ -112,10 +172,12 @@ function Listings() {
               fontSize: "20px"
             }}
           >
+
             ⏳ İlanlar yükleniyor...
+
           </div>
 
-        ) : ilanlar.length === 0 ? (
+        ) : filtrelenmisIlanlar.length === 0 ? (
 
           <div
             style={{
@@ -125,11 +187,16 @@ function Listings() {
           >
 
             <h2>
-              📦 Henüz ilan bulunmuyor
+
+              📦 İlan bulunamadı
+
             </h2>
 
+
             <p>
-              Onaylanmış ilanlar burada görünecek.
+
+              Bu kategoride henüz onaylanmış ilan bulunmuyor.
+
             </p>
 
           </div>
@@ -145,11 +212,14 @@ function Listings() {
             }}
           >
 
-            {ilanlar.map((ilan) => (
+            {filtrelenmisIlanlar.map((ilan) => (
 
               <ProductCard
+
                 key={ilan.id}
+
                 ilan={ilan}
+
               />
 
             ))}
@@ -159,6 +229,7 @@ function Listings() {
         )}
 
       </main>
+
 
       <Footer />
 

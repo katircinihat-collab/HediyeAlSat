@@ -361,7 +361,9 @@ Number(
 
 ))
 
-}
+  }
+
+</div>
 <div className="order-grid">
 
 <div className="order-box">

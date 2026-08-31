@@ -1,247 +1,246 @@
-/* ==================================
+/* =========================================
    ÖZEL GÜNLER
-================================== */
+========================================= */
 
 .special-days {
-  max-width: 1850px;
-
-  margin: 55px auto;
-
-  padding: 0 24px;
+  width: 100%;
+  padding: 35px 22px 45px;
+  box-sizing: border-box;
 }
 
 
-/* ==================================
+/* =========================================
    BAŞLIK
-================================== */
+========================================= */
 
-.special-days h2 {
-  margin: 0 0 24px;
+.special-days-header {
+  margin-bottom: 25px;
+}
+
+.special-days-header h2 {
+  margin: 0;
 
   font-size: 30px;
-
   font-weight: 800;
 
-  color: #222;
+  color: #111;
+}
 
-  text-align: left;
+.special-days-header p {
+  margin: 10px 0 0;
+
+  font-size: 14px;
+
+  color: #666;
 }
 
 
-/* ==================================
+/* =========================================
    GRID
-================================== */
+========================================= */
 
-.days-grid {
-  display: grid;
+.special-days .special-days-grid {
+  width: 100%;
 
-  grid-template-columns: repeat(4, 1fr);
+  display: grid !important;
 
-  gap: 18px;
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr)) !important;
+
+  gap: 16px;
+
+  box-sizing: border-box;
 }
 
 
-/* ==================================
+/* =========================================
    KART
-================================== */
+========================================= */
 
-.day-card {
-  position: relative;
+.special-days .special-day-card {
+  width: 100%;
 
-  background: #ffffff;
+  min-height: 180px;
 
-  border: 1px solid #eeeeee;
+  background: #fff;
 
-  border-radius: 17px;
+  border-radius: 15px;
 
-  padding: 22px 18px;
+  padding: 22px 18px 23px;
 
-  min-height: 215px;
+  box-sizing: border-box;
 
-  text-align: center;
-
-  box-shadow:
-    0 6px 20px rgba(0, 0, 0, 0.07);
-
-  display: flex;
+  display: flex !important;
 
   flex-direction: column;
 
-  justify-content: space-between;
-
   align-items: center;
 
-  transition:
-    transform 0.25s ease,
-    box-shadow 0.25s ease;
-}
+  justify-content: flex-start;
 
-.day-card:hover {
-  transform: translateY(-5px);
+  text-align: center;
+
+  border: none;
 
   box-shadow:
-    0 14px 30px rgba(0, 0, 0, 0.12);
+    0 5px 18px rgba(0, 0, 0, 0.08);
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 
-/* ==================================
-   İKON
-================================== */
+/* =========================================
+   KART HOVER
+========================================= */
 
-.day-icon {
+.special-days .special-day-card:hover {
+  transform: translateY(-4px);
+
+  box-shadow:
+    0 10px 25px rgba(0, 0, 0, 0.13);
+}
+
+
+/* =========================================
+   EMOJI
+========================================= */
+
+.special-days .special-day-emoji {
   font-size: 48px;
 
   line-height: 1;
 
-  margin: 4px 0 12px;
+  margin-bottom: 14px;
+
+  height: 50px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
 }
 
 
-/* ==================================
+/* =========================================
    BAŞLIK
-================================== */
+========================================= */
 
-.day-card h3 {
-  margin: 0 0 15px;
+.special-days .special-day-card h3 {
+  margin: 0;
 
-  font-size: 18px;
+  font-size: 17px;
 
   line-height: 1.3;
 
   font-weight: 800;
 
-  color: #222;
-
-  min-height: auto;
+  color: #111;
 }
 
 
-/* ==================================
+/* =========================================
    BUTON
-================================== */
+========================================= */
 
-.day-card button {
+.special-days .special-day-button {
   width: 100%;
 
-  height: 42px;
+  margin-top: auto;
 
-  border: none;
+  min-height: 38px;
 
-  border-radius: 10px;
+  display: flex;
 
-  background: #b00020;
+  align-items: center;
 
-  color: #ffffff;
+  justify-content: center;
+
+  box-sizing: border-box;
+
+  border-radius: 8px;
+
+  background: #c90024;
+
+  color: #fff;
+
+  text-decoration: none;
 
   font-size: 13px;
 
   font-weight: 700;
-
-  cursor: pointer;
 
   transition:
     background 0.2s ease,
     transform 0.2s ease;
 }
 
-.day-card button:hover {
-  background: #8f001a;
+
+/* =========================================
+   BUTON HOVER
+========================================= */
+
+.special-days .special-day-button:hover {
+  background: #a9001f;
+
+  color: #fff;
 
   transform: translateY(-1px);
 }
 
 
-/* ==================================
+/* =========================================
    TABLET
-================================== */
+========================================= */
 
-@media (max-width: 1200px) {
+@media (max-width: 1000px) {
 
-  .days-grid {
-    grid-template-columns: repeat(3, 1fr);
+  .special-days .special-days-grid {
+    grid-template-columns:
+      repeat(3, minmax(0, 1fr)) !important;
   }
 
 }
 
 
-/* ==================================
-   TABLET
-================================== */
+/* =========================================
+   TABLET / KÜÇÜK EKRAN
+========================================= */
 
-@media (max-width: 900px) {
-
-  .days-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-}
-
-
-/* ==================================
-   MOBİL
-================================== */
-
-@media (max-width: 600px) {
+@media (max-width: 700px) {
 
   .special-days {
-    margin: 40px auto;
-
-    padding: 0 14px;
+    padding: 25px 15px 35px;
   }
 
-  .special-days h2 {
-    font-size: 23px;
-
-    margin-bottom: 18px;
+  .special-days-header h2 {
+    font-size: 24px;
   }
 
-  .days-grid {
-    grid-template-columns: repeat(2, 1fr);
+  .special-days .special-days-grid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr)) !important;
 
     gap: 12px;
   }
 
-  .day-card {
-    min-height: 190px;
-
-    padding: 18px 12px;
-  }
-
-  .day-icon {
-    font-size: 40px;
-  }
-
-  .day-card h3 {
-    font-size: 15px;
-
-    margin-bottom: 12px;
-  }
-
-  .day-card button {
-    height: 38px;
-
-    font-size: 11px;
-  }
-
 }
 
 
-/* ==================================
-   ÇOK KÜÇÜK TELEFON
-================================== */
+/* =========================================
+   TELEFON
+========================================= */
 
-@media (max-width: 400px) {
+@media (max-width: 480px) {
 
-  .day-card {
-    min-height: 180px;
+  .special-days .special-days-grid {
+    grid-template-columns: 1fr !important;
   }
 
-  .day-icon {
-    font-size: 36px;
-  }
-
-  .day-card h3 {
-    font-size: 14px;
+  .special-days .special-day-card {
+    min-height: 175px;
   }
 
 }

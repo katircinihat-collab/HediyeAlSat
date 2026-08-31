@@ -3,12 +3,11 @@ import { useParams,useNavigate } from "react-router-dom";
 
 import {
 doc,
-getDoc,
-updateDoc,
-deleteDoc
+getDoc
 } from "firebase/firestore";
 
 import { db } from "../firebase";
+import { adminApi } from "../config/adminApi";
 
 
 function AdminDetail(){
@@ -60,17 +59,7 @@ getir();
 async function onayla(){
 
 
-await updateDoc(
-
-doc(db,"ilanlar",id),
-
-{
-
-onay:true
-
-}
-
-);
+await adminApi(`/listings/${id}/approve`, { method: "PUT" });
 
 
 alert("İlan yayınlandı ✅");
@@ -86,17 +75,7 @@ navigate("/admin");
 async function reddet(){
 
 
-await updateDoc(
-
-doc(db,"ilanlar",id),
-
-{
-
-onay:false
-
-}
-
-);
+await adminApi(`/listings/${id}/reject`, { method: "PUT" });
 
 
 alert("İlan reddedildi");
@@ -116,11 +95,7 @@ if(!confirm("Silinsin mi?"))
 return;
 
 
-await deleteDoc(
-
-doc(db,"ilanlar",id)
-
-);
+await adminApi(`/listings/${id}`, { method: "DELETE" });
 
 
 navigate("/admin");

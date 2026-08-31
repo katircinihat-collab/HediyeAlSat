@@ -26,7 +26,7 @@ function PaymentSuccess() {
 
         <div className="success-buttons">
 
-          <Link to="/orders">
+          <Link to="/siparislerim">
 
             <button>
 

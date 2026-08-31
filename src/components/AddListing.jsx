@@ -4,6 +4,8 @@ import { useState } from "react";
 import {
   collection,
   addDoc,
+  doc,
+  getDoc,
   getDocs,
   query,
   where
@@ -285,35 +287,9 @@ function AddListing() {
        İLAN NUMARASI
     =========================== */
 
-    const snap =
-      await getDocs(
-        collection(
-          db,
-          "ilanlar"
-        )
-      );
-
-    let numaralar =
-      snap.docs
-        .map(
-          d => d.data().ilanNo
-        )
-        .filter(Boolean)
-        .map(Number);
-
-    const yeniNo =
-      String(
-
-        numaralar.length > 0
-
-          ? Math.max(...numaralar) + 1
-
-          : 1
-
-      ).padStart(
-        6,
-        "0"
-      );
+    // Security Rules ile uyum için tüm ilanlar koleksiyonu taranmaz.
+    // Firestore belge kimliği otomatik kalırken ilan numarası zaman tabanlı üretilir.
+    const yeniNo = String(Date.now());
 
 
     /* ===========================
@@ -323,7 +299,7 @@ function AddListing() {
     let magazaId = "";
     let magazaAdi = "";
 
-    const magazaSnap =
+    const uidMagazaSnap =
       await getDocs(
 
         query(
@@ -334,24 +310,41 @@ function AddListing() {
           ),
 
           where(
-            "sahip",
+            "sahipUid",
             "==",
-            auth.currentUser.email
+            auth.currentUser.uid
           )
 
         )
 
       );
 
-    if (!magazaSnap.empty) {
+    const emailMagazaSnap = uidMagazaSnap.empty
+      ? await getDocs(query(
+        collection(db, "magazalar"),
+        where("sahip", "==", auth.currentUser.email)
+      ))
+      : null;
+
+    let magazaBelgesi = !uidMagazaSnap.empty
+      ? uidMagazaSnap.docs[0]
+      : emailMagazaSnap?.docs[0];
+
+    if (!magazaBelgesi) {
+      const legacySnap = await getDoc(
+        doc(db, "magazalar", auth.currentUser.email)
+      );
+
+      if (legacySnap.exists()) magazaBelgesi = legacySnap;
+    }
+
+    if (magazaBelgesi) {
 
       magazaId =
-        magazaSnap.docs[0].id;
+        magazaBelgesi.id;
 
       magazaAdi =
-        magazaSnap.docs[0]
-          .data()
-          .magazaAdi;
+        magazaBelgesi.data().magazaAdi;
 
     }
 
@@ -421,6 +414,9 @@ function AddListing() {
 
       sahip:
         auth.currentUser.email,
+
+      sahipUid:
+        auth.currentUser.uid,
 
       magazaId:
         magazaId,

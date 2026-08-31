@@ -1,0 +1,140 @@
+.flash-sale-page {
+  min-height: 100vh;
+  padding: 25px 15px 50px;
+}
+
+.flash-sale-page-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Ana sayfaya dön */
+
+.flash-sale-back {
+  display: inline-block;
+  margin-bottom: 20px;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+/* BAŞLIK ALANI */
+
+.flash-sale-page-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  padding: 15px 18px;
+  margin-bottom: 25px;
+
+  border-radius: 12px;
+}
+
+/* ⚡ */
+
+.flash-sale-page-icon {
+  font-size: 28px;
+  line-height: 1;
+}
+
+/* BAŞLIK */
+
+.flash-sale-page-header h1 {
+  margin: 0;
+
+  font-size: 26px;
+  line-height: 1.2;
+
+  font-weight: 700;
+}
+
+/* AÇIKLAMA */
+
+.flash-sale-page-header p {
+  margin: 5px 0 0;
+
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+/* ÜRÜNLER */
+
+.flash-sale-grid {
+  display: grid;
+
+  grid-template-columns: repeat(
+    auto-fill,
+    minmax(220px, 1fr)
+  );
+
+  gap: 20px;
+}
+
+/* YÜKLENİYOR */
+
+.flash-sale-loading {
+  text-align: center;
+
+  padding: 50px 20px;
+
+  font-size: 16px;
+}
+
+/* ÜRÜN YOK */
+
+.flash-sale-empty {
+  text-align: center;
+
+  padding: 60px 20px;
+}
+
+.flash-sale-empty > div {
+  font-size: 40px;
+}
+
+.flash-sale-empty h2 {
+  margin: 10px 0 5px;
+
+  font-size: 22px;
+}
+
+.flash-sale-empty p {
+  font-size: 14px;
+}
+
+/* MOBİL */
+
+@media (max-width: 600px) {
+
+  .flash-sale-page {
+    padding: 18px 10px 40px;
+  }
+
+  .flash-sale-page-header {
+    gap: 9px;
+
+    padding: 12px 14px;
+  }
+
+  .flash-sale-page-icon {
+    font-size: 22px;
+  }
+
+  .flash-sale-page-header h1 {
+    font-size: 20px;
+  }
+
+  .flash-sale-page-header p {
+    font-size: 12px;
+  }
+
+  .flash-sale-grid {
+    grid-template-columns: repeat(
+      2,
+      minmax(0, 1fr)
+    );
+
+    gap: 10px;
+  }
+
+}

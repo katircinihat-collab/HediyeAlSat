@@ -1,0 +1,293 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function hasEmail() {
+      return signedIn() && request.auth.token.email is string;
+    }
+
+    function isOwnerUid(uid) {
+      return signedIn() && uid == request.auth.uid;
+    }
+
+    function isOwnerEmail(email) {
+      return hasEmail() && email == request.auth.token.email;
+    }
+
+    function isAdmin() {
+      let adminPath = /databases/$(database)/documents/admins/$(request.auth.token.email);
+      return hasEmail()
+        && exists(adminPath)
+        && (!("aktif" in get(adminPath).data) || get(adminPath).data.aktif != false);
+    }
+
+    function onlyChanged(fields) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(fields);
+    }
+
+    function emailOwnedCreate() {
+      return hasEmail()
+        && request.resource.data.kullanici == request.auth.token.email;
+    }
+
+    function emailOwnedExisting() {
+      return hasEmail()
+        && resource.data.kullanici == request.auth.token.email;
+    }
+
+    function listingOwner() {
+      return signedIn()
+        && (
+          (("sahipUid" in resource.data) && resource.data.sahipUid == request.auth.uid)
+          || (("sahip" in resource.data) && isOwnerEmail(resource.data.sahip))
+        );
+    }
+
+    function storeOwner(storeId) {
+      return signedIn()
+        && (
+          (("sahipUid" in resource.data) && resource.data.sahipUid == request.auth.uid)
+          || (("sahip" in resource.data) && isOwnerEmail(resource.data.sahip))
+          || (hasEmail() && storeId == request.auth.token.email)
+        );
+    }
+
+    match /admins/{email} {
+      allow read: if isAdmin();
+      allow create, update, delete: if false;
+    }
+
+    match /profiller/{uid} {
+      allow read: if isOwnerUid(uid) || isAdmin();
+      allow create: if isOwnerUid(uid)
+        && request.resource.data.keys().hasOnly([
+          "ad", "telefon", "sehir", "hakkinda"
+        ]);
+      allow update: if isOwnerUid(uid)
+        && onlyChanged(["ad", "telefon", "sehir", "hakkinda"]);
+      allow delete: if isOwnerUid(uid);
+    }
+
+    match /users/{uid} {
+      allow read: if isOwnerUid(uid) || isAdmin();
+      allow create: if isOwnerUid(uid)
+        && request.resource.data.keys().hasOnly([
+          "ad", "displayName", "email", "telefon", "sehir",
+          "hakkinda", "photoURL", "createdAt", "updatedAt"
+        ])
+        && (!("email" in request.resource.data)
+          || request.resource.data.email == request.auth.token.email);
+      allow update: if isOwnerUid(uid)
+        && onlyChanged([
+          "ad", "displayName", "email", "telefon", "sehir",
+          "hakkinda", "photoURL", "updatedAt"
+        ])
+        && (!("email" in request.resource.data)
+          || request.resource.data.email == request.auth.token.email);
+      allow delete: if isOwnerUid(uid);
+    }
+
+    match /sepet/{cartId} {
+      allow read: if emailOwnedExisting();
+      allow create: if emailOwnedCreate();
+      allow update: if emailOwnedExisting()
+        && request.resource.data.kullanici == resource.data.kullanici;
+      allow delete: if emailOwnedExisting();
+    }
+
+    match /favoriler/{favoriteId} {
+      allow read: if emailOwnedExisting();
+      allow create: if emailOwnedCreate();
+      allow update: if emailOwnedExisting()
+        && request.resource.data.kullanici == resource.data.kullanici;
+      allow delete: if emailOwnedExisting();
+    }
+
+    match /mesajlar/{messageId} {
+      allow read: if hasEmail()
+        && (resource.data.gonderen == request.auth.token.email
+          || resource.data.alan == request.auth.token.email);
+
+      allow create: if hasEmail()
+        && request.resource.data.gonderen == request.auth.token.email
+        && request.resource.data.alan is string
+        && request.resource.data.mesaj is string
+        && request.resource.data.mesaj.size() <= 5000
+        && request.resource.data.okundu == false;
+
+      allow update: if hasEmail()
+        && resource.data.alan == request.auth.token.email
+        && onlyChanged(["okundu"])
+        && request.resource.data.okundu is bool;
+
+      allow delete: if false;
+    }
+
+    match /ilanlar/{listingId} {
+      allow read: if resource.data.onay == true || listingOwner() || isAdmin();
+
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly([
+          "ilanNo", "baslik", "fiyat", "eskiFiyat", "kategori",
+          "altKategori", "tip", "sehir", "telefon", "adet", "stok",
+          "marka", "renk", "aciklama", "resim", "resimler", "video",
+          "ozelGunler", "sahipUid", "sahip", "magazaId", "magazaAdi",
+          "paraBirimi", "puan", "yorumSayisi", "favoriSayisi",
+          "satisSayisi", "goruntulenme", "onay", "oneCikan", "trend",
+          "kampanyali", "indirim", "ucretsizKargo", "ayniGunKargo",
+          "guvenliOdeme", "kargoUcreti", "teslimatSuresi", "aktif", "tarih"
+        ])
+        && request.resource.data.sahipUid == request.auth.uid
+        && request.resource.data.sahip == request.auth.token.email
+        && request.resource.data.onay == false
+        && request.resource.data.trend == false
+        && request.resource.data.oneCikan == false
+        && request.resource.data.kampanyali == false
+        && request.resource.data.puan == 5
+        && request.resource.data.yorumSayisi == 0
+        && request.resource.data.favoriSayisi == 0
+        && request.resource.data.satisSayisi == 0
+        && request.resource.data.goruntulenme == 0
+        && request.resource.data.guvenliOdeme == true;
+
+      allow update: if isAdmin()
+        || (listingOwner() && onlyChanged([
+          "baslik", "fiyat", "telefon", "aciklama", "kategori",
+          "altKategori", "renk", "marka", "resim", "resimler",
+          "video", "ozelGunler", "tip", "sehir", "adet", "stok",
+          "eskiFiyat", "indirim", "ucretsizKargo", "ayniGunKargo",
+          "kargoUcreti", "teslimatSuresi", "aktif", "paraBirimi"
+        ]));
+
+      allow delete: if listingOwner() || isAdmin();
+    }
+
+    match /magazalar/{storeId} {
+      allow read: if true;
+
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly([
+          "sahipUid", "sahip", "magazaAdi", "telefon", "sehir",
+          "aciklama", "logo", "kapak", "puan", "takipci", "tarih"
+        ])
+        && request.resource.data.sahipUid == request.auth.uid
+        && request.resource.data.sahip == request.auth.token.email
+        && request.resource.data.puan == 5
+        && request.resource.data.takipci == 0;
+
+      allow update: if isAdmin()
+        || (storeOwner(storeId) && onlyChanged([
+          "magazaAdi", "adi", "logo", "kapak", "banner",
+          "telefon", "sehir", "aciklama"
+        ]));
+
+      allow delete: if isAdmin();
+    }
+
+    match /yorumlar/{reviewId} {
+      allow read: if true;
+      allow create: if emailOwnedCreate()
+        && request.resource.data.ilanId is string
+        && request.resource.data.puan is number
+        && request.resource.data.puan >= 1
+        && request.resource.data.puan <= 5
+        && request.resource.data.yorum is string
+        && request.resource.data.yorum.size() >= 3
+        && request.resource.data.yorum.size() <= 2000;
+      allow update: if false;
+      allow delete: if emailOwnedExisting() || isAdmin();
+    }
+
+    match /magazaPuanlari/{ratingId} {
+      allow read: if true;
+      allow create: if emailOwnedCreate()
+        && request.resource.data.magazaId is string
+        && request.resource.data.puan is number
+        && request.resource.data.puan >= 1
+        && request.resource.data.puan <= 5;
+      allow update: if false;
+      allow delete: if emailOwnedExisting() || isAdmin();
+    }
+
+    match /magazaYorumlari/{reviewId} {
+      allow read: if true;
+      allow create: if emailOwnedCreate()
+        && request.resource.data.magazaId is string
+        && request.resource.data.yorum is string
+        && request.resource.data.yorum.size() >= 1
+        && request.resource.data.yorum.size() <= 2000
+        && (!("puan" in request.resource.data)
+          || (request.resource.data.puan is number
+            && request.resource.data.puan >= 1
+            && request.resource.data.puan <= 5));
+      allow update: if false;
+      allow delete: if emailOwnedExisting() || isAdmin();
+    }
+
+    match /takipciler/{followId} {
+      allow read: if emailOwnedExisting() || isAdmin();
+      allow create: if emailOwnedCreate()
+        && request.resource.data.magazaId is string;
+      allow update: if false;
+      allow delete: if emailOwnedExisting() || isAdmin();
+    }
+
+    match /takipler/{followId} {
+      allow read: if true;
+      allow create: if emailOwnedCreate()
+        && request.resource.data.magaza is string;
+      allow update: if false;
+      allow delete: if emailOwnedExisting() || isAdmin();
+    }
+
+    // TODO SECURITY: Sipariş sahipliği ve izin verilen durum geçişleri backend'e
+    // taşındıktan sonra alıcı/satıcı bazlı alan seviyesi kurallara sıkılaştırılmalı.
+    match /siparisler/{orderId} {
+      allow read, create, update, delete: if signedIn();
+    }
+
+    // TODO SECURITY: Ödeme kayıtlarına istemci yazımı tamamen kapatılmalı.
+    match /odemeler/{paymentId} {
+      allow read, create, update, delete: if signedIn();
+    }
+
+    // TODO SECURITY: Cüzdan ve bakiye hareketleri yalnız Admin SDK tarafından yazılmalı.
+    match /wallets/{walletId} {
+      allow read, create, update, delete: if signedIn();
+    }
+
+    match /bakiyeHareketleri/{movementId} {
+      allow read, create, update, delete: if signedIn();
+    }
+
+    // TODO SECURITY: Tüm para çekme modelleri tek backend sahiplik modelinde birleştirilmeli.
+    match /paraCekmeTalepleri/{requestId} {
+      allow read, create, update, delete: if signedIn();
+    }
+
+    match /geriCekmeTalepleri/{requestId} {
+      allow read, create, update, delete: if signedIn();
+    }
+
+    match /cekmeTalepleri/{requestId} {
+      allow read, create, update, delete: if signedIn();
+    }
+
+    match /withdrawRequests/{requestId} {
+      allow read, create, update, delete: if signedIn();
+    }
+
+    // TODO SECURITY: Paket ve ödeme alanları backend tarafından oluşturulup kilitlenmeli.
+    match /sponsorBasvurular/{applicationId} {
+      allow read, create, update, delete: if signedIn();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

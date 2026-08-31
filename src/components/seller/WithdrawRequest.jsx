@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { auth } from "../../firebase";
 import { onAuthStateChanged } from "firebase/auth";
+import { apiUrl } from "../../config/api";
 import "../../styles/components/withdraw-request.css";
 
 function WithdrawRequest() {
@@ -41,7 +42,7 @@ function WithdrawRequest() {
 
             const response =
                 await fetch(
-                    `http://localhost:5000/api/wallet/${encodeURIComponent(user.email)}`,
+                    apiUrl(`/api/wallet/${encodeURIComponent(user.email)}`),
                     {
                         method: "GET",
 
@@ -269,7 +270,7 @@ function WithdrawRequest() {
 
             const response =
                 await fetch(
-                    "http://localhost:5000/api/withdraw",
+                    apiUrl("/api/withdraw"),
                     {
                         method: "POST",
 

@@ -3,6 +3,8 @@ import { auth, db } from "../firebase";
 import {
   collection,
   addDoc,
+  doc,
+  getDoc,
   getDocs,
   query,
   where
@@ -143,14 +145,27 @@ function CreateStore() {
 
     }
 
-    const q=query(
+    const uidQuery=query(
+      collection(db,"magazalar"),
+      where("sahipUid","==",auth.currentUser.uid)
+    );
+
+    const uidSnap=await getDocs(uidQuery);
+
+    const emailQuery=query(
       collection(db,"magazalar"),
       where("sahip","==",auth.currentUser.email)
     );
 
-    const snap=await getDocs(q);
+    const emailSnap=uidSnap.empty
+      ? await getDocs(emailQuery)
+      : null;
 
-    if(!snap.empty){
+    const legacySnap=uidSnap.empty && emailSnap?.empty
+      ? await getDoc(doc(db,"magazalar",auth.currentUser.email))
+      : null;
+
+    if(!uidSnap.empty || !emailSnap?.empty || legacySnap?.exists()){
 
       alert("Bu hesapla zaten bir mağaza açılmış.");
 
@@ -163,6 +178,8 @@ function CreateStore() {
       collection(db,"magazalar"),
 
       {
+
+        sahipUid:auth.currentUser.uid,
 
         sahip:auth.currentUser.email,
 

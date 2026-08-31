@@ -1,8 +1,12 @@
+
 import SEO from "../components/SEO";
 
 import { useEffect, useState } from "react";
-import { collection, getDocs } from "firebase/firestore";
-import { useSearchParams } from "react-router-dom";
+import { collection, getDocs, query, where } from "firebase/firestore";
+import {
+  useSearchParams
+} from "react-router-dom";
+
 import { db } from "../firebase";
 
 import Navbar from "../components/Navbar";
@@ -20,107 +24,258 @@ import Footer from "../components/Footer";
 
 import "../styles/pages/home.css";
 
+
 function Home() {
 
   const [ilanlar, setIlanlar] = useState([]);
 
-  const [kategori, setKategori] = useState("");
-
-  const [tip, setTip] = useState("Tümü");
-
   const [favoriler, setFavoriler] = useState(false);
 
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] =
+    useSearchParams();
 
-  const arama = searchParams.get("arama") || "";
 
-  const ozelGun = searchParams.get("ozelGun") || "";
+  /*
+  ==================================================
+  URL'DEN FİLTRELERİ AL
+  ==================================================
+  */
+
+  const kategori =
+    searchParams.get("kategori") || "";
+
+  const tip =
+    searchParams.get("tip") || "Tümü";
+
+  const arama =
+    searchParams.get("arama") || "";
+
+  const ozelGun =
+    searchParams.get("ozelGun") || "";
+
+
+  /*
+  ==================================================
+  KATEGORİ DEĞİŞTİR
+  ==================================================
+  */
+
+  function kategoriDegistir(yeniKategori) {
+
+    console.log(
+      "Kategori değiştirildi:",
+      yeniKategori
+    );
+
+
+    const yeniParams =
+      new URLSearchParams(searchParams);
+
+
+    if (yeniKategori) {
+
+      yeniParams.set(
+        "kategori",
+        yeniKategori
+      );
+
+    } else {
+
+      yeniParams.delete("kategori");
+
+    }
+
+
+    setSearchParams(
+      yeniParams,
+      {
+        replace: true
+      }
+    );
+
+  }
+
+
+  /*
+  ==================================================
+  İLANLARI GETİR
+  ==================================================
+  */
 
   useEffect(() => {
 
     async function getir() {
 
-      const snap = await getDocs(
-        collection(db, "ilanlar")
-      );
+      try {
 
-      console.log("Toplam ilan:", snap.docs.length);
+        const snap =
+          await getDocs(
+            query(
+              collection(db, "ilanlar"),
+              where("onay", "==", true)
+            )
+          );
 
-      console.log(
-        snap.docs.map(doc => doc.data())
-      );
 
-      setIlanlar(
-        snap.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }))
-      );
+        console.log(
+          "Toplam ilan:",
+          snap.docs.length
+        );
+
+
+        const veriler =
+          snap.docs.map(
+            (doc) => ({
+
+              id: doc.id,
+
+              ...doc.data()
+
+            })
+          );
+
+
+        setIlanlar(
+          veriler
+        );
+
+      } catch (error) {
+
+        console.error(
+          "İlanlar alınamadı:",
+          error
+        );
+
+      }
 
     }
+
 
     getir();
 
   }, []);
 
-  const filtreli = ilanlar.filter((item) => {
 
-    const text = (
-      (item.baslik || "") +
-      " " +
-      (item.aciklama || "") +
-      " " +
-      (item.kategori || "") +
-      " " +
-      (item.sehir || "")
-    ).toLowerCase();
+  /*
+  ==================================================
+  FİLTRELE
+  ==================================================
+  */
 
-    const ozelGunUygun =
-      !ozelGun ||
-      (Array.isArray(item.ozelGunler) &&
-        item.ozelGunler.includes(ozelGun));
+  const filtreli =
+    ilanlar.filter(
+      (item) => {
 
-    return (
+        const text =
+          (
+            (item.baslik || "") +
+            " " +
+            (item.aciklama || "") +
+            " " +
+            (item.kategori || "") +
+            " " +
+            (item.sehir || "")
+          ).toLowerCase();
 
-      item.onay === true &&
 
-      text.includes(arama.toLowerCase()) &&
+        const aramaUygun =
+          text.includes(
+            arama.toLowerCase()
+          );
 
-      (kategori === "" ||
-        item.kategori === kategori) &&
 
-      (tip === "Tümü" ||
-        item.tip === tip) &&
+        const kategoriUygun =
+          !kategori ||
+          item.kategori === kategori;
 
-      (
-        !favoriler ||
-        localStorage.getItem("fav_" + item.id) === "true"
-      ) &&
 
-      ozelGunUygun
+        const tipUygun =
+          tip === "Tümü" ||
+          item.tip === tip;
 
+
+        const favoriUygun =
+          !favoriler ||
+          localStorage.getItem(
+            "fav_" + item.id
+          ) === "true";
+
+
+        const ozelGunUygun =
+          !ozelGun ||
+          (
+            Array.isArray(
+              item.ozelGunler
+            ) &&
+            item.ozelGunler.includes(
+              ozelGun
+            )
+          );
+
+
+        return (
+
+          aramaUygun &&
+
+          kategoriUygun &&
+
+          tipUygun &&
+
+          favoriUygun &&
+
+          ozelGunUygun
+
+        );
+
+      }
     );
 
-  });
+
+  /*
+  ==================================================
+  KONSOL KONTROLÜ
+  ==================================================
+  */
+
+  console.log(
+    "Aktif kategori:",
+    kategori
+  );
 
   console.log(
     "Gösterilecek ilan:",
     filtreli.length
   );
 
-  // ⚡ Günün Fırsatları
+
+  /*
+  ==================================================
+  GÜNÜN FIRSATLARI
+  ==================================================
+  */
+
   const gununFirsatlari =
     filtreli.filter(
-      x => x.trend === true
+      (x) =>
+        x.trend === true
     );
+
 
   const gosterTrend =
     gununFirsatlari.length > 0
       ? gununFirsatlari
-      : filtreli.slice(0, 20);
+      : filtreli.slice(
+          0,
+          20
+        );
 
 
-  // 🔥 En Çok Satanlar
+  /*
+  ==================================================
+  EN ÇOK SATANLAR
+  ==================================================
+  */
+
   const enCokSatan =
     [...filtreli]
       .sort(
@@ -128,89 +283,172 @@ function Home() {
           (b.satisSayisi || 0) -
           (a.satisSayisi || 0)
       )
-      .slice(0, 20);
+      .slice(
+        0,
+        20
+      );
 
 
-  // 🆕 Son Eklenenler
+  /*
+  ==================================================
+  SON EKLENENLER
+  ==================================================
+  */
+
   const sonEklenen =
     [...filtreli]
-      .sort((a, b) => {
+      .sort(
+        (a, b) => {
 
-        const ta =
-          a.tarih?.seconds || 0;
-
-        const tb =
-          b.tarih?.seconds || 0;
-
-        return tb - ta;
-
-      })
-      .slice(0, 20);
+          const ta =
+            a.tarih?.seconds || 0;
 
 
-  // 👑 Premium Mağazalar
+          const tb =
+            b.tarih?.seconds || 0;
+
+
+          return tb - ta;
+
+        }
+      )
+      .slice(
+        0,
+        20
+      );
+
+
+  /*
+  ==================================================
+  PREMIUM MAĞAZALAR
+  ==================================================
+  */
+
   const premiumMagazalar =
     filtreli.filter(
-      x => x.premium === true
+      (x) =>
+        x.premium === true
     );
 
 
-  // ⭐ Editörün Seçimi
+  /*
+  ==================================================
+  EDİTÖRÜN SEÇİMİ
+  ==================================================
+  */
+
   const editorSecimi =
     filtreli.filter(
-      x => x.oneCikan === true
+      (x) =>
+        x.oneCikan === true
     );
+
 
   const gosterEditor =
     editorSecimi.length > 0
       ? editorSecimi
-      : filtreli.slice(0, 20);
+      : filtreli.slice(
+          0,
+          20
+        );
 
+
+  /*
+  ==================================================
+  SAYFA
+  ==================================================
+  */
 
   return (
 
     <>
 
       <SEO
+
         title="HediyeAlSat | Türkiye'nin Hediye Pazaryeri"
+
         description="Türkiye'nin en yeni hediye pazaryeri. El yapımı ürünler, butik mağazalar ve binlerce hediye ilanı HediyeAlSat'ta."
+
         canonical="https://hediyealsat.com/"
+
         image="https://hediyealsat.com/logo192.png"
+
       />
+
 
       <Navbar />
 
+
       <FlashSale />
 
+
       <CategoryBar
-        setKategori={setKategori}
-        favoriler={favoriler}
-        setFavoriler={setFavoriler}
+
+        kategori={
+          kategori
+        }
+
+        setKategori={
+          kategoriDegistir
+        }
+
+        favoriler={
+          favoriler
+        }
+
+        setFavoriler={
+          setFavoriler
+        }
+
       />
 
+
       <FilterBar
-        favoriler={favoriler}
-        setFavoriler={setFavoriler}
+
+        favoriler={
+          favoriler
+        }
+
+        setFavoriler={
+          setFavoriler
+        }
+
       />
+
 
       <AdBanner />
 
 
       <ProductSlider
+
         title="⚡ Günün Fırsatları"
-        ilanlar={gosterTrend}
+
+        ilanlar={
+          gosterTrend
+        }
+
       />
 
 
       <ProductSlider
+
         title="🔥 En Çok Satan Hediyeler"
-        ilanlar={enCokSatan}
+
+        ilanlar={
+          enCokSatan
+        }
+
       />
 
 
       <ProductSlider
+
         title="🆕 Yeni Gelen Hediyeler"
-        ilanlar={sonEklenen}
+
+        ilanlar={
+          sonEklenen
+        }
+
       />
 
 
@@ -218,15 +456,26 @@ function Home() {
         premiumMagazalar.length > 0 &&
 
         <ProductSlider
+
           title="👑 Premium Mağazalar"
-          ilanlar={premiumMagazalar}
+
+          ilanlar={
+            premiumMagazalar
+          }
+
         />
+
       }
 
 
       <ProductSlider
+
         title="✨ Editörün Seçimi"
-        ilanlar={gosterEditor}
+
+        ilanlar={
+          gosterEditor
+        }
+
       />
 
 
@@ -252,5 +501,6 @@ function Home() {
   );
 
 }
+
 
 export default Home;
