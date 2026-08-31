@@ -238,6 +238,9 @@ async function createPayment(data) {
     İYZİCO ÖDEME BAŞLAT
     ==============================================
     */
+if (!iyzipay) {
+    throw new Error("Iyzico henüz yapılandırılmadı.");
+}
 
     return new Promise((resolve, reject) => {
 

@@ -1,9 +1,16 @@
 const OpenAI = require("openai");
 
-const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-});
+let client = null;
 
+if (process.env.OPENAI_API_KEY) {
+  client = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY
+  });
+} else {
+  console.warn(
+    "OpenAI API anahtarı eksik. AI özelliği anahtar eklenene kadar devre dışı."
+  );
+}
 
 async function hediyeOnerisi({
   kisi,
@@ -12,9 +19,12 @@ async function hediyeOnerisi({
   urunler
 }) {
 
+  if (!client) {
+    throw new Error("Yapay zeka özelliği henüz yapılandırılmadı.");
+  }
+
   const urunListesi = urunler
     .map((urun) => {
-
       return `
 ID: ${urun.id}
 Başlık: ${urun.baslik || ""}
@@ -23,10 +33,8 @@ Fiyat: ${urun.fiyat || ""}
 Açıklama: ${urun.aciklama || ""}
 Şehir: ${urun.sehir || ""}
 `;
-
     })
     .join("\n");
-
 
   const prompt = `
 Sen HediyeAlSat isimli Türkçe bir hediye pazaryerinin
@@ -47,11 +55,9 @@ ${butce}
 Ek bilgi:
 ${mesaj || "Ek bilgi verilmedi."}
 
-
 HediyeAlSat ürünleri:
 
 ${urunListesi}
-
 
 Kurallar:
 
@@ -80,26 +86,16 @@ Cevabı şu formatta oluştur:
 Sadece geçerli JSON döndür.
 `;
 
-
   const response = await client.responses.create({
+    model: "gpt-5-mini",
+    input: prompt
+  });
 
-  model: "gpt-5-mini",
-
-  input: prompt
-
-});
-
-
-  const text =
-    response.output_text;
-
+  const text = response.output_text;
 
   try {
-
     return JSON.parse(text);
-
   } catch (cause) {
-
     console.error(
       "AI JSON parse hatası:",
       text
@@ -109,11 +105,8 @@ Sadece geçerli JSON döndür.
       "Yapay zekâ geçerli JSON döndürmedi.",
       { cause }
     );
-
   }
-
 }
-
 
 module.exports = {
   hediyeOnerisi
