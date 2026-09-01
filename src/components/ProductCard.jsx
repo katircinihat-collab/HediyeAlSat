@@ -346,6 +346,10 @@ function ProductCard({ ilan }) {
         ilan.oneCikan
           ? "featured-product"
           : ""
+      } ${
+        ilan.kategori === "A4 Tasarım"
+          ? "product-card--a4"
+          : ""
       }`}
 
     >

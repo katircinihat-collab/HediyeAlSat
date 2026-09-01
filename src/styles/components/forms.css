@@ -229,6 +229,13 @@ select:focus{
     margin-top: 8px;
 }
 
+.photo-upload-status {
+    margin: 8px 0 0;
+    color: #d85c00;
+    font-size: 14px;
+    font-weight: 600;
+}
+
 .a4-protection-tip,
 .a4-rights-notice {
     margin: 14px 0;

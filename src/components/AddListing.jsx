@@ -66,6 +66,7 @@ function AddListing() {
 
   const [urunTuru, setUrunTuru] = useState("normal");
   const [a4HakOnayi, setA4HakOnayi] = useState(false);
+  const [fotograflarYukleniyor, setFotograflarYukleniyor] = useState(false);
 
   const [ilan, setIlan] = useState({
 
@@ -98,71 +99,106 @@ function AddListing() {
   async function fotoCokluYukle(e) {
 
     const dosyalar =
-      Array.from(e.target.files);
+      Array.from(e.target.files || []);
 
-    if (dosyalar.length > 5) {
+    e.target.value = "";
+
+    if (dosyalar.length === 0 || fotograflarYukleniyor) return;
+
+    const kalanFotoSiniri =
+      5 - ilan.resimler.length;
+
+    if (dosyalar.length > kalanFotoSiniri) {
 
       alert(
-        "En fazla 5 fotoğraf yükleyebilirsin."
+        kalanFotoSiniri > 0
+          ? `En fazla ${kalanFotoSiniri} fotoğraf daha yükleyebilirsin. Toplam sınır 5 fotoğraftır.`
+          : "En fazla 5 fotoğraf yükleyebilirsin."
       );
 
       return;
 
     }
 
-    let fotolar = [];
+    setFotograflarYukleniyor(true);
 
-    for (const dosya of dosyalar) {
+    try {
 
-      const formData =
-        new FormData();
+      const yuklemeSonuclari = await Promise.allSettled(
+        dosyalar.map(async (dosya) => {
+          let sonHata;
 
-      formData.append(
-        "file",
-        dosya
+          for (let deneme = 0; deneme < 2; deneme += 1) {
+            try {
+              const formData = new FormData();
+
+              formData.append("file", dosya);
+              formData.append("upload_preset", UPLOAD_PRESET);
+
+              const cevap = await fetch(
+                `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
+                {
+                  method: "POST",
+                  body: formData
+                }
+              );
+
+              if (!cevap.ok) {
+                throw new Error(`Fotoğraf yüklenemedi (${cevap.status}).`);
+              }
+
+              const veri = await cevap.json();
+
+              if (!veri.secure_url) {
+                throw new Error("Yükleme servisi fotoğraf adresi döndürmedi.");
+              }
+
+              return veri.secure_url;
+            } catch (hata) {
+              sonHata = hata;
+            }
+          }
+
+          throw sonHata;
+        })
       );
 
-      formData.append(
-        "upload_preset",
-        UPLOAD_PRESET
-      );
+      const yuklenenFotolar = yuklemeSonuclari
+        .filter((sonuc) => sonuc.status === "fulfilled")
+        .map((sonuc) => sonuc.value);
 
-      const cevap = await fetch(
-        `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
-        {
-          method: "POST",
-          body: formData
-        }
-      );
+      if (yuklenenFotolar.length > 0) {
+        setIlan((onceki) => {
+          const tumFotolar = [
+            ...onceki.resimler,
+            ...yuklenenFotolar
+          ].slice(0, 5);
 
-      const veri =
-        await cevap.json();
+          return {
+            ...onceki,
+            resimler: tumFotolar,
+            resim: tumFotolar[0] || ""
+          };
+        });
 
-      if (veri.secure_url) {
-
-        fotolar.push(
-          veri.secure_url
-        );
-
+        alert(`${yuklenenFotolar.length} fotoğraf yüklendi ✅`);
       }
 
+      const basarisizSayisi =
+        yuklemeSonuclari.length - yuklenenFotolar.length;
+
+      if (basarisizSayisi > 0) {
+        alert(
+          `${basarisizSayisi} fotoğraf yüklenemedi. Lütfen tekrar deneyin.`
+        );
+      }
+
+    } catch (hata) {
+      console.error("Fotoğraf yükleme hatası:", hata);
+      alert("Fotoğraflar yüklenemedi. Lütfen tekrar deneyin.");
+    } finally {
+      setFotograflarYukleniyor(false);
     }
-
-    setIlan({
-
-      ...ilan,
-
-      resimler: fotolar,
-
-      resim:
-        fotolar[0] || ""
-
-    });
-
-    alert(
-      fotolar.length +
-      " fotoğraf yüklendi ✅"
-    );
 
   }
 
@@ -267,6 +303,16 @@ function AddListing() {
 
       alert(
         "Önce giriş yap."
+      );
+
+      return;
+
+    }
+
+    if (fotograflarYukleniyor) {
+
+      alert(
+        "Fotoğrafların yüklenmesi tamamlanıyor, lütfen bekleyin."
       );
 
       return;
@@ -949,10 +995,17 @@ function AddListing() {
           type="file"
           accept="image/*"
           multiple
+          disabled={fotograflarYukleniyor}
           onChange={
             fotoCokluYukle
           }
         />
+
+        {fotograflarYukleniyor && (
+          <p className="photo-upload-status" role="status">
+            Fotoğraflar yükleniyor...
+          </p>
+        )}
 
 
         <div
