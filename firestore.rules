@@ -139,7 +139,10 @@ service cloud.firestore {
           "paraBirimi", "puan", "yorumSayisi", "favoriSayisi",
           "satisSayisi", "goruntulenme", "onay", "oneCikan", "trend",
           "kampanyali", "indirim", "ucretsizKargo", "ayniGunKargo",
-          "guvenliOdeme", "kargoUcreti", "teslimatSuresi", "aktif", "tarih"
+          "guvenliOdeme", "kargoUcreti", "teslimatSuresi", "aktif", "tarih",
+          "urunTipi", "dosyaFormatlari", "baskiOlcusu", "cozunurluk",
+          "dijitalTeslimat", "fizikselKargo", "hakOnayi",
+          "hakOnayiTarihi", "hakOnayiSurumu", "dijitalDosyaDurumu"
         ])
         && request.resource.data.sahipUid == request.auth.uid
         && request.resource.data.sahip == request.auth.token.email
@@ -152,7 +155,25 @@ service cloud.firestore {
         && request.resource.data.favoriSayisi == 0
         && request.resource.data.satisSayisi == 0
         && request.resource.data.goruntulenme == 0
-        && request.resource.data.guvenliOdeme == true;
+        && request.resource.data.guvenliOdeme == true
+        && ((!("urunTipi" in request.resource.data)
+            && !request.resource.data.keys().hasAny([
+              "dosyaFormatlari", "baskiOlcusu", "cozunurluk",
+              "dijitalTeslimat", "fizikselKargo", "hakOnayi",
+              "hakOnayiTarihi", "hakOnayiSurumu", "dijitalDosyaDurumu"
+            ]))
+          || (("urunTipi" in request.resource.data)
+            && request.resource.data.urunTipi == "dijital"
+            && request.resource.data.kategori == "A4 Tasarım"
+            && request.resource.data.dosyaFormatlari is list
+            && request.resource.data.baskiOlcusu is string
+            && request.resource.data.cozunurluk is string
+            && request.resource.data.dijitalTeslimat == true
+            && request.resource.data.fizikselKargo == false
+            && request.resource.data.hakOnayi == true
+            && request.resource.data.hakOnayiTarihi is timestamp
+            && request.resource.data.hakOnayiSurumu == "digital-rights-v1"
+            && request.resource.data.dijitalDosyaDurumu == "bekleniyor"));
 
       allow update: if isAdmin()
         || (listingOwner() && onlyChanged([
@@ -164,6 +185,11 @@ service cloud.firestore {
         ]));
 
       allow delete: if listingOwner() || isAdmin();
+    }
+
+    // Provider identifiers and protected originals are backend-only.
+    match /digitalAssets/{assetId} {
+      allow read, create, update, delete: if false;
     }
 
     match /magazalar/{storeId} {

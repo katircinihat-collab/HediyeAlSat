@@ -33,6 +33,15 @@ exports.onayla = async (req, res, next) => {
         const ref = await ilanGetir(req.params.id, res);
         if (!ref) return;
 
+        const snap = await ref.get();
+        const listing = snap.data();
+        if (listing.urunTipi === "dijital" && listing.dijitalDosyaDurumu !== "hazir") {
+            return res.status(409).json({
+                success: false,
+                message: "Korumalı orijinal dosyası hazır olmayan dijital ilan onaylanamaz."
+            });
+        }
+
         await ref.update({ onay: true });
         res.json({ success: true });
     } catch (error) {

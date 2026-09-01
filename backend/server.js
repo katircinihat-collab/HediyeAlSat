@@ -43,6 +43,9 @@ const aiRoutes =
 const adminRoutes =
     require("./routes/adminRoutes");
 
+const digitalAssetRoutes =
+    require("./routes/digitalAssetRoutes");
+
 
 // =====================================================
 // API ROUTELARI
@@ -105,6 +108,11 @@ app.use(
 app.use(
     "/api/admin",
     adminRoutes
+);
+
+app.use(
+    "/api/digital-assets",
+    digitalAssetRoutes
 );
 
 

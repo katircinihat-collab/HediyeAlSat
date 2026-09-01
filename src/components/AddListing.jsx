@@ -4,6 +4,7 @@ import { useState } from "react";
 import {
   collection,
   addDoc,
+  deleteDoc,
   doc,
   getDoc,
   getDocs,
@@ -14,11 +15,14 @@ import {
 import { db } from "../firebase";
 import categories from "../data/categories";
 import cities from "../data/cities";
+import { apiUrl } from "../config/api";
 
 import "../App.css";
 
 const CLOUD_NAME = "dsncigidz";
 const UPLOAD_PRESET = "zcqdaoum";
+const DIGITAL_RIGHTS_VERSION = "digital-rights-v1";
+const MAX_DIGITAL_FILE_SIZE = 15 * 1024 * 1024;
 
 const ozelGunListesi = [
   {
@@ -67,6 +71,12 @@ function AddListing() {
 
   const [a4HakOnayi, setA4HakOnayi] = useState(false);
   const [fotograflarYukleniyor, setFotograflarYukleniyor] = useState(false);
+  const [orijinalDosya, setOrijinalDosya] = useState(null);
+  const [dijitalDosyaYukleniyor, setDijitalDosyaYukleniyor] = useState(false);
+  const [dijitalMeta, setDijitalMeta] = useState({
+    baskiOlcusu: "A4 (210 × 297 mm)",
+    cozunurluk: ""
+  });
 
   const [ilan, setIlan] = useState({
 
@@ -93,6 +103,44 @@ function AddListing() {
 
   const a4Tasarlaniyor =
     ilan.kategori === "A4 Tasarım";
+
+  function orijinalDosyaSec(e) {
+    const dosya = e.target.files?.[0] || null;
+    e.target.value = "";
+    if (!dosya) return;
+
+    const izinliTipler = ["application/pdf", "image/jpeg", "image/png"];
+    if (!izinliTipler.includes(dosya.type)) {
+      alert("Yalnız PDF, JPG, JPEG ve PNG dosyaları desteklenir.");
+      return;
+    }
+    if (dosya.size === 0 || dosya.size > MAX_DIGITAL_FILE_SIZE) {
+      alert("Orijinal dosya boş olamaz ve en fazla 15 MB olabilir.");
+      return;
+    }
+    setOrijinalDosya(dosya);
+  }
+
+  async function korumaliDosyaServisiniKontrolEt(token) {
+    const cevap = await fetch(apiUrl("/api/digital-assets/status"), {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const veri = await cevap.json();
+    return cevap.ok && veri.configured === true;
+  }
+
+  async function orijinalDosyayiYukle(listingId, token) {
+    const cevap = await fetch(apiUrl(`/api/digital-assets/upload/${listingId}`), {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": orijinalDosya.type
+      },
+      body: orijinalDosya
+    });
+    const veri = await cevap.json();
+    if (!cevap.ok) throw new Error(veri.message || "Orijinal dosya yüklenemedi.");
+  }
 
 
   /* ===========================
@@ -342,6 +390,14 @@ function AddListing() {
 
     }
 
+    if (a4Tasarlaniyor && !orijinalDosya) {
+
+      alert("Satılacak orijinal dijital tasarım dosyasını seçmelisiniz.");
+
+      return;
+
+    }
+
     if (
       ilan.resimler.length === 0
     ) {
@@ -434,6 +490,19 @@ function AddListing() {
     /* ===========================
        FIREBASE KAYDI
     =========================== */
+
+    const dijitalAlanlar = a4Tasarlaniyor ? {
+      urunTipi: "dijital",
+      dosyaFormatlari: [orijinalDosya.type === "application/pdf" ? "PDF" : orijinalDosya.type === "image/png" ? "PNG" : "JPG"],
+      baskiOlcusu: dijitalMeta.baskiOlcusu.trim(),
+      cozunurluk: dijitalMeta.cozunurluk.trim(),
+      dijitalTeslimat: true,
+      fizikselKargo: false,
+      hakOnayi: true,
+      hakOnayiTarihi: new Date(),
+      hakOnayiSurumu: DIGITAL_RIGHTS_VERSION,
+      dijitalDosyaDurumu: "bekleniyor"
+    } : {};
 
     const yeniIlan = {
 
@@ -543,14 +612,27 @@ function AddListing() {
       aktif: true,
 
       tarih:
-        new Date()
+        new Date(),
+
+      ...dijitalAlanlar
 
     };
 
+    let yeniDijitalIlanRef = null;
 
     try {
 
-      await addDoc(
+      let kimlikTokeni = null;
+      if (a4Tasarlaniyor) {
+        kimlikTokeni = await auth.currentUser.getIdToken();
+        const servisHazir = await korumaliDosyaServisiniKontrolEt(kimlikTokeni);
+        if (!servisHazir) {
+          alert("Korumalı dijital dosya servisi henüz yapılandırılmamış. İlan kaydedilmedi.");
+          return;
+        }
+      }
+
+      const ilanRef = await addDoc(
 
         collection(
           db,
@@ -560,6 +642,12 @@ function AddListing() {
         yeniIlan
 
       );
+
+      if (a4Tasarlaniyor) {
+        yeniDijitalIlanRef = ilanRef;
+        setDijitalDosyaYukleniyor(true);
+        await orijinalDosyayiYukle(ilanRef.id, kimlikTokeni);
+      }
 
       alert(
         "✅ İlan başarıyla gönderildi."
@@ -591,6 +679,8 @@ function AddListing() {
       });
 
       setA4HakOnayi(false);
+      setOrijinalDosya(null);
+      setDijitalMeta({ baskiOlcusu: "A4 (210 × 297 mm)", cozunurluk: "" });
 
     }
 
@@ -598,9 +688,24 @@ function AddListing() {
 
       console.log(err);
 
+      if (a4Tasarlaniyor && yeniDijitalIlanRef) {
+        try {
+          await deleteDoc(yeniDijitalIlanRef);
+        } catch (cleanupError) {
+          console.error("Yarım dijital ilan temizlenemedi:", cleanupError);
+        }
+
+        alert("Dosya yüklenemedi, ilan yayınlanmadı. Lütfen tekrar deneyin.");
+        return;
+      }
+
       alert(
-        "Kayıt sırasında hata oluştu."
+        err.message || "Kayıt sırasında hata oluştu."
       );
+
+    } finally {
+
+      setDijitalDosyaYukleniyor(false);
 
     }
 
@@ -721,6 +826,7 @@ function AddListing() {
           required
           onChange={(e) => {
             setA4HakOnayi(false);
+            setOrijinalDosya(null);
             setIlan({
 
               ...ilan,
@@ -1041,6 +1147,39 @@ function AddListing() {
                 Bu onay yalnızca A4 Tasarım ilanları için zorunludur.
               </small>
             </div>
+
+            <div className="digital-original-upload">
+              <h3>🔐 Satılacak Orijinal Dosya</h3>
+              <p>
+                Yukarıya yalnız önizleme görsellerini yükleyin. Müşteriye ileride güvenli biçimde teslim edilecek orijinal dosyayı buradan ayrıca seçin. Bu dosyanın public adresi ilan belgesine yazılmaz.
+              </p>
+              <input
+                type="file"
+                accept="application/pdf,image/jpeg,image/png"
+                disabled={dijitalDosyaYukleniyor}
+                onChange={orijinalDosyaSec}
+              />
+              <small>PDF, JPG, JPEG veya PNG · En fazla 15 MB</small>
+              {orijinalDosya && <strong>{orijinalDosya.name}</strong>}
+
+              <div className="digital-metadata-grid">
+                <label>
+                  Baskı ölçüsü
+                  <input
+                    value={dijitalMeta.baskiOlcusu}
+                    onChange={(e) => setDijitalMeta({ ...dijitalMeta, baskiOlcusu: e.target.value })}
+                  />
+                </label>
+                <label>
+                  Çözünürlük
+                  <input
+                    placeholder="Örn. 300 DPI / 2480 × 3508 px"
+                    value={dijitalMeta.cozunurluk}
+                    onChange={(e) => setDijitalMeta({ ...dijitalMeta, cozunurluk: e.target.value })}
+                  />
+                </label>
+              </div>
+            </div>
           </>
         )}
 
@@ -1088,9 +1227,10 @@ function AddListing() {
         <button
           type="submit"
           className="ilan-kaydet-btn"
+          disabled={fotograflarYukleniyor || dijitalDosyaYukleniyor}
         >
 
-          🚀 İlanı Yayınla
+          {dijitalDosyaYukleniyor ? "🔐 Orijinal dosya korunuyor..." : "🚀 İlanı Yayınla"}
 
         </button>
 
