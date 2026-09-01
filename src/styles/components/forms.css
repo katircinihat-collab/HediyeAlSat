@@ -208,15 +208,54 @@ select:focus{
 
 }
 
+.a4-upload-intro {
+    margin-top: 8px;
+}
+
+.a4-upload-intro label {
+    display: block;
+    margin-bottom: 6px;
+}
+
+.a4-upload-intro p,
+.a4-upload-limit {
+    margin: 0 0 12px;
+    color: #666;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.a4-upload-limit {
+    margin-top: 8px;
+}
+
+.a4-protection-tip,
 .a4-rights-notice {
-    margin: 14px 0 20px;
+    margin: 14px 0;
     padding: 16px;
-    border: 1px solid #f0c36a;
     border-radius: 12px;
+}
+
+.a4-protection-tip {
+    border: 1px solid #b8d8f5;
+    background: #f2f8fe;
+    color: #244b6b;
+}
+
+.a4-rights-notice {
+    margin-bottom: 20px;
+    border: 1px solid #f0c36a;
     background: #fff9e8;
     color: #59430e;
 }
 
+.a4-protection-tip h3,
+.a4-rights-notice h3 {
+    margin: 0 0 8px;
+    font-size: 17px;
+}
+
+.a4-protection-tip p,
 .a4-rights-notice p {
     margin: 0 0 12px;
     line-height: 1.5;
@@ -235,4 +274,18 @@ select:focus{
     height: 18px;
     margin-top: 2px;
     flex: 0 0 auto;
+}
+
+.a4-rights-notice small {
+    display: block;
+    margin-top: 10px;
+    color: #7a621e;
+    line-height: 1.4;
+}
+
+@media (max-width: 600px) {
+    .a4-protection-tip,
+    .a4-rights-notice {
+        padding: 14px;
+    }
 }

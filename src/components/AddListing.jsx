@@ -273,10 +273,10 @@ function AddListing() {
 
     }
 
-    if (urunTuru === "a4-tasarim" && !a4HakOnayi) {
+    if (ilan.kategori === "A4 Tasarım" && !a4HakOnayi) {
 
       alert(
-        "A4 tasarımın satış ve kullanım haklarının size ait olduğunu onaylamalısınız."
+        "A4 tasarımınızı satışa sunabilmek için tasarım hakları onayını vermeniz gerekiyor."
       );
 
       return;
@@ -579,26 +579,6 @@ function AddListing() {
           <option value="normal">Normal Ürün</option>
           <option value="a4-tasarim">A4 Tasarım</option>
         </select>
-
-        {urunTuru === "a4-tasarim" && (
-          <div className="a4-rights-notice">
-            <p>
-              Yalnızca satış ve kullanım hakkı size ait olan özgün tasarımları yükleyebilirsiniz.
-            </p>
-
-            <label>
-              <input
-                type="checkbox"
-                checked={a4HakOnayi}
-                onChange={(e) => setA4HakOnayi(e.target.checked)}
-              />
-              <span>
-                Bu tasarımın satış ve kullanım haklarının bana ait olduğunu onaylıyorum.
-              </span>
-            </label>
-          </div>
-        )}
-
 
         <input
           placeholder="İlan Başlığı"
@@ -948,10 +928,21 @@ function AddListing() {
         </div>
 
 
-        <label>
-          📷 Ürün Fotoğrafları
-          (En fazla 5)
-        </label>
+        {ilan.kategori === "A4 Tasarım" ? (
+          <div className="a4-upload-intro">
+            <label>
+              🎨 A4 Tasarımını Yükle
+            </label>
+            <p>
+              Satışa sunmak istediğin A4 tasarımının görselini buradan yükle. Müşteriler ilanında bu görselleri görecek.
+            </p>
+          </div>
+        ) : (
+          <label>
+            📷 Ürün Fotoğrafları
+            (En fazla 5)
+          </label>
+        )}
 
 
         <input
@@ -989,6 +980,43 @@ function AddListing() {
           }
 
         </div>
+
+        {ilan.kategori === "A4 Tasarım" && (
+          <>
+            <p className="a4-upload-limit">
+              En fazla 5 görsel ekleyebilirsin. Tasarımını net göstermek için mümkünse dikey A4 oranında ve kaliteli bir önizleme kullan.
+            </p>
+
+            <div className="a4-protection-tip">
+              <h3>💡 Tasarımını Koru</h3>
+              <p>
+                Tasarımının yüksek çözünürlüklü orijinalini ilan görseli olarak yüklemek zorunda değilsin. İstersen düşük çözünürlüklü veya filigranlı bir önizleme kullanabilirsin.
+              </p>
+            </div>
+
+            <div className="a4-rights-notice">
+              <h3>🛡️ Tasarım Hakları Onayı</h3>
+              <p>
+                Bu tasarımın satışa sunulması için gerekli satış ve kullanım haklarına sahip olduğumu; gerekli izinlere sahip olmadığım üçüncü kişilere ait telif hakkı, marka, logo, karakter, fotoğraf, çizim veya diğer korunan içerikleri kullanmadığımı beyan ve kabul ediyorum.
+              </p>
+
+              <label>
+                <input
+                  type="checkbox"
+                  checked={a4HakOnayi}
+                  onChange={(e) => setA4HakOnayi(e.target.checked)}
+                />
+                <span>
+                  Tasarımın satışa sunulması için gerekli hak ve yetkilere sahip olduğumu onaylıyorum.
+                </span>
+              </label>
+
+              <small>
+                Bu onay yalnızca A4 Tasarım ilanları için zorunludur.
+              </small>
+            </div>
+          </>
+        )}
 
 
         <label>
