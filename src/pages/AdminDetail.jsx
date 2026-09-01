@@ -8,6 +8,7 @@ getDoc
 
 import { db } from "../firebase";
 import { adminApi } from "../config/adminApi";
+import { formatListingCategory } from "../data/categories";
 
 
 function AdminDetail(){
@@ -206,7 +207,7 @@ className="detail-img"
 
 <p>
 📦 Kategori:
-{ilan.kategori}
+{formatListingCategory(ilan)}
 </p>
 
 

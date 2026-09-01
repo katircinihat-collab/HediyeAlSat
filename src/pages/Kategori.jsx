@@ -13,6 +13,13 @@ import { db } from "../firebase";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import ProductSlider from "../components/ProductSlider";
+import {
+  getCategoryBySlug,
+  getDefaultSubcategoryForSlug,
+  getListingSubcategory,
+  isLegacySecondHandListing,
+  matchesMainCategory
+} from "../data/categories";
 
 import "../styles/pages/home.css";
 
@@ -29,59 +36,19 @@ function Kategori() {
   const [loading, setLoading] =
     useState(true);
 
+  const [altKategori, setAltKategori] =
+    useState(() => getDefaultSubcategoryForSlug(kategori));
 
-  const kategoriBilgileri = {
+  const categoryDefinition =
+    getCategoryBySlug(kategori);
 
-    "cicek": {
-      ad: "Çiçek",
-      ikon: "🌸"
-    },
-
-    "taki-aksesuar": {
-      ad: "Takı & Aksesuar",
-      ikon: "💍"
-    },
-
-    "el-yapimi": {
-      ad: "El Yapımı",
-      ikon: "🧵"
-    },
-
-    "2-el-hediyelik": {
-      ad: "2. El Hediyelik",
-      ikon: "♻️"
-    },
-
-    "kisiye-ozel": {
-      ad: "Kişiye Özel",
-      ikon: "🎁"
-    },
-
-    "organizasyon": {
-      ad: "Organizasyon",
-      ikon: "🎉"
-    },
-
-    "ev-dekorasyonu": {
-      ad: "Ev Dekorasyonu",
-      ikon: "🏠"
-    },
-
-    "oyuncak": {
-      ad: "Oyuncak",
-      ikon: "🧸"
-    },
-
-    "hediye-kutulari": {
-      ad: "Hediye Kutuları",
-      ikon: "🎀"
-    }
-
-  };
-
-
-  const bilgi =
-    kategoriBilgileri[kategori];
+  const bilgi = categoryDefinition
+    ? {
+        ad: categoryDefinition.name,
+        ikon: categoryDefinition.icon,
+        altKategoriler: categoryDefinition.subcategories
+      }
+    : null;
 
 
   useEffect(() => {
@@ -91,6 +58,7 @@ function Kategori() {
       try {
 
         setLoading(true);
+        setAltKategori(getDefaultSubcategoryForSlug(kategori));
 
 
         const snap =
@@ -127,7 +95,8 @@ function Kategori() {
           veriler.filter(
             (item) =>
 
-              item.kategori === bilgi.ad
+              !isLegacySecondHandListing(item) &&
+              matchesMainCategory(item, bilgi.ad)
 
           );
 
@@ -156,6 +125,10 @@ function Kategori() {
     // Category slug is the intended trigger; `bilgi` is derived from it.
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [kategori]);
+
+  const gorunenIlanlar = ilanlar.filter((ilan) =>
+    !altKategori || getListingSubcategory(ilan) === altKategori
+  );
 
 
   if (!bilgi) {
@@ -256,6 +229,21 @@ function Kategori() {
             ürünleri keşfedin.
           </p>
 
+          <label htmlFor="alt-kategori-filtre">
+            Alt Kategori
+          </label>
+
+          <select
+            id="alt-kategori-filtre"
+            value={altKategori}
+            onChange={(event) => setAltKategori(event.target.value)}
+          >
+            <option value="">Tüm Alt Kategoriler</option>
+            {bilgi.altKategoriler.map((item) => (
+              <option key={item} value={item}>{item}</option>
+            ))}
+          </select>
+
         </div>
 
 
@@ -274,7 +262,7 @@ function Kategori() {
 
           </div>
 
-        ) : ilanlar.length === 0 ? (
+        ) : gorunenIlanlar.length === 0 ? (
 
           <div
             style={{
@@ -299,7 +287,7 @@ function Kategori() {
 
             title={`${bilgi.ikon} ${bilgi.ad} Ürünleri`}
 
-            ilanlar={ilanlar}
+            ilanlar={gorunenIlanlar}
 
           />
 

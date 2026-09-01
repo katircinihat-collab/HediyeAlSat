@@ -64,7 +64,6 @@ const ozelGunListesi = [
 
 function AddListing() {
 
-  const [urunTuru, setUrunTuru] = useState("normal");
   const [a4HakOnayi, setA4HakOnayi] = useState(false);
   const [fotograflarYukleniyor, setFotograflarYukleniyor] = useState(false);
 
@@ -90,6 +89,9 @@ function AddListing() {
 
   const altKategoriler =
     categories[ilan.kategori] || [];
+
+  const a4Tasarlaniyor =
+    ilan.kategori === "A4 Tasarım";
 
 
   /* ===========================
@@ -319,7 +321,17 @@ function AddListing() {
 
     }
 
-    if (ilan.kategori === "A4 Tasarım" && !a4HakOnayi) {
+    if (!ilan.kategori || !ilan.altKategori) {
+
+      alert(
+        "Ana kategori ve alt kategori seçmelisiniz."
+      );
+
+      return;
+
+    }
+
+    if (a4Tasarlaniyor && !a4HakOnayi) {
 
       alert(
         "A4 tasarımınızı satışa sunabilmek için tasarım hakları onayını vermeniz gerekiyor."
@@ -567,7 +579,6 @@ function AddListing() {
 
       });
 
-      setUrunTuru("normal");
       setA4HakOnayi(false);
 
     }
@@ -597,34 +608,6 @@ function AddListing() {
       <form
         onSubmit={kaydet}
       >
-
-        <label>
-          🧩 Ürün Türü
-        </label>
-
-        <select
-          value={urunTuru}
-          onChange={(e) => {
-            const yeniTur = e.target.value;
-
-            setUrunTuru(yeniTur);
-            setA4HakOnayi(false);
-            setIlan((onceki) => ({
-              ...onceki,
-              kategori: yeniTur === "a4-tasarim"
-                ? "A4 Tasarım"
-                : onceki.kategori === "A4 Tasarım"
-                  ? ""
-                  : onceki.kategori,
-              altKategori: yeniTur === "a4-tasarim"
-                ? ""
-                : onceki.altKategori
-            }));
-          }}
-        >
-          <option value="normal">Normal Ürün</option>
-          <option value="a4-tasarim">A4 Tasarım</option>
-        </select>
 
         <input
           placeholder="İlan Başlığı"
@@ -724,8 +707,9 @@ function AddListing() {
 
         <select
           value={ilan.kategori}
-          disabled={urunTuru === "a4-tasarim"}
-          onChange={(e) =>
+          required
+          onChange={(e) => {
+            setA4HakOnayi(false);
             setIlan({
 
               ...ilan,
@@ -735,18 +719,13 @@ function AddListing() {
 
               altKategori: ""
 
-            })
-          }
+            });
+          }}
         >
 
           <option value="">
             Kategori Seçiniz
           </option>
-
-          {urunTuru === "a4-tasarim" && (
-            <option value="A4 Tasarım">A4 Tasarım</option>
-          )}
-
 
           {
             Object.keys(
@@ -774,6 +753,7 @@ function AddListing() {
         <select
           value={ilan.altKategori}
           disabled={!ilan.kategori}
+          required
           onChange={(e) =>
             setIlan({
 
@@ -974,7 +954,7 @@ function AddListing() {
         </div>
 
 
-        {ilan.kategori === "A4 Tasarım" ? (
+        {a4Tasarlaniyor ? (
           <div className="a4-upload-intro">
             <label>
               🎨 A4 Tasarımını Yükle
@@ -1034,7 +1014,7 @@ function AddListing() {
 
         </div>
 
-        {ilan.kategori === "A4 Tasarım" && (
+        {a4Tasarlaniyor && (
           <>
             <p className="a4-upload-limit">
               En fazla 5 görsel ekleyebilirsin. Tasarımını net göstermek için mümkünse dikey A4 oranında ve kaliteli bir önizleme kullan.

@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { db } from "../firebase";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import { isLegacySecondHandListing } from "../data/categories";
 
 import "../styles/pages/kiralik.css";
 
@@ -41,7 +42,9 @@ function Kiralik() {
           id: doc.id,
           ...doc.data()
         }))
-        .filter((ilan) => ilan.tip === "Kiralık");
+        .filter((ilan) =>
+          ilan.tip === "Kiralık" && !isLegacySecondHandListing(ilan)
+        );
 
       setIlanlar(liste);
       setFiltreliIlanlar(liste);

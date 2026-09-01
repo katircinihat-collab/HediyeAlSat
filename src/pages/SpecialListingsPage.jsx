@@ -6,6 +6,10 @@ import Navbar from "../components/Navbar";
 import ProductCard from "../components/ProductCard";
 import Footer from "../components/Footer";
 import "../styles/pages/special-listings.css";
+import {
+  isA4Listing,
+  isLegacySecondHandListing
+} from "../data/categories";
 
 function fiyatSayiyaCevir(deger) {
   if (typeof deger === "number") return Number.isFinite(deger) ? deger : null;
@@ -48,7 +52,9 @@ function SpecialListingsPage({ tur }) {
           .map((belge) => ({ id: belge.id, ...belge.data() }))
           .filter((ilan) => ilan.aktif !== false)
           .filter((ilan) => {
-            if (!yuzTlSayfasi) return ilan.kategori === "A4 Tasarım";
+            if (!yuzTlSayfasi) return isA4Listing(ilan);
+
+            if (isLegacySecondHandListing(ilan)) return false;
 
             const fiyat = fiyatSayiyaCevir(ilan.fiyat);
             return fiyat !== null && fiyat >= 0 && fiyat <= 100;

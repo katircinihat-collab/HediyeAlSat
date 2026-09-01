@@ -28,6 +28,7 @@ import {
 } from "firebase/firestore";
 
 import { auth, db } from "../firebase";
+import { formatListingCategory } from "../data/categories";
 
 import "../App.css";
 
@@ -908,7 +909,7 @@ function DetailPage() {
         <meta
           name="keywords"
           content={
-            `${ilan.baslik}, ${ilan.kategori}, hediye`
+            `${ilan.baslik}, ${formatListingCategory(ilan)}, hediye`
           }
         />
 
@@ -1043,7 +1044,7 @@ function DetailPage() {
 
               📦 Kategori:
               {" "}
-              {ilan.kategori}
+              {formatListingCategory(ilan)}
 
             </p>
 

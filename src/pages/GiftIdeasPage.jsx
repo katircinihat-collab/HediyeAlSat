@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 import { db } from "../firebase";
 import Navbar from "../components/Navbar";
 import ProductCard from "../components/ProductCard";
+import { isLegacySecondHandListing } from "../data/categories";
 
 import "../styles/pages/gift-ideas-page.css";
 
@@ -28,7 +29,8 @@ function GiftIdeasPage() {
           .map((d) => ({
             id: d.id,
             ...d.data()
-          }));
+          }))
+          .filter((ilan) => !isLegacySecondHandListing(ilan));
 
         setIlanlar(liste);
 

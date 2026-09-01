@@ -10,6 +10,7 @@ import {
 import { db } from "../firebase";
 import { Link } from "react-router-dom";
 import { adminApi } from "../config/adminApi";
+import { formatListingCategory } from "../data/categories";
 
 import "../styles/pages/admin.css";
 function fiyatFormat(fiyat) {
@@ -634,6 +635,12 @@ alt={ilan.baslik}
 <div className="admin-product-title">
 
 {ilan.baslik}
+
+</div>
+
+<div className="admin-product-owner">
+
+📂 {formatListingCategory(ilan) || "-"}
 
 </div>
 

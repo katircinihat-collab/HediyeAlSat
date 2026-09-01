@@ -1,5 +1,5 @@
 import "../styles/components/category-bar.css";
-import categories from "../data/categories";
+import { categoryDefinitions } from "../data/categories";
 import { useNavigate } from "react-router-dom";
 
 function CategoryBar({
@@ -11,37 +11,7 @@ function CategoryBar({
 
   const navigate = useNavigate();
 
-  const ikonlar = {
-
-    "Çiçek": "🌸",
-    "Takı & Aksesuar": "💍",
-    "El Yapımı": "🧵",
-    "2. El Hediyelik": "♻️",
-    "Kişiye Özel": "🎁",
-    "Organizasyon": "🎉",
-    "Ev Dekorasyonu": "🏠",
-    "Oyuncak": "🧸",
-    "Hediye Kutuları": "🎀"
-
-  };
-
-
-  const sluglar = {
-
-    "Çiçek": "cicek",
-    "Takı & Aksesuar": "taki-aksesuar",
-    "El Yapımı": "el-yapimi",
-    "2. El Hediyelik": "2-el-hediyelik",
-    "Kişiye Özel": "kisiye-ozel",
-    "Organizasyon": "organizasyon",
-    "Ev Dekorasyonu": "ev-dekorasyonu",
-    "Oyuncak": "oyuncak",
-    "Hediye Kutuları": "hediye-kutulari"
-
-  };
-
-
-  function kategoriSec(yeniKategori) {
+  function kategoriSec(yeniKategori, slug) {
 
     console.log(
       "Kategori seçildi:",
@@ -61,10 +31,6 @@ function CategoryBar({
 
 
     setKategori(yeniKategori);
-
-
-    const slug =
-      sluglar[yeniKategori];
 
 
     if (slug) {
@@ -97,25 +63,25 @@ function CategoryBar({
       </button>
 
 
-      {Object.keys(categories).map(
-        (kategoriAdi) => (
+      {categoryDefinitions.map(
+        (category) => (
 
           <button
             type="button"
-            key={kategoriAdi}
+            key={category.id}
             className={
-              kategori === kategoriAdi
+              kategori === category.name
                 ? "category-item active"
                 : "category-item"
             }
             onClick={() =>
-              kategoriSec(kategoriAdi)
+              kategoriSec(category.name, category.id)
             }
           >
 
-            {ikonlar[kategoriAdi] || "📦"}{" "}
+            {category.icon}{" "}
 
-            {kategoriAdi}
+            {category.name}
 
           </button>
 

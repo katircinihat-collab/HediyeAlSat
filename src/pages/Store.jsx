@@ -10,6 +10,7 @@ import {
   doc
 } from "firebase/firestore";
 import { auth, db } from "../firebase";
+import { isLegacySecondHandListing } from "../data/categories";
 
 function Store() {
 
@@ -43,7 +44,7 @@ function Store() {
       snap.docs.map(d => ({
         id: d.id,
         ...d.data()
-      }))
+      })).filter((ilan) => !isLegacySecondHandListing(ilan))
     );
 
     const takipQ = query(

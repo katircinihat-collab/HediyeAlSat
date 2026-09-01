@@ -12,6 +12,7 @@ import { db } from "../firebase";
 
 import Navbar from "../components/Navbar";
 import ProductCard from "../components/ProductCard";
+import { isLegacySecondHandListing } from "../data/categories";
 
 import "../styles/pages/special-day.css";
 
@@ -147,6 +148,8 @@ function SpecialDay() {
         const filtreli =
           liste.filter(
             (ilan) => {
+
+              if (isLegacySecondHandListing(ilan)) return false;
 
               if (
                 !Array.isArray(

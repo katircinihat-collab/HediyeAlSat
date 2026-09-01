@@ -25,6 +25,7 @@ deleteDoc
 } from "firebase/firestore";
 
 import { auth, db } from "../firebase";
+import { isLegacySecondHandListing } from "../data/categories";
 
 import StoreHero from "../components/StoreHero";
 import StoreStats from "../components/StoreStats";
@@ -109,7 +110,7 @@ setIlanlar(
   ilanSnap.docs.map((doc) => ({
     ...doc.data(),
     id: doc.id
-  }))
+  })).filter((ilan) => !isLegacySecondHandListing(ilan))
 );
 
 }

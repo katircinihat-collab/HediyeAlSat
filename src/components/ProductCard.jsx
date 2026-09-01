@@ -22,6 +22,10 @@ import {
   auth,
   db
 } from "../firebase";
+import {
+  formatListingCategory,
+  isA4Listing
+} from "../data/categories";
 
 
 function ProductCard({ ilan }) {
@@ -347,7 +351,7 @@ function ProductCard({ ilan }) {
           ? "featured-product"
           : ""
       } ${
-        ilan.kategori === "A4 Tasarım"
+        isA4Listing(ilan)
           ? "product-card--a4"
           : ""
       }`}
@@ -463,11 +467,11 @@ function ProductCard({ ilan }) {
 
         {/* KATEGORİ */}
 
-        {ilan.kategori && (
+        {(ilan.kategori || ilan.anaKategori) && (
 
           <div className="product-category">
 
-            {ilan.kategori}
+            {formatListingCategory(ilan)}
 
           </div>
 

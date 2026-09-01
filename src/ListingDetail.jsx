@@ -1,3 +1,5 @@
+import { formatListingCategory } from "./data/categories";
+
 function ListingDetail({ilan,geri}){
 
 
@@ -48,7 +50,7 @@ ilan.emoji || "🎁"
 
 <p>
 Kategori:
-{ilan.kategori}
+{formatListingCategory(ilan)}
 </p>
 
 

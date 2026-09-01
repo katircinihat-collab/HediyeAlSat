@@ -9,6 +9,13 @@ import {
 } from "react-router-dom";
 
 import { db } from "../firebase";
+import {
+  getListingMainCategory,
+  getListingSubcategory,
+  isA4Listing,
+  isLegacySecondHandListing,
+  matchesMainCategory
+} from "../data/categories";
 
 import Navbar from "../components/Navbar";
 import FlashSale from "../components/FlashSale";
@@ -167,7 +174,7 @@ function Home() {
     ilanlar.filter(
       (item) => {
 
-        if (item.kategori === "A4 Tasarım") {
+        if (isA4Listing(item) || isLegacySecondHandListing(item)) {
           return false;
         }
 
@@ -178,6 +185,10 @@ function Home() {
             (item.aciklama || "") +
             " " +
             (item.kategori || "") +
+            " " +
+            getListingMainCategory(item) +
+            " " +
+            getListingSubcategory(item) +
             " " +
             (item.sehir || "")
           ).toLowerCase();
@@ -191,7 +202,7 @@ function Home() {
 
         const kategoriUygun =
           !kategori ||
-          item.kategori === kategori;
+          matchesMainCategory(item, kategori);
 
 
         const tipUygun =

@@ -6,6 +6,11 @@ import Navbar from "../components/Navbar";
 import ProductCard from "../components/ProductCard";
 import Footer from "../components/Footer";
 import CategoryBar from "../components/CategoryBar";
+import categories, {
+  getListingSubcategory,
+  isLegacySecondHandListing,
+  matchesMainCategory
+} from "../data/categories";
 
 import "../styles/pages/product.css";
 
@@ -16,6 +21,7 @@ function Listings() {
 
   // Seçilen kategori
   const [kategori, setKategori] = useState("");
+  const [altKategori, setAltKategori] = useState("");
 
   // Favoriler
   const [favoriler, setFavoriler] = useState(false);
@@ -66,14 +72,25 @@ function Listings() {
 
   const filtrelenmisIlanlar = ilanlar.filter((ilan) => {
 
+    if (isLegacySecondHandListing(ilan)) {
+      return false;
+    }
+
     // Kategori filtresi
     if (
       kategori &&
-      ilan.kategori !== kategori
+      !matchesMainCategory(ilan, kategori)
     ) {
 
       return false;
 
+    }
+
+    if (
+      altKategori &&
+      getListingSubcategory(ilan) !== altKategori
+    ) {
+      return false;
     }
 
     // Favoriler filtresi
@@ -99,13 +116,32 @@ function Listings() {
 
       <CategoryBar
 
-        setKategori={setKategori}
+        setKategori={(yeniKategori) => {
+          setKategori(yeniKategori);
+          setAltKategori("");
+        }}
 
         favoriler={favoriler}
 
         setFavoriler={setFavoriler}
 
       />
+
+      {kategori && (
+        <div style={{ maxWidth: "1850px", margin: "20px auto 0", padding: "0 20px" }}>
+          <label htmlFor="listings-alt-kategori">Alt Kategori</label>
+          <select
+            id="listings-alt-kategori"
+            value={altKategori}
+            onChange={(event) => setAltKategori(event.target.value)}
+          >
+            <option value="">Tüm Alt Kategoriler</option>
+            {(categories[kategori] || []).map((item) => (
+              <option key={item} value={item}>{item}</option>
+            ))}
+          </select>
+        </div>
+      )}
 
 
       <main
