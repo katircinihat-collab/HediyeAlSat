@@ -11,6 +11,7 @@ import { db } from "../firebase";
 import { Link } from "react-router-dom";
 import { adminApi } from "../config/adminApi";
 import { formatListingCategory } from "../data/categories";
+import AdminStores from "../components/admin/AdminStores";
 
 import "../styles/pages/admin.css";
 function fiyatFormat(fiyat) {
@@ -60,6 +61,7 @@ function Admin() {
   const [sonSiparisler, setSonSiparisler] = useState([]);
 
   const [bakiyeler, setBakiyeler] = useState([]);
+  const [magazalar, setMagazalar] = useState([]);
 
   async function getir() {
 
@@ -157,6 +159,10 @@ function Admin() {
       collection(db, "magazalar")
     );
 
+    setMagazalar(
+      magazaSnap.docs.map((belge) => ({ id: belge.id, ...belge.data() }))
+    );
+
     setToplamMagaza(
       magazaSnap.size
     );
@@ -239,6 +245,12 @@ function Admin() {
 
     dashboardGetir();
 
+  }
+
+  function magazaDurumunuGuncelle(id, aktif) {
+    setMagazalar((onceki) =>
+      onceki.map((magaza) => magaza.id === id ? { ...magaza, aktif } : magaza)
+    );
   }
 return (
 
@@ -583,6 +595,11 @@ onClick={()=>odemeYap(b.id)}
 </table>
 
 </div>
+
+<AdminStores
+magazalar={magazalar}
+onStatusChanged={magazaDurumunuGuncelle}
+/>
 
 <div className="admin-section">
 

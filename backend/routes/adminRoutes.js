@@ -12,5 +12,6 @@ router.put("/listings/:id/approve", adminListingController.onayla);
 router.put("/listings/:id/reject", adminListingController.reddet);
 router.patch("/listings/:id/flags", adminListingController.ozellikDegistir);
 router.delete("/listings/:id", adminListingController.sil);
+router.patch("/stores/:id/status", adminListingController.magazaDurumuGuncelle);
 
 module.exports = router;

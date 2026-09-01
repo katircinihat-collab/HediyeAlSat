@@ -773,9 +773,7 @@ function Navbar() {
                     <>
 
                       <Link
-                        to={
-                          `/magaza/${magazaId}`
-                        }
+                        to="/magazam"
                         onClick={
                           menuKapat
                         }
@@ -792,7 +790,7 @@ function Navbar() {
                           </strong>
 
                           <small>
-                            Mağazanı görüntüle
+                            Mağazanı yönet
                           </small>
                         </div>
 

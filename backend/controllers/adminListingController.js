@@ -1,4 +1,4 @@
-const { firestore } = require("../config/firebase");
+const { firestore, FieldValue } = require("../config/firebase");
 
 const ADMIN_FLAGS = new Set([
     "oneCikan",
@@ -80,6 +80,44 @@ exports.sil = async (req, res, next) => {
 
         await ref.delete();
         res.json({ success: true });
+    } catch (error) {
+        next(error);
+    }
+};
+
+exports.magazaDurumuGuncelle = async (req, res, next) => {
+    try {
+        const storeId = String(req.params.id || "").trim();
+        const { aktif } = req.body;
+
+        if (!storeId || storeId.length > 1500 || typeof aktif !== "boolean") {
+            return res.status(400).json({
+                success: false,
+                message: "Geçersiz mağaza veya durum bilgisi."
+            });
+        }
+
+        const ref = firestore.collection("magazalar").doc(storeId);
+        const snap = await ref.get();
+
+        if (!snap.exists) {
+            return res.status(404).json({
+                success: false,
+                message: "Mağaza bulunamadı."
+            });
+        }
+
+        await ref.update({
+            aktif,
+            durumGuncellemeTarihi: FieldValue.serverTimestamp(),
+            durumGuncelleyen: req.user.email || req.user.uid
+        });
+
+        return res.json({
+            success: true,
+            storeId,
+            aktif
+        });
     } catch (error) {
         next(error);
     }

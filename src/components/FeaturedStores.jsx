@@ -15,10 +15,9 @@ function FeaturedStores() {
       const snap = await getDocs(collection(db, "magazalar"));
 
       setStores(
-        snap.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }))
+        snap.docs
+          .map(doc => ({ id: doc.id, ...doc.data() }))
+          .filter((store) => store.aktif !== false)
       );
 
     }

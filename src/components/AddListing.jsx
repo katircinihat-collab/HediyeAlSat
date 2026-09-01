@@ -412,11 +412,21 @@ function AddListing() {
 
     if (magazaBelgesi) {
 
+      const magazaVerisi = magazaBelgesi.data();
+
+      if (magazaVerisi.aktif === false) {
+
+        alert("Mağazanız şu anda kapalı olduğu için yeni ilan veremezsiniz.");
+
+        return;
+
+      }
+
       magazaId =
         magazaBelgesi.id;
 
       magazaAdi =
-        magazaBelgesi.data().magazaAdi;
+        magazaVerisi.magazaAdi || magazaVerisi.adi || "";
 
     }
 

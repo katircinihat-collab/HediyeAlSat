@@ -49,7 +49,16 @@ function StoreDetail() {
           return;
         }
 
-        setMagaza({ id: magazaSnap.id, ...magazaSnap.data() });
+        const magazaData = { id: magazaSnap.id, ...magazaSnap.data() };
+        setMagaza(magazaData);
+
+        if (magazaData.aktif === false) {
+          setIlanlar([]);
+          setYorumlar([]);
+          setOySayisi(0);
+          setOrtalamaPuan(null);
+          return;
+        }
 
         const [ilanSnap, puanSnap, yorumSnap] = await Promise.all([
           getDocs(query(collection(db, "ilanlar"), where("magazaId", "==", id), where("onay", "==", true))),
@@ -186,6 +195,8 @@ function StoreDetail() {
           <div className="store-page-state store-error-state"><span>⚠️</span><h1>Bir sorun oluştu</h1><p>{hata}</p></div>
         ) : !magaza ? (
           <div className="store-page-state"><span>🏪</span><h1>Mağaza bulunamadı</h1><p>Bu mağaza kaldırılmış veya bağlantı geçersiz olabilir.</p><Link to="/magazalar">Mağazalara dön</Link></div>
+        ) : magaza.aktif === false ? (
+          <div className="store-page-state store-closed-state"><span>🔒</span><h1>Bu mağaza şu anda aktif değil.</h1><p>Mağaza geçici olarak ziyaretçilere kapatılmıştır.</p><Link to="/magazalar">Aktif mağazaları keşfet</Link></div>
         ) : (
           <>
             <Helmet>

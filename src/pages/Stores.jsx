@@ -26,10 +26,9 @@ function Stores() {
         collection(db, "magazalar")
       );
 
-      const liste = snap.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data()
-      }));
+      const liste = snap.docs
+        .map((doc) => ({ id: doc.id, ...doc.data() }))
+        .filter((store) => store.aktif !== false);
 
       setStores(liste);
     } catch (error) {

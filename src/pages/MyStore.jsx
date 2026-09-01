@@ -18,7 +18,8 @@ function MyStore() {
     kapak: "",
     telefon: "",
     sehir: "",
-    aciklama: ""
+    aciklama: "",
+    aktif: true
   });
   const [magazaId, setMagazaId] = useState(null);
 
@@ -65,7 +66,8 @@ function MyStore() {
       kapak: veri.kapak || veri.banner || "",
       telefon: veri.telefon || "",
       sehir: veri.sehir || "",
-      aciklama: veri.aciklama || ""
+      aciklama: veri.aciklama || "",
+      aktif: veri.aktif !== false
     });
 
   }
@@ -101,6 +103,13 @@ function MyStore() {
     <div className="page">
 
       <h1>🏪 Mağazam</h1>
+
+      {magaza.aktif === false && (
+        <div className="store-closed-notice" role="status">
+          <strong>Mağazanız şu anda yönetim tarafından kapatılmıştır.</strong>
+          <span>Mağaza bilgileriniz ve geçmiş kayıtlarınız korunur; yeni ilan ekleyemezsiniz.</span>
+        </div>
+      )}
 
       <input
         placeholder="Mağaza Adı"
