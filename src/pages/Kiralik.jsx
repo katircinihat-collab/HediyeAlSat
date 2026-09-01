@@ -3,6 +3,7 @@ import { collection, getDocs, query, where } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 
 import { db } from "../firebase";
+import cities from "../data/cities";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { isLegacySecondHandListing } from "../data/categories";
@@ -181,13 +182,11 @@ function Kiralik() {
     )
   ];
 
-  const sehirler = [
-    ...new Set(
-      ilanlar
-        .map((ilan) => ilan.sehir)
-        .filter(Boolean)
-    )
-  ];
+  const sehirSayisi = new Set(
+    ilanlar
+      .map((ilan) => ilan.sehir)
+      .filter(Boolean)
+  ).size;
 
   function temizle() {
 
@@ -285,7 +284,7 @@ function Kiralik() {
 
             <div>
               <strong>
-                {sehirler.length}
+                {sehirSayisi}
               </strong>
 
               <span>
@@ -434,7 +433,7 @@ function Kiralik() {
                   Tüm Şehirler
                 </option>
 
-                {sehirler.map((item) => (
+                {cities.map((item) => (
 
                   <option
                     key={item}

@@ -13,6 +13,7 @@ import {
 
 import { db } from "../firebase";
 import categories from "../data/categories";
+import cities from "../data/cities";
 
 import "../App.css";
 
@@ -837,29 +838,11 @@ function AddListing() {
             Şehir Seçiniz
           </option>
 
-          <option>
-            Sakarya
-          </option>
-
-          <option>
-            İstanbul
-          </option>
-
-          <option>
-            Ankara
-          </option>
-
-          <option>
-            İzmir
-          </option>
-
-          <option>
-            Bursa
-          </option>
-
-          <option>
-            Kocaeli
-          </option>
+          {cities.map((city) => (
+            <option key={city} value={city}>
+              {city}
+            </option>
+          ))}
 
         </select>
 
