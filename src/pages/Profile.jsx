@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
@@ -25,17 +25,36 @@ function konumAyir(sehir = "") {
   };
 }
 
+const bosProfil = {
+  ad: "",
+  telefon: "",
+  il: "",
+  ilce: "",
+  hakkinda: ""
+};
+
+function profilNormallestir(profil = {}) {
+  return {
+    ad: String(profil.ad || "").trim(),
+    telefon: telefonFormatla(profil.telefon),
+    il: String(profil.il || "").trim(),
+    ilce: String(profil.ilce || "").trim(),
+    hakkinda: String(profil.hakkinda || "").trim()
+  };
+}
+
 function Profile() {
   const navigate = useNavigate();
-  const [profil, setProfil] = useState({
-    ad: "",
-    telefon: "",
-    il: "",
-    ilce: "",
-    hakkinda: ""
-  });
+  const [profil, setProfil] = useState(bosProfil);
+  const [kayitliProfil, setKayitliProfil] = useState(bosProfil);
   const [yukleniyor, setYukleniyor] = useState(true);
   const [kaydediliyor, setKaydediliyor] = useState(false);
+  const [basariMesaji, setBasariMesaji] = useState("");
+
+  const profilDegisti = useMemo(
+    () => JSON.stringify(profilNormallestir(profil)) !== JSON.stringify(kayitliProfil),
+    [profil, kayitliProfil]
+  );
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -49,14 +68,19 @@ function Profile() {
 
         if (snapshot.exists()) {
           const data = snapshot.data();
-          const konum = konumAyir(data.sehir);
-          setProfil({
+          const konum = konumAyir(data.sehir || data.il);
+          const yuklenenProfil = profilNormallestir({
             ad: data.ad || "",
             telefon: telefonFormatla(data.telefon),
-            il: konum.il,
-            ilce: konum.ilce,
+            il: data.il || konum.il,
+            ilce: data.ilce || konum.ilce,
             hakkinda: data.hakkinda || ""
           });
+          setProfil(yuklenenProfil);
+          setKayitliProfil(yuklenenProfil);
+        } else {
+          setProfil(bosProfil);
+          setKayitliProfil(bosProfil);
         }
       } catch (error) {
         console.error("Profil bilgileri alınamadı:", error);
@@ -68,7 +92,15 @@ function Profile() {
     return unsubscribe;
   }, [navigate]);
 
+  useEffect(() => {
+    if (!basariMesaji) return undefined;
+
+    const timer = window.setTimeout(() => setBasariMesaji(""), 3000);
+    return () => window.clearTimeout(timer);
+  }, [basariMesaji]);
+
   function alanDegistir(alan, value) {
+    setBasariMesaji("");
     setProfil((onceki) => ({ ...onceki, [alan]: value }));
   }
 
@@ -76,7 +108,7 @@ function Profile() {
     event.preventDefault();
 
     const user = auth.currentUser;
-    if (!user || kaydediliyor) return;
+    if (!user || kaydediliyor || !profilDegisti) return;
 
     const telefonRakamlar = profil.telefon.replace(/\D/g, "");
     if (telefonRakamlar && !/^05\d{9}$/.test(telefonRakamlar)) {
@@ -91,18 +123,25 @@ function Profile() {
         .filter(Boolean)
         .join(" / ");
 
+      const kaydedilecekProfil = profilNormallestir({
+        ...profil,
+        telefon: telefonRakamlar
+      });
+
       await setDoc(
         doc(db, "profiller", user.uid),
         {
-          ad: profil.ad.trim(),
-          telefon: telefonFormatla(telefonRakamlar),
+          ad: kaydedilecekProfil.ad,
+          telefon: kaydedilecekProfil.telefon,
           sehir,
-          hakkinda: profil.hakkinda.trim()
+          hakkinda: kaydedilecekProfil.hakkinda
         },
         { merge: true }
       );
 
-      alert("Profil bilgileriniz kaydedildi ✅");
+      setProfil(kaydedilecekProfil);
+      setKayitliProfil(kaydedilecekProfil);
+      setBasariMesaji("Bilgileriniz kaydedildi.");
     } catch (error) {
       console.error("Profil kaydedilemedi:", error);
       alert("Profil bilgileri kaydedilemedi. Lütfen tekrar deneyin.");
@@ -115,11 +154,6 @@ function Profile() {
     <>
       <Navbar />
       <main className="profile-page">
-        <header className="profile-header">
-          <h1>👤 Profil Bilgilerim</h1>
-          <p>Telefon ve konum bilgilerinizi yalnızca hesabınız için yönetin.</p>
-        </header>
-
         <nav className="profile-menu" aria-label="Hesap sayfaları">
           <Link className="profile-link" to="/ilanlarim">📦 İlanlarım</Link>
           <Link className="profile-link" to="/siparislerim">🛒 Siparişlerim</Link>
@@ -137,10 +171,23 @@ function Profile() {
           <div className="profile-card profile-loading">Profil bilgileriniz yükleniyor...</div>
         ) : (
           <form className="profile-card profile-form" onSubmit={kaydet}>
-            <div className="profile-email">
-              <span>E-posta</span>
-              <strong>{auth.currentUser?.email}</strong>
-            </div>
+            <header className="profile-card-header">
+              <h1>👤 Profil Bilgilerim</h1>
+              <p>Hesap bilgilerinizi tek bir yerden görüntüleyip güncelleyebilirsiniz.</p>
+            </header>
+
+            <label>
+              E-posta
+              <input
+                type="email"
+                value={auth.currentUser?.email || ""}
+                disabled
+                aria-describedby="profile-email-note"
+              />
+              <small id="profile-email-note">
+                E-posta adresiniz Firebase hesabınızdan alınır.
+              </small>
+            </label>
 
             <label>
               Ad Soyad
@@ -202,9 +249,25 @@ function Profile() {
               />
             </label>
 
-            <button type="submit" className="profile-save-btn" disabled={kaydediliyor}>
-              {kaydediliyor ? "Kaydediliyor..." : "💾 Bilgilerimi Kaydet"}
-            </button>
+            <div className="profile-save-row">
+              <button
+                type="submit"
+                className="profile-save-btn"
+                disabled={kaydediliyor || !profilDegisti}
+              >
+                {kaydediliyor
+                  ? "Kaydediliyor..."
+                  : profilDegisti
+                    ? "💾 Bilgilerimi Kaydet"
+                    : "✓ Bilgiler Kaydedildi"}
+              </button>
+
+              {basariMesaji && (
+                <p className="profile-success" role="status">
+                  {basariMesaji}
+                </p>
+              )}
+            </div>
           </form>
         )}
       </main>
