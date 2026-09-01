@@ -236,7 +236,9 @@ function Stores() {
                   <div className="stores-card-info">
 
                     <span>
-                      ⭐ {store.puan || 5}
+                      {Number(store.oySayisi || 0) > 0 && Number(store.puan || 0) > 0
+                        ? `⭐ ${store.puan}`
+                        : "Yeni Mağaza"}
                     </span>
 
                     <span>

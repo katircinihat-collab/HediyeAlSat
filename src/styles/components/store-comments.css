@@ -106,6 +106,14 @@ font-weight:700;
 
 color:#222;
 
+overflow-wrap:anywhere;
+
+}
+
+.comment-header > div:last-child{
+
+min-width:0;
+
 }
 
 .comment-header span{

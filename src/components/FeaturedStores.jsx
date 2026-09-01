@@ -69,7 +69,11 @@ function FeaturedStores() {
 
             <div className="store-info">
 
-              <span>⭐ {store.puan || 5}</span>
+              <span>
+                {Number(store.oySayisi || 0) > 0 && Number(store.puan || 0) > 0
+                  ? `⭐ ${store.puan}`
+                  : "Yeni Mağaza"}
+              </span>
 
               <span>👥 {store.takipci || 0}</span>
 
