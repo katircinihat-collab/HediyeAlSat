@@ -534,7 +534,7 @@
 .product-card.product-card--a4 .product-image,
 .product-card.product-card--a4.featured-product .product-image {
   aspect-ratio: 210 / 297;
-  max-height: 420px;
+  max-height: 350px;
   background: #f4f2f0;
 }
 
@@ -551,7 +551,7 @@
 @media (max-width: 600px) {
   .product-card.product-card--a4 .product-image,
   .product-card.product-card--a4.featured-product .product-image {
-    max-height: 460px;
+    max-height: 360px;
   }
 
   .product-card.product-card--a4 .product-image img {

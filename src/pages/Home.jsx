@@ -167,6 +167,10 @@ function Home() {
     ilanlar.filter(
       (item) => {
 
+        if (item.kategori === "A4 Tasarım") {
+          return false;
+        }
+
         const text =
           (
             (item.baslik || "") +

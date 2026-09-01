@@ -383,9 +383,13 @@ width:100%;
 
 height:180px;
 
-object-fit:cover;
+object-fit:contain;
 
-background:#eee;
+object-position:center;
+
+display:block;
+
+background:#f3f4f6;
 
 }
 
