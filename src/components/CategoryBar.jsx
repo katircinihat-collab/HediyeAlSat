@@ -86,47 +86,6 @@ function CategoryBar({
         )
       )}
 
-
-      <button
-        type="button"
-        className="category-item"
-        onClick={() => {
-
-          alert(
-            "📍 Yakında konuma göre filtreleme eklenecek."
-          );
-
-        }}
-      >
-        📍 Konum
-      </button>
-
-
-      <button
-        type="button"
-        className="category-item"
-        onClick={() => {
-
-          alert(
-            "☎️ Telefon filtresi yakında eklenecek."
-          );
-
-        }}
-      >
-        ☎️ Tel
-      </button>
-
-
-      <button
-        type="button"
-        className="category-item"
-        onClick={() =>
-          navigate("/favorilerim")
-        }
-      >
-        ❤️ Favorilerim
-      </button>
-
     </section>
 
   );

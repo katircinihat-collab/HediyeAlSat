@@ -1,31 +1,39 @@
 import "../styles/components/filter-bar.css";
 import { useNavigate } from "react-router-dom";
+import { auth } from "../firebase";
 
 function FilterBar() {
 
   const navigate = useNavigate();
+
+  function profileGit(hash) {
+    const hedef = `/profil#${hash}`;
+
+    if (!auth.currentUser) {
+      navigate("/login", { state: { from: hedef } });
+      return;
+    }
+
+    navigate(hedef);
+  }
 
   return (
 
     <div className="filter-bar">
 
       <button
-        onClick={()=>{
-          navigate("/profil#konum");
-        }}
+        onClick={() => profileGit("konum")}
       >
         📍 Konum
       </button>
 
       <button
-        onClick={()=>{
-          navigate("/profil#telefon");
-        }}
+        onClick={() => profileGit("telefon")}
       >
         ☎️ Tel
       </button>
 
-      <button onClick={()=>navigate("/favorilerim")}>
+      <button onClick={() => navigate("/favorilerim")}>
 
         ❤️ Favorilerim
 
