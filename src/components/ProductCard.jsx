@@ -5,10 +5,6 @@ import {
 } from "react-router-dom";
 
 import {
-  useState
-} from "react";
-
-import {
   collection,
   query,
   where,
@@ -26,6 +22,7 @@ import {
   formatListingCategory,
   isA4Listing
 } from "../data/categories";
+import useFavorite from "../hooks/useFavorite";
 
 
 function ProductCard({ ilan }) {
@@ -35,13 +32,11 @@ function ProductCard({ ilan }) {
      FAVORİ
   ========================= */
 
-  const [fav, setFav] = useState(
-
-    localStorage.getItem(
-      "fav_" + ilan.id
-    ) === "true"
-
-  );
+  const {
+    favori: fav,
+    favoriDegistir,
+    favoriIslemi
+  } = useFavorite(ilan);
 
 
   /* =========================
@@ -133,33 +128,6 @@ function ProductCard({ ilan }) {
   /* =========================
      FAVORİ
   ========================= */
-
-  function favori(e) {
-
-    e.preventDefault();
-
-    e.stopPropagation();
-
-
-    const yeniDurum =
-      !fav;
-
-
-    localStorage.setItem(
-
-      "fav_" + ilan.id,
-
-      yeniDurum.toString()
-
-    );
-
-
-    setFav(
-      yeniDurum
-    );
-
-  }
-
 
   /* =========================
      SEPETE EKLE
@@ -398,8 +366,10 @@ function ProductCard({ ilan }) {
           }
 
           onClick={
-            favori
+            favoriDegistir
           }
+
+          disabled={favoriIslemi}
 
           title="Favorilere ekle"
 

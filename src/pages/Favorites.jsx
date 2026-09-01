@@ -1,142 +1,143 @@
-import {useEffect,useState} from "react";
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { onAuthStateChanged } from "firebase/auth";
 import {
-collection,
-getDocs,
-query,
-where
+  collection,
+  doc,
+  getDoc,
+  onSnapshot,
+  query,
+  where
 } from "firebase/firestore";
+import { auth, db } from "../firebase";
+import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
+import ProductCard from "../components/ProductCard";
+import "../styles/pages/profile.css";
 
-import {db,auth} from "../firebase";
+function Favorites() {
+  const navigate = useNavigate();
+  const [favoriler, setFavoriler] = useState([]);
+  const [yukleniyor, setYukleniyor] = useState(true);
 
-import "../App.css";
+  useEffect(() => {
+    let favoriDinleyici = null;
+    let aktif = true;
 
+    const authDinleyici = onAuthStateChanged(auth, (user) => {
+      if (favoriDinleyici) favoriDinleyici();
 
-function Favorites(){
+      if (!user) {
+        setYukleniyor(false);
+        navigate("/login", { replace: true });
+        return;
+      }
 
+      const favoriSorgusu = query(
+        collection(db, "favoriler"),
+        where("kullanici", "==", user.email)
+      );
 
-const [favoriler,setFavoriler]=useState([]);
+      favoriDinleyici = onSnapshot(
+        favoriSorgusu,
+        async (snapshot) => {
+          const favoriBelgeleri = snapshot.docs.map((favorite) => ({
+            favoriId: favorite.id,
+            ...favorite.data()
+          }));
+          const ilanIds = [
+            ...new Set(
+              favoriBelgeleri
+                .map((favorite) => favorite.ilanId)
+                .filter(Boolean)
+            )
+          ];
 
+          const ilanSonuclari = await Promise.allSettled(
+            ilanIds.map(async (ilanId) => {
+              const ilanSnapshot = await getDoc(doc(db, "ilanlar", ilanId));
+              return ilanSnapshot.exists()
+                ? { id: ilanSnapshot.id, ...ilanSnapshot.data() }
+                : null;
+            })
+          );
 
+          if (!aktif) return;
 
-useEffect(()=>{
+          const guncelIlanlar = ilanSonuclari
+              .filter((result) => result.status === "fulfilled" && result.value)
+              .map((result) => ({
+                key: `ilan-${result.value.id}`,
+                ilan: result.value,
+                legacy: false
+              }));
 
+          const legacyFavoriler = favoriBelgeleri
+            .filter((favorite) => !favorite.ilanId && favorite.baslik)
+            .map((favorite) => ({
+              key: `legacy-${favorite.favoriId}`,
+              ilan: favorite,
+              legacy: true
+            }));
 
-async function getir(){
+          setFavoriler([...guncelIlanlar, ...legacyFavoriler]);
+          setYukleniyor(false);
+        },
+        (error) => {
+          console.error("Favoriler alınamadı:", error);
+          if (aktif) setYukleniyor(false);
+        }
+      );
+    });
 
+    return () => {
+      aktif = false;
+      authDinleyici();
+      if (favoriDinleyici) favoriDinleyici();
+    };
+  }, [navigate]);
 
-if(!auth.currentUser)return;
+  return (
+    <>
+      <Navbar />
+      <main className="favorites-page">
+        <header className="favorites-header">
+          <h1>❤️ Favorilerim</h1>
+          <p>Beğendiğiniz ürünleri burada kolayca takip edebilirsiniz.</p>
+        </header>
 
-
-const q=query(
-
-collection(db,"favoriler"),
-
-where(
-"kullanici",
-"==",
-auth.currentUser.email
-)
-
-);
-
-
-
-const snap=await getDocs(q);
-
-
-setFavoriler(
-
-snap.docs.map(d=>({
-
-id:d.id,
-
-...d.data()
-
-}))
-
-);
-
-
+        {yukleniyor ? (
+          <div className="favorites-state">Favoriler yükleniyor...</div>
+        ) : favoriler.length === 0 ? (
+          <section className="favorites-empty">
+            <span>♡</span>
+            <h2>Henüz favori ürününüz yok.</h2>
+            <p>Beğendiğiniz ürünleri kalp simgesine dokunarak kaydedebilirsiniz.</p>
+            <Link to="/ilanlar">Ürünleri keşfet</Link>
+          </section>
+        ) : (
+          <div className="favorites-grid">
+            {favoriler.map(({ key, ilan, legacy }) =>
+              legacy ? (
+                <article className="legacy-favorite-card" key={key}>
+                  {ilan.resim && <img src={ilan.resim} alt={ilan.baslik} />}
+                  <div>
+                    <h2>{ilan.baslik}</h2>
+                    <strong>{Number(ilan.fiyat || 0).toLocaleString("tr-TR")} TL</strong>
+                    {ilan.sehir && <p>📍 {ilan.sehir}</p>}
+                    <small>Eski favori kaydı</small>
+                  </div>
+                </article>
+              ) : (
+                <ProductCard key={key} ilan={ilan} />
+              )
+            )}
+          </div>
+        )}
+      </main>
+      <Footer />
+    </>
+  );
 }
-
-
-getir();
-
-
-},[]);
-
-
-
-
-return (
-
-<div className="page">
-
-
-<h1>
-
-❤️ Favorilerim
-
-</h1>
-
-
-
-{
-
-favoriler.length===0
-
-?
-
-<h3>
-
-Favori ilan yok
-
-</h3>
-
-
-:
-
-favoriler.map(f=>(
-
-
-<div className="product" key={f.id}>
-
-
-<h3>
-
-{f.baslik}
-
-</h3>
-
-
-<p>
-
-💰 {f.fiyat}
-
-</p>
-
-
-<p>
-
-📍 {f.sehir}
-
-</p>
-
-
-</div>
-
-
-))
-
-}
-
-
-
-</div>
-
-)
-
-}
-
 
 export default Favorites;

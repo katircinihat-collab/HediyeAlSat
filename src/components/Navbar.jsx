@@ -476,7 +476,7 @@ function Navbar() {
 
           <Link
             className="nav-icon"
-            to="/favoriler"
+            to="/favorilerim"
             title="Favorilerim"
             aria-label="Favorilerim"
           >
@@ -648,11 +648,11 @@ function Navbar() {
 
                     <div>
                       <strong>
-                        Profilim
+                        Profil Bilgilerim
                       </strong>
 
                       <small>
-                        Hesap bilgilerin
+                        Telefon ve konumunu yönet
                       </small>
                     </div>
 
@@ -688,7 +688,7 @@ function Navbar() {
                   {/* FAVORİLER */}
 
                   <Link
-                    to="/favoriler"
+                    to="/favorilerim"
                     onClick={
                       menuKapat
                     }

@@ -87,6 +87,33 @@ color: #1d1d1f;
 word-break: break-word;
 }
 
+.detail-favorite-btn {
+display: inline-flex;
+align-items: center;
+justify-content: center;
+margin: 0 0 20px;
+padding: 10px 15px;
+border: 1px solid #e3e3e3;
+border-radius: 10px;
+background: #fff;
+color: #444;
+font-weight: 700;
+cursor: pointer;
+transition: .2s ease;
+}
+
+.detail-favorite-btn:hover,
+.detail-favorite-btn.active {
+border-color: #c1121f;
+background: #fff2f3;
+color: #c1121f;
+}
+
+.detail-favorite-btn:disabled {
+opacity: .65;
+cursor: wait;
+}
+
 /* =========================================================
 FİYAT
 ========================================================= */

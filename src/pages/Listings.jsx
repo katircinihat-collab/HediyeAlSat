@@ -23,9 +23,6 @@ function Listings() {
   const [kategori, setKategori] = useState("");
   const [altKategori, setAltKategori] = useState("");
 
-  // Favoriler
-  const [favoriler, setFavoriler] = useState(false);
-
   useEffect(() => {
 
     async function getir() {
@@ -93,13 +90,6 @@ function Listings() {
       return false;
     }
 
-    // Favoriler filtresi
-    if (favoriler && !ilan.favori) {
-
-      return false;
-
-    }
-
     return true;
 
   });
@@ -120,10 +110,6 @@ function Listings() {
           setKategori(yeniKategori);
           setAltKategori("");
         }}
-
-        favoriler={favoriler}
-
-        setFavoriler={setFavoriler}
 
       />
 

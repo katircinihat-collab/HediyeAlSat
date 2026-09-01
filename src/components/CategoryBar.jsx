@@ -4,9 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 function CategoryBar({
   kategori,
-  setKategori,
-  favoriler,
-  setFavoriler
+  setKategori
 }) {
 
   const navigate = useNavigate();
@@ -121,13 +119,9 @@ function CategoryBar({
 
       <button
         type="button"
-        className={
-          favoriler
-            ? "category-item active"
-            : "category-item"
-        }
+        className="category-item"
         onClick={() =>
-          setFavoriler(!favoriler)
+          navigate("/favorilerim")
         }
       >
         ❤️ Favorilerim

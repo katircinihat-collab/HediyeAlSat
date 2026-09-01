@@ -1,5 +1,9 @@
 import "../styles/components/filter-bar.css";
-function FilterBar({ favoriler, setFavoriler }) {
+import { useNavigate } from "react-router-dom";
+
+function FilterBar() {
+
+  const navigate = useNavigate();
 
   return (
 
@@ -7,12 +11,7 @@ function FilterBar({ favoriler, setFavoriler }) {
 
       <button
         onClick={()=>{
-          alert(
-`📍 Semerciler Mahallesi
-Dr. Nuri Bayar Caddesi
-Birkent Pasajı Kat:1 No:69
-Adapazarı / Sakarya`
-          );
+          navigate("/profil#konum");
         }}
       >
         📍 Konum
@@ -20,16 +19,13 @@ Adapazarı / Sakarya`
 
       <button
         onClick={()=>{
-          alert(
-`☎️ 05530229950
-☎️ 05324093233`
-          );
+          navigate("/profil#telefon");
         }}
       >
         ☎️ Tel
       </button>
 
-      <button onClick={()=>setFavoriler(!favoriler)}>
+      <button onClick={()=>navigate("/favorilerim")}>
 
         ❤️ Favorilerim
 

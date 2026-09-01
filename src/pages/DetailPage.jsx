@@ -29,6 +29,7 @@ import {
 
 import { auth, db } from "../firebase";
 import { formatListingCategory } from "../data/categories";
+import useFavorite from "../hooks/useFavorite";
 
 import "../App.css";
 
@@ -58,6 +59,12 @@ function DetailPage() {
     useState(false);
 
   const [takipEdiyor] = useState(false);
+
+  const {
+    favori,
+    favoriDegistir,
+    favoriIslemi
+  } = useFavorite(ilan);
 
 
   /* =========================
@@ -971,6 +978,15 @@ function DetailPage() {
             <h1>
               {ilan.baslik}
             </h1>
+
+            <button
+              type="button"
+              className={`detail-favorite-btn ${favori ? "active" : ""}`}
+              onClick={favoriDegistir}
+              disabled={favoriIslemi}
+            >
+              {favori ? "❤️ Favorilerimde" : "♡ Favorilere Ekle"}
+            </button>
 
 
             {/* FİYAT */}

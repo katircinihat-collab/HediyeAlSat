@@ -37,8 +37,6 @@ function Home() {
 
   const [ilanlar, setIlanlar] = useState([]);
 
-  const [favoriler, setFavoriler] = useState(false);
-
   const [searchParams, setSearchParams] =
     useSearchParams();
 
@@ -210,13 +208,6 @@ function Home() {
           item.tip === tip;
 
 
-        const favoriUygun =
-          !favoriler ||
-          localStorage.getItem(
-            "fav_" + item.id
-          ) === "true";
-
-
         const ozelGunUygun =
           !ozelGun ||
           (
@@ -236,8 +227,6 @@ function Home() {
           kategoriUygun &&
 
           tipUygun &&
-
-          favoriUygun &&
 
           ozelGunUygun
 
@@ -408,28 +397,10 @@ function Home() {
           kategoriDegistir
         }
 
-        favoriler={
-          favoriler
-        }
-
-        setFavoriler={
-          setFavoriler
-        }
-
       />
 
 
-      <FilterBar
-
-        favoriler={
-          favoriler
-        }
-
-        setFavoriler={
-          setFavoriler
-        }
-
-      />
+      <FilterBar />
 
 
       <AdBanner />

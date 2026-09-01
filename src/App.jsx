@@ -335,6 +335,11 @@ function App() {
         />
 
         <Route
+          path="/favorilerim"
+          element={<Favorites />}
+        />
+
+        <Route
           path="/siparislerim"
           element={<MyOrders />}
         />
