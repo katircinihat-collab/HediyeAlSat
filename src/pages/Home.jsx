@@ -4,6 +4,7 @@ import SEO from "../components/SEO";
 import { useEffect, useState } from "react";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import {
+  Link,
   useSearchParams
 } from "react-router-dom";
 
@@ -417,6 +418,26 @@ function Home() {
 
 
       <AdBanner />
+
+      <section className="shopping-hubs" aria-label="Özel alışveriş bölümleri">
+        <article className="shopping-hub-card shopping-hub-card-budget">
+          <span className="shopping-hub-icon">💯</span>
+          <div>
+            <h2>Ne Alırsan 100 TL</h2>
+            <p>100 TL ve altındaki hediyeleri keşfet.</p>
+          </div>
+          <Link to="/100-tl-alti">Ürünleri Gör</Link>
+        </article>
+
+        <article className="shopping-hub-card shopping-hub-card-design">
+          <span className="shopping-hub-icon">🎨</span>
+          <div>
+            <h2>A4 Tasarım Pazarı</h2>
+            <p>Özgün poster ve A4 tasarımları keşfet.</p>
+          </div>
+          <Link to="/a4-tasarimlar">Tasarımları Gör</Link>
+        </article>
+      </section>
 
 
       <ProductSlider

@@ -406,7 +406,9 @@ async function sponsorBasvurusunuGuncelle(
 */
 
 async function paymentCallback(token) {
-
+ if (!iyzipay) {
+        throw new Error("Iyzico henüz yapılandırılmadı.");
+    }
     return new Promise((resolve, reject) => {
 
         console.log(

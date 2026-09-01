@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { auth } from "../firebase";
+import { apiUrl } from "../config/api";
 
 function AdminWithdraw() {
     const [talepler, setTalepler] = useState([]);
@@ -178,7 +179,7 @@ function AdminWithdraw() {
 
             const response =
                 await fetch(
-                    "/api/withdraw/admin",
+                    apiUrl("/api/withdraw/admin"),
                     {
                         method: "GET",
 
@@ -267,7 +268,7 @@ function AdminWithdraw() {
 
             const response =
                 await fetch(
-                    `/api/withdraw/approve/${talepId}`,
+                    apiUrl(`/api/withdraw/approve/${talepId}`),
                     {
                         method: "PUT",
 
@@ -351,7 +352,7 @@ function AdminWithdraw() {
 
             const response =
                 await fetch(
-                    `/api/withdraw/reject/${talepId}`,
+                    apiUrl(`/api/withdraw/reject/${talepId}`),
                     {
                         method: "PUT",
 

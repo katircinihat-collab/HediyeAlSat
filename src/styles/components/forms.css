@@ -207,3 +207,32 @@ select:focus{
     border-color:#22c55e !important;
 
 }
+
+.a4-rights-notice {
+    margin: 14px 0 20px;
+    padding: 16px;
+    border: 1px solid #f0c36a;
+    border-radius: 12px;
+    background: #fff9e8;
+    color: #59430e;
+}
+
+.a4-rights-notice p {
+    margin: 0 0 12px;
+    line-height: 1.5;
+}
+
+.a4-rights-notice label {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    cursor: pointer;
+    line-height: 1.45;
+}
+
+.a4-rights-notice input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin-top: 2px;
+    flex: 0 0 auto;
+}

@@ -1,0 +1,44 @@
+.special-listings-page {
+  width: 100%;
+  max-width: 1850px;
+  margin: 40px auto 70px;
+  padding: 0 20px;
+}
+
+.special-listings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 30px;
+}
+
+.special-listings-header h1 {
+  margin: 0;
+  font-size: clamp(28px, 4vw, 38px);
+}
+
+.special-listings-header p {
+  margin: 9px 0 0;
+  color: #6b7280;
+  font-size: 17px;
+}
+
+.special-listings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 25px;
+}
+
+.special-listings-state {
+  padding: 80px 20px;
+  text-align: center;
+}
+
+.special-listings-state p { color: #6b7280; }
+
+@media (max-width: 640px) {
+  .special-listings-page { margin-top: 28px; padding: 0 14px; }
+  .special-listings-header { align-items: flex-start; flex-direction: column; }
+  .special-listings-grid { grid-template-columns: minmax(0, 1fr); gap: 18px; }
+}

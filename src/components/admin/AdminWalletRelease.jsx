@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { auth } from "../../firebase";
+import { apiUrl } from "../../config/api";
 
 import "../../styles/components/admin-wallet-release.css";
 
@@ -62,7 +63,7 @@ function AdminWalletRelease() {
 
             const response =
                 await fetch(
-                    "/api/wallet-release/admin/pending",
+                    apiUrl("/api/wallet-release/admin/pending"),
                     {
                         headers: {
                             Authorization:
@@ -129,7 +130,7 @@ function AdminWalletRelease() {
             const response =
                 await fetch(
 
-                    "/api/wallet-release/admin/release",
+                    apiUrl("/api/wallet-release/admin/release"),
 
                     {
 
@@ -211,7 +212,7 @@ function AdminWalletRelease() {
                 const response =
                     await fetch(
 
-                        "/api/wallet-release/admin/release-all",
+                        apiUrl("/api/wallet-release/admin/release-all"),
 
                         {
 

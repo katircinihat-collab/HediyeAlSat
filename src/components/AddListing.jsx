@@ -64,6 +64,9 @@ const ozelGunListesi = [
 
 function AddListing() {
 
+  const [urunTuru, setUrunTuru] = useState("normal");
+  const [a4HakOnayi, setA4HakOnayi] = useState(false);
+
   const [ilan, setIlan] = useState({
 
     baslik: "",
@@ -264,6 +267,16 @@ function AddListing() {
 
       alert(
         "Önce giriş yap."
+      );
+
+      return;
+
+    }
+
+    if (urunTuru === "a4-tasarim" && !a4HakOnayi) {
+
+      alert(
+        "A4 tasarımın satış ve kullanım haklarının size ait olduğunu onaylamalısınız."
       );
 
       return;
@@ -508,6 +521,9 @@ function AddListing() {
 
       });
 
+      setUrunTuru("normal");
+      setA4HakOnayi(false);
+
     }
 
     catch (err) {
@@ -535,6 +551,53 @@ function AddListing() {
       <form
         onSubmit={kaydet}
       >
+
+        <label>
+          🧩 Ürün Türü
+        </label>
+
+        <select
+          value={urunTuru}
+          onChange={(e) => {
+            const yeniTur = e.target.value;
+
+            setUrunTuru(yeniTur);
+            setA4HakOnayi(false);
+            setIlan((onceki) => ({
+              ...onceki,
+              kategori: yeniTur === "a4-tasarim"
+                ? "A4 Tasarım"
+                : onceki.kategori === "A4 Tasarım"
+                  ? ""
+                  : onceki.kategori,
+              altKategori: yeniTur === "a4-tasarim"
+                ? ""
+                : onceki.altKategori
+            }));
+          }}
+        >
+          <option value="normal">Normal Ürün</option>
+          <option value="a4-tasarim">A4 Tasarım</option>
+        </select>
+
+        {urunTuru === "a4-tasarim" && (
+          <div className="a4-rights-notice">
+            <p>
+              Yalnızca satış ve kullanım hakkı size ait olan özgün tasarımları yükleyebilirsiniz.
+            </p>
+
+            <label>
+              <input
+                type="checkbox"
+                checked={a4HakOnayi}
+                onChange={(e) => setA4HakOnayi(e.target.checked)}
+              />
+              <span>
+                Bu tasarımın satış ve kullanım haklarının bana ait olduğunu onaylıyorum.
+              </span>
+            </label>
+          </div>
+        )}
 
 
         <input
@@ -635,6 +698,7 @@ function AddListing() {
 
         <select
           value={ilan.kategori}
+          disabled={urunTuru === "a4-tasarim"}
           onChange={(e) =>
             setIlan({
 
@@ -652,6 +716,10 @@ function AddListing() {
           <option value="">
             Kategori Seçiniz
           </option>
+
+          {urunTuru === "a4-tasarim" && (
+            <option value="A4 Tasarım">A4 Tasarım</option>
+          )}
 
 
           {

@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { auth } from "../firebase";
-
+import { auth, db } from "../firebase";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -107,15 +107,17 @@ function Login(){
 
     try{
 
-      await createUserWithEmailAndPassword(
+      const userCredential = await createUserWithEmailAndPassword(
+  auth,
+  email,
+  sifre
+);
 
-        auth,
-
-        email,
-
-        sifre
-
-      );
+await setDoc(doc(db, "users", userCredential.user.uid), {
+  uid: userCredential.user.uid,
+  email: userCredential.user.email,
+  createdAt: serverTimestamp()
+});
 
       alert("🎉 Hesabınız oluşturuldu.");
 

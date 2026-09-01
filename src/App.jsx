@@ -47,6 +47,7 @@ import StoreDetail from "./pages/StoreDetail";
 import Checkout from "./pages/Checkout";
 import NotFound from "./pages/NotFound";
 import AdminRoute from "./components/AdminRoute";
+import SpecialListingsPage from "./pages/SpecialListingsPage";
 
 
 /* ==============================
@@ -134,6 +135,16 @@ function App() {
         <Route
           path="/ilanlar"
           element={<Listings />}
+        />
+
+        <Route
+          path="/100-tl-alti"
+          element={<SpecialListingsPage tur="100-tl" />}
+        />
+
+        <Route
+          path="/a4-tasarimlar"
+          element={<SpecialListingsPage tur="a4-tasarim" />}
         />
 
 
