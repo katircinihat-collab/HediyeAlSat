@@ -1,5 +1,5 @@
 import { auth } from "../firebase";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import {
   collection,
@@ -73,10 +73,8 @@ function AddListing() {
   const [fotograflarYukleniyor, setFotograflarYukleniyor] = useState(false);
   const [orijinalDosya, setOrijinalDosya] = useState(null);
   const [dijitalDosyaYukleniyor, setDijitalDosyaYukleniyor] = useState(false);
-  const [dijitalMeta, setDijitalMeta] = useState({
-    baskiOlcusu: "A4 (210 × 297 mm)",
-    cozunurluk: ""
-  });
+  const [orijinalOnizlemeUrl, setOrijinalOnizlemeUrl] = useState("");
+  const orijinalDosyaInputRef = useRef(null);
 
   const [ilan, setIlan] = useState({
 
@@ -104,6 +102,18 @@ function AddListing() {
   const a4Tasarlaniyor =
     ilan.kategori === "A4 Tasarım";
 
+  useEffect(() => {
+    if (!orijinalDosya || !orijinalDosya.type.startsWith("image/")) {
+      setOrijinalOnizlemeUrl("");
+      return undefined;
+    }
+
+    const yerelUrl = URL.createObjectURL(orijinalDosya);
+    setOrijinalOnizlemeUrl(yerelUrl);
+
+    return () => URL.revokeObjectURL(yerelUrl);
+  }, [orijinalDosya]);
+
   function orijinalDosyaSec(e) {
     const dosya = e.target.files?.[0] || null;
     e.target.value = "";
@@ -111,14 +121,25 @@ function AddListing() {
 
     const izinliTipler = ["application/pdf", "image/jpeg", "image/png"];
     if (!izinliTipler.includes(dosya.type)) {
-      alert("Yalnız PDF, JPG, JPEG ve PNG dosyaları desteklenir.");
+      alert("Bu dosya türü desteklenmiyor. PDF, JPG, JPEG veya PNG seçin.");
       return;
     }
-    if (dosya.size === 0 || dosya.size > MAX_DIGITAL_FILE_SIZE) {
-      alert("Orijinal dosya boş olamaz ve en fazla 15 MB olabilir.");
+    if (dosya.size === 0) {
+      alert("Boş dosya seçilemez.");
+      return;
+    }
+    if (dosya.size > MAX_DIGITAL_FILE_SIZE) {
+      alert("Dosya boyutu en fazla 15 MB olabilir.");
       return;
     }
     setOrijinalDosya(dosya);
+  }
+
+  function orijinalDosyaTuru(dosya) {
+    if (!dosya) return "";
+    if (dosya.type === "application/pdf") return "PDF";
+    if (dosya.type === "image/png") return "PNG";
+    return "JPG / JPEG";
   }
 
   async function korumaliDosyaServisiniKontrolEt(token) {
@@ -494,8 +515,6 @@ function AddListing() {
     const dijitalAlanlar = a4Tasarlaniyor ? {
       urunTipi: "dijital",
       dosyaFormatlari: [orijinalDosya.type === "application/pdf" ? "PDF" : orijinalDosya.type === "image/png" ? "PNG" : "JPG"],
-      baskiOlcusu: dijitalMeta.baskiOlcusu.trim(),
-      cozunurluk: dijitalMeta.cozunurluk.trim(),
       dijitalTeslimat: true,
       fizikselKargo: false,
       hakOnayi: true,
@@ -680,7 +699,6 @@ function AddListing() {
 
       setA4HakOnayi(false);
       setOrijinalDosya(null);
-      setDijitalMeta({ baskiOlcusu: "A4 (210 × 297 mm)", cozunurluk: "" });
 
     }
 
@@ -1154,31 +1172,42 @@ function AddListing() {
                 Yukarıya yalnız önizleme görsellerini yükleyin. Müşteriye ileride güvenli biçimde teslim edilecek orijinal dosyayı buradan ayrıca seçin. Bu dosyanın public adresi ilan belgesine yazılmaz.
               </p>
               <input
+                ref={orijinalDosyaInputRef}
+                className="digital-original-input"
                 type="file"
                 accept="application/pdf,image/jpeg,image/png"
                 disabled={dijitalDosyaYukleniyor}
                 onChange={orijinalDosyaSec}
               />
-              <small>PDF, JPG, JPEG veya PNG · En fazla 15 MB</small>
-              {orijinalDosya && <strong>{orijinalDosya.name}</strong>}
+              <button
+                type="button"
+                className="digital-file-button"
+                disabled={dijitalDosyaYukleniyor}
+                onClick={() => orijinalDosyaInputRef.current?.click()}
+              >
+                {orijinalDosya ? "Dosyayı Değiştir" : "Orijinal Dosya Seç"}
+              </button>
 
-              <div className="digital-metadata-grid">
-                <label>
-                  Baskı ölçüsü
-                  <input
-                    value={dijitalMeta.baskiOlcusu}
-                    onChange={(e) => setDijitalMeta({ ...dijitalMeta, baskiOlcusu: e.target.value })}
-                  />
-                </label>
-                <label>
-                  Çözünürlük
-                  <input
-                    placeholder="Örn. 300 DPI / 2480 × 3508 px"
-                    value={dijitalMeta.cozunurluk}
-                    onChange={(e) => setDijitalMeta({ ...dijitalMeta, cozunurluk: e.target.value })}
-                  />
-                </label>
-              </div>
+              {!orijinalDosya ? (
+                <div className="digital-file-empty">Henüz orijinal dosya seçilmedi</div>
+              ) : (
+                <div className="digital-file-selected">
+                  {orijinalOnizlemeUrl ? (
+                    <img src={orijinalOnizlemeUrl} alt="Seçilen orijinal dosyanın yerel önizlemesi" />
+                  ) : (
+                    <span className="digital-file-icon" aria-hidden="true">📄</span>
+                  )}
+                  <div>
+                    <strong>✓ Dosya seçildi</strong>
+                    <span>{orijinalDosya.name}</span>
+                    <small>
+                      {orijinalDosyaTuru(orijinalDosya)} · {(orijinalDosya.size / (1024 * 1024)).toFixed(2)} MB
+                    </small>
+                  </div>
+                </div>
+              )}
+
+              <small className="digital-file-help">PDF, JPG, JPEG veya PNG · En fazla 15 MB</small>
             </div>
           </>
         )}
