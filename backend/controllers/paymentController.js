@@ -81,7 +81,7 @@ exports.paymentCallback = async (
 
         const result =
 
-            await paymentService.paymentCallback(
+            await paymentService.securePaymentCallback(
 
                 token
 
@@ -107,10 +107,10 @@ exports.paymentCallback = async (
 
     } catch (err) {
 
-        console.log(
-            "Callback controller hatası:",
-            err
-        );
+        console.error("Callback controller hatası:", {
+            code: err.code || "CALLBACK_FAILED",
+            message: err.message || "Callback tamamlanamadı."
+        });
 
 
         return res.redirect(

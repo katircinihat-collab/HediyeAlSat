@@ -10,6 +10,7 @@ const walletService = require("./walletService");
 const { firestore, FieldValue } = require("../config/firebase");
 const orderModel = require("../models/orderModel");
 const { PaymentValidationError, validateNormalPayment, buildIyzicoBasket } = require("./paymentValidationService");
+const { validateRetrievedPayment, finalizePayment } = require("./paymentCallbackService");
 
 const KOMISYON_ORANI = 0.08;
 
@@ -134,6 +135,12 @@ async function createPayment(data, authenticatedUser) {
         paymentStatus: "WAITING",
 
         toplamTutar: trustedPrice,
+
+        expectedPaidPrice: trustedPrice,
+
+        currency: "TRY",
+
+        odemeTipi: sponsorOdeme ? "sponsor" : "siparis",
 
         urunToplami: trustedProductTotal,
 
@@ -792,6 +799,48 @@ async function paymentCallback(token) {
 
 }
 
+async function securePaymentCallback(token) {
+    if (!iyzipay) throw new Error("Iyzico henüz yapılandırılmadı.");
+
+    const result = await new Promise((resolve, reject) => {
+        iyzipay.checkoutForm.retrieve({ locale: "tr", token }, (error, response) => {
+            if (error) return reject(error);
+            if (!response) return reject(new Error("Ödeme sonucu bulunamadı."));
+            resolve(response);
+        });
+    });
+
+    const conversationId = result.conversationId || result.basketId;
+    const payment = conversationId ? await paymentModel.getPayment(conversationId) : null;
+
+    try {
+        const verified = validateRetrievedPayment(result, payment);
+        const finalized = await finalizePayment({
+            firestore,
+            FieldValue,
+            conversationId: verified.conversationId,
+            paymentId: verified.paymentId
+        });
+
+        if (!finalized.alreadyFinalized && payment?.kullanici) {
+            await orderService.sepetTemizle(payment.kullanici);
+        }
+        return { success: true, sponsor: finalized.sponsor, redirect: "/payment-success" };
+    } catch (error) {
+        if (payment && error.paymentStatus) {
+            await paymentModel.updatePayment(payment.id, {
+                paymentStatus: error.paymentStatus,
+                callbackStatus: error.code
+            });
+        }
+        console.error("Callback doğrulama/finalize hatası:", {
+            conversationId: conversationId || null,
+            code: error.code || "CALLBACK_FAILED"
+        });
+        throw error;
+    }
+}
+
 
 /*
 ==================================================
@@ -804,6 +853,8 @@ module.exports = {
     createPayment,
 
     paymentCallback,
+
+    securePaymentCallback,
 
     KOMISYON_ORANI
 
