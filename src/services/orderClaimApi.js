@@ -12,3 +12,5 @@ async function request(path, options = {}) {
 }
 export const createOrderClaim = (orderId, payload) => request(`/api/orders/${encodeURIComponent(orderId)}/claim`, { method: "POST", body: JSON.stringify(payload) });
 export const cancelOrderClaim = (claimId) => request(`/api/order-claims/${encodeURIComponent(claimId)}/cancel`, { method: "POST" });
+export const submitReturnShipment = (claimId, payload) => request(`/api/order-claims/${encodeURIComponent(claimId)}/return-shipment`, { method: "POST", body: JSON.stringify(payload) });
+export const reportReturnReceived = (claimId) => request(`/api/order-claims/${encodeURIComponent(claimId)}/report-return-received`, { method: "POST" });

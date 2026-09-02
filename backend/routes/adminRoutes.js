@@ -19,5 +19,7 @@ router.post("/orders/:orderId/confirm-delivery", orderStatusController.confirmDe
 router.get("/order-claims", orderClaimController.listAdmin);
 router.get("/order-claims/:claimId", orderClaimController.getAdmin);
 router.patch("/order-claims/:claimId/status", orderClaimController.updateAdminStatus);
+router.post("/order-claims/:claimId/confirm-return-received", orderClaimController.confirmReturnReceived);
+router.patch("/order-claims/:claimId/return-shipment", orderClaimController.correctReturnShipment);
 
 module.exports = router;

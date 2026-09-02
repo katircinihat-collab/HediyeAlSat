@@ -655,3 +655,15 @@ test("50 - buyer ve seller sipariş payout blokesini doğrudan değiştiremez", 
   await assertFails(updateDoc(doc(dbFor(ownerAuth), "siparisler", "owner-order"), { hakEdisBlokeli: true }));
   await assertFails(updateDoc(doc(dbFor(otherAuth), "siparisler", "owner-order"), { hakEdisBlokeli: false }));
 });
+
+test("51 - buyer orderClaims geri kargo alanlarını doğrudan değiştiremez", async () => {
+  await assertFails(updateDoc(doc(dbFor(ownerAuth), "orderClaims", "owner-claim"), {
+    returnFlowStatus: "kargoya_verildi", returnCarrier: "Aras", returnTrackingNumber: "ABC123"
+  }));
+});
+
+test("52 - seller orderClaims geri teslim alanlarını doğrudan değiştiremez", async () => {
+  await assertFails(updateDoc(doc(dbFor(otherAuth), "orderClaims", "owner-claim"), {
+    returnFlowStatus: "teslim_dogrulandi", sellerReturnReceivedReported: true
+  }));
+});

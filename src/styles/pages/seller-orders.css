@@ -101,3 +101,4 @@
   font-size: 0.78rem;
   color: #7c2d12;
 }
+.seller-return-status{display:grid;gap:6px;width:100%;margin-top:10px;padding:12px;border:1px solid #f59e0b;border-radius:10px;background:#fffbeb;color:#78350f}.seller-return-status button{min-height:44px;border:0;border-radius:9px;background:#b45309;color:#fff;font-weight:700;cursor:pointer}

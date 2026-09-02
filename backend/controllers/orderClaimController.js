@@ -1,5 +1,5 @@
 const { firestore } = require("../config/firebase");
-const { OrderClaimError, createClaim, cancelClaim, updateClaimStatus } = require("../services/orderClaimService");
+const { OrderClaimError, createClaim, cancelClaim, updateClaimStatus, submitReturnShipment, reportReturnReceived, confirmReturnReceived, correctReturnShipment } = require("../services/orderClaimService");
 
 function sendError(res, error) {
     return res.status(error.status || 500).json({ success: false, code: error.code || "ORDER_CLAIM_FAILED", message: error instanceof OrderClaimError ? error.message : "Talep işlemi tamamlanamadı." });
@@ -26,5 +26,21 @@ exports.getAdmin = async (req, res) => {
 };
 exports.updateAdminStatus = async (req, res) => {
     try { return res.json({ success: true, ...(await updateClaimStatus({ firestore, claimId: String(req.params.claimId || "").trim(), status: req.body?.status, resolutionNote: req.body?.resolutionNote, admin: req.user })) }); }
+    catch (error) { return sendError(res, error); }
+};
+exports.submitReturnShipment = async (req, res) => {
+    try { return res.json({ success: true, ...(await submitReturnShipment({ firestore, claimId: String(req.params.claimId || "").trim(), user: req.user, body: req.body })) }); }
+    catch (error) { return sendError(res, error); }
+};
+exports.reportReturnReceived = async (req, res) => {
+    try { return res.json({ success: true, ...(await reportReturnReceived({ firestore, claimId: String(req.params.claimId || "").trim(), user: req.user })) }); }
+    catch (error) { return sendError(res, error); }
+};
+exports.confirmReturnReceived = async (req, res) => {
+    try { return res.json({ success: true, ...(await confirmReturnReceived({ firestore, claimId: String(req.params.claimId || "").trim(), admin: req.user, note: req.body?.note })) }); }
+    catch (error) { return sendError(res, error); }
+};
+exports.correctReturnShipment = async (req, res) => {
+    try { return res.json({ success: true, ...(await correctReturnShipment({ firestore, claimId: String(req.params.claimId || "").trim(), admin: req.user, body: req.body })) }); }
     catch (error) { return sendError(res, error); }
 };
