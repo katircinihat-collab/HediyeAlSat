@@ -12,22 +12,12 @@ const paymentService =
 */
 
 exports.startPayment = async (req, res) => {
-
-    console.log(
-        "POST /api/payment geldi"
-    );
-
-    console.log(
-        "Ödeme verisi:",
-        req.body
-    );
-
-
     try {
 
         const result =
             await paymentService.createPayment(
-                req.body
+                req.body,
+                req.user
             );
 
 
@@ -36,19 +26,13 @@ exports.startPayment = async (req, res) => {
 
     } catch (err) {
 
-        console.log(
-            "Ödeme başlatma hatası:",
-            err
-        );
+        console.error("Ödeme başlatma hatası:", err.message);
 
-
-        res.status(500).json({
+        res.status(err.status || 500).json({
 
             success: false,
-
-            error:
-                err.message ||
-                "Ödeme oluşturulamadı."
+            code: err.code || "PAYMENT_START_FAILED",
+            error: err.status ? err.message : "Ödeme oluşturulamadı."
 
         });
 
@@ -73,12 +57,6 @@ exports.paymentCallback = async (
         console.log(
             "=== CALLBACK GELDİ ==="
         );
-
-        console.log(
-            "Callback body:",
-            req.body
-        );
-
 
         const token =
             req.body.token;

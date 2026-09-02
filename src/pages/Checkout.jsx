@@ -129,10 +129,19 @@ function Checkout() {
       ? araToplam * 0.10
       : 0;
 
-  const kargoUcreti =
-    araToplam > 1000
-      ? 0
-      : 79.90;
+  const saticiToplamlari = urunler.reduce((toplamlar, urun) => {
+    const satici = urun.satici || urun.sahip || urun.magazaId || "bilinmeyen-satici";
+    const urunToplami = Math.round(Number(urun.fiyat || 0) * Number(urun.adet || 0) * 100);
+    toplamlar[satici] = (toplamlar[satici] || 0) + urunToplami;
+    return toplamlar;
+  }, {});
+
+  const kargoUcreti = Number((
+    Object.values(saticiToplamlari).reduce(
+      (toplam, saticiToplami) => toplam + (saticiToplami >= 50000 ? 0 : 7990),
+      0
+    ) / 100
+  ).toFixed(2));
 
   const normalGenelToplam =
     araToplam -
@@ -203,6 +212,8 @@ function Checkout() {
 
       try {
 
+        const token = await auth.currentUser.getIdToken();
+
         const adParcalari =
           (
             sponsorData.yetkiliAdi ||
@@ -226,7 +237,8 @@ function Checkout() {
             method: "POST",
 
             headers: {
-              "Content-Type": "application/json"
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`
             },
 
             body: JSON.stringify({
@@ -395,6 +407,8 @@ function Checkout() {
 
     try {
 
+      const token = await auth.currentUser.getIdToken();
+
       const adParcalari =
         adSoyad
           .trim()
@@ -489,7 +503,8 @@ function Checkout() {
 
             headers: {
               "Content-Type":
-                "application/json"
+                "application/json",
+              Authorization: `Bearer ${token}`
             },
 
             body: JSON.stringify({

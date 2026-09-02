@@ -8,6 +8,8 @@ const orderService = require("./orderService");
 const walletService = require("./walletService");
 
 const { firestore, FieldValue } = require("../config/firebase");
+const orderModel = require("../models/orderModel");
+const { PaymentValidationError, validateNormalPayment, buildIyzicoBasket } = require("./paymentValidationService");
 
 const KOMISYON_ORANI = 0.08;
 
@@ -18,24 +20,20 @@ const KOMISYON_ORANI = 0.08;
 ==================================================
 */
 
-async function createPayment(data) {
+async function createPayment(data, authenticatedUser) {
+
+    if (!authenticatedUser || !authenticatedUser.uid || !authenticatedUser.email) {
+        throw new PaymentValidationError("Ödeme başlatmak için giriş yapmalısınız.", 401, "AUTH_REQUIRED");
+    }
 
     const {
         siparisIds = [],
-        price,
         buyerName,
         buyerSurname,
-        email,
-        basketItems = [],
 
         // SPONSOR ÖDEME BİLGİLERİ
         sponsor = false,
-        sponsorBasvuruId = "",
-        paketId = "",
-        paketAdi = "",
-        sure = 0,
-        magazaAdi = "",
-        telefon = ""
+        sponsorBasvuruId = ""
     } = data;
 
 
@@ -53,6 +51,69 @@ async function createPayment(data) {
         sponsor === true ||
         Boolean(sponsorBasvuruId);
 
+    const email = authenticatedUser.email;
+    let trustedSiparisIds = siparisIds;
+    let trustedPrice;
+    let trustedBasketItems;
+    let trustedSponsor = null;
+    let trustedProductTotal = 0;
+    let trustedShipping = 0;
+    let trustedShippingDetails = [];
+
+    if (sponsorOdeme) {
+        if (!sponsorBasvuruId) {
+            throw new PaymentValidationError("Sponsor başvurusu bulunamadı.", 404, "SPONSOR_APPLICATION_NOT_FOUND");
+        }
+
+        const applicationSnapshot = await firestore.collection("sponsorBasvurular").doc(sponsorBasvuruId).get();
+        if (!applicationSnapshot.exists) {
+            throw new PaymentValidationError("Sponsor başvurusu bulunamadı.", 404, "SPONSOR_APPLICATION_NOT_FOUND");
+        }
+        const application = applicationSnapshot.data();
+        if (application.kullaniciId !== authenticatedUser.uid || application.email !== email) {
+            throw new PaymentValidationError("Bu sponsor başvurusu kullanıcı hesabınıza ait değil.", 403, "SPONSOR_APPLICATION_FORBIDDEN");
+        }
+        if (application.odemeDurumu === true) {
+            throw new PaymentValidationError("Bu sponsor başvurusunun ödemesi tamamlanmış.", 409, "SPONSOR_ALREADY_PAID");
+        }
+
+        trustedPrice = Number(application.paketFiyati);
+        if (!Number.isFinite(trustedPrice) || trustedPrice <= 0) {
+            throw new PaymentValidationError("Sponsor paket tutarı geçersiz.");
+        }
+        trustedSiparisIds = [];
+        trustedSponsor = application;
+        trustedBasketItems = [{
+            id: `SPONSOR-${application.paketId}`,
+            name: application.paketAdi,
+            category1: "Sponsor Mağaza",
+            category2: "Reklam",
+            itemType: "VIRTUAL",
+            price: trustedPrice.toFixed(2)
+        }];
+    } else {
+        const verified = await validateNormalPayment({
+            siparisIds,
+            user: authenticatedUser,
+            getOrder: orderModel.getOrder,
+            getListing: async (listingId) => {
+                const snapshot = await firestore.collection("ilanlar").doc(listingId).get();
+                return snapshot.exists ? { id: snapshot.id, ...snapshot.data() } : null;
+            }
+        });
+
+        trustedPrice = verified.payableTotal;
+        trustedProductTotal = verified.productTotal;
+        trustedShipping = verified.shipping;
+        trustedShippingDetails = verified.shippingDetails;
+        trustedBasketItems = buildIyzicoBasket(verified);
+
+        await Promise.all(verified.verifiedItems.map((item) => orderModel.updateOrder(
+            item.siparisId,
+            { kargoOdemeTipi: item.shippingPayer }
+        )));
+    }
+
 
     /*
     ==============================================
@@ -64,7 +125,7 @@ async function createPayment(data) {
 
         conversationId,
 
-        siparisIds,
+        siparisIds: trustedSiparisIds,
 
         kullanici: email,
 
@@ -72,7 +133,13 @@ async function createPayment(data) {
 
         paymentStatus: "WAITING",
 
-        toplamTutar: Number(price),
+        toplamTutar: trustedPrice,
+
+        urunToplami: trustedProductTotal,
+
+        kargoUcreti: trustedShipping,
+
+        kargoDetaylari: trustedShippingDetails,
 
         komisyonOrani:
             sponsorOdeme
@@ -89,19 +156,19 @@ async function createPayment(data) {
             sponsorBasvuruId || "",
 
         paketId:
-            paketId || "",
+            trustedSponsor?.paketId || "",
 
         paketAdi:
-            paketAdi || "",
+            trustedSponsor?.paketAdi || "",
 
         sponsorSuresi:
-            Number(sure) || 0,
+            Number(trustedSponsor?.sponsorSuresi) || 0,
 
         magazaAdi:
-            magazaAdi || "",
+            trustedSponsor?.magazaAdi || "",
 
         telefon:
-            telefon || ""
+            trustedSponsor?.telefon || ""
 
     });
 
@@ -112,21 +179,7 @@ async function createPayment(data) {
     ==============================================
     */
 
-    const iyzicoBasketItems =
-        basketItems.length > 0
-            ? basketItems
-            : [
-                {
-                    id: sponsorBasvuruId || conversationId,
-                    name:
-                        paketAdi ||
-                        "HediyeAlSat Sponsor Mağaza",
-                    category1: "Sponsor Mağaza",
-                    itemType: "VIRTUAL",
-                    price:
-                        Number(price).toFixed(2)
-                }
-            ];
+    const iyzicoBasketItems = trustedBasketItems;
 
 
     /*
@@ -144,10 +197,10 @@ async function createPayment(data) {
         basketId: conversationId,
 
         price:
-            Number(price).toFixed(2),
+            trustedPrice.toFixed(2),
 
         paidPrice:
-            Number(price).toFixed(2),
+            trustedPrice.toFixed(2),
 
         currency: "TRY",
 
@@ -262,13 +315,6 @@ if (!iyzipay) {
                     return;
 
                 }
-
-
-                console.log(
-                    "İyzico sonucu:"
-                );
-
-                console.log(result);
 
 
                 resolve(result);
@@ -434,12 +480,6 @@ async function paymentCallback(token) {
                     "ERR:",
                     err
                 );
-
-                console.log(
-                    "RESULT:",
-                    result
-                );
-
 
                 try {
 
