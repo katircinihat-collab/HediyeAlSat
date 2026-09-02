@@ -29,11 +29,6 @@ function StoreDetail() {
   const [hata, setHata] = useState("");
   const [urunSekmesi, setUrunSekmesi] = useState("urunler");
 
-  const kategoriler = useMemo(
-    () => [...new Set(ilanlar.map(getListingMainCategory).filter(Boolean))],
-    [ilanlar]
-  );
-
   const dijitalTasarımlar = useMemo(
     () => ilanlar.filter(isDigitalA4Listing),
     [ilanlar]
@@ -43,6 +38,18 @@ function StoreDetail() {
     () => ilanlar.filter((ilan) => !isA4Listing(ilan)),
     [ilanlar]
   );
+
+  const vitrinIlanlari = useMemo(
+    () => [...normalUrunler, ...dijitalTasarımlar],
+    [dijitalTasarımlar, normalUrunler]
+  );
+
+  const kategoriler = useMemo(
+    () => [...new Set(vitrinIlanlari.map(getListingMainCategory).filter(Boolean))],
+    [vitrinIlanlari]
+  );
+
+  const aktifUrunSayisi = vitrinIlanlari.length;
 
   useEffect(() => {
     let aktif = true;
@@ -82,6 +89,7 @@ function StoreDetail() {
         setIlanlar(
           ilanSnap.docs
             .map((belge) => ({ id: belge.id, ...belge.data() }))
+            .filter((ilan) => ilan.aktif !== false)
             .filter((ilan) => !isLegacySecondHandListing(ilan))
         );
 
@@ -222,8 +230,8 @@ function StoreDetail() {
 
             <Link to="/magazalar" className="store-back-link">← Mağazalara Dön</Link>
             <div className="store-content">
-              <StoreHero magaza={magaza} takipEdiyor={takipEdiyor} takipEt={takipEt} takipBirak={takipBirak} ortalamaPuan={ortalamaPuan} oySayisi={oySayisi} ilanSayisi={ilanlar.length} kategoriler={kategoriler} />
-              <StoreStats ilanSayisi={ilanlar.length} ortalamaPuan={ortalamaPuan} oySayisi={oySayisi} />
+              <StoreHero magaza={magaza} takipEdiyor={takipEdiyor} takipEt={takipEt} takipBirak={takipBirak} ortalamaPuan={ortalamaPuan} oySayisi={oySayisi} ilanSayisi={aktifUrunSayisi} kategoriler={kategoriler} />
+              <StoreStats ilanSayisi={aktifUrunSayisi} ortalamaPuan={ortalamaPuan} oySayisi={oySayisi} />
               <section className="store-catalog" aria-label="Mağaza ürünleri">
                 <div className="store-catalog-tabs" role="tablist" aria-label="Ürün türü">
                   <button

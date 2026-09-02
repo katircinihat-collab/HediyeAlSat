@@ -49,6 +49,9 @@ const digitalAssetRoutes =
 const designVoteRoutes =
     require("./routes/designVoteRoutes");
 
+const giftBattleRoutes =
+    require("./routes/giftBattleRoutes");
+
 
 // =====================================================
 // API ROUTELARI
@@ -121,6 +124,11 @@ app.use(
 app.use(
     "/api/design-votes",
     designVoteRoutes
+);
+
+app.use(
+    "/api/gift-battle",
+    giftBattleRoutes
 );
 
 

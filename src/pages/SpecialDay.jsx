@@ -24,6 +24,7 @@ import "../styles/pages/special-day.css";
 const ozelGunler = {
 
   "Sevgililer Günü": {
+    id: "sevgililer-gunu",
     emoji: "❤️",
     baslik: "Sevgililer Günü",
     aciklama:
@@ -31,6 +32,7 @@ const ozelGunler = {
   },
 
   "Anneler Günü": {
+    id: "anneler-gunu",
     emoji: "🌷",
     baslik: "Anneler Günü",
     aciklama:
@@ -38,6 +40,7 @@ const ozelGunler = {
   },
 
   "Babalar Günü": {
+    id: "babalar-gunu",
     emoji: "👔",
     baslik: "Babalar Günü",
     aciklama:
@@ -45,6 +48,7 @@ const ozelGunler = {
   },
 
   "Doğum Günü": {
+    id: "dogum-gunu",
     emoji: "🎂",
     baslik: "Doğum Günü",
     aciklama:
@@ -52,6 +56,7 @@ const ozelGunler = {
   },
 
   "Yılbaşı": {
+    id: "yilbasi",
     emoji: "🎄",
     baslik: "Yılbaşı",
     aciklama:
@@ -59,6 +64,7 @@ const ozelGunler = {
   },
 
   "Mezuniyet": {
+    id: "mezuniyet",
     emoji: "🎓",
     baslik: "Mezuniyet",
     aciklama:
@@ -66,6 +72,7 @@ const ozelGunler = {
   },
 
   "Yıldönümü": {
+    id: "yildonumu",
     emoji: "💍",
     baslik: "Yıldönümü",
     aciklama:
@@ -73,6 +80,7 @@ const ozelGunler = {
   },
 
   "Sürpriz": {
+    id: "surpriz",
     emoji: "🎉",
     baslik: "Sürpriz",
     aciklama:
@@ -151,6 +159,7 @@ function SpecialDay() {
 
               if (isLegacySecondHandListing(ilan)) return false;
               if (isA4Listing(ilan)) return false;
+              if (ilan.aktif === false) return false;
 
               if (
                 !Array.isArray(
@@ -161,9 +170,8 @@ function SpecialDay() {
               }
 
 
-              return ilan.ozelGunler.includes(
-                ozelGun
-              );
+              return ilan.ozelGunler.includes(bilgi.id)
+                || ilan.ozelGunler.includes(ozelGun);
 
             }
           );

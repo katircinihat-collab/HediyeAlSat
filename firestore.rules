@@ -240,6 +240,15 @@ service cloud.firestore {
       allow read, create, update, delete: if false;
     }
 
+    // Günün kapışması ve oyları yalnız doğrulanmış backend/Admin SDK tarafından yönetilir.
+    match /giftBattles/{battleId} {
+      allow read, create, update, delete: if false;
+    }
+
+    match /giftBattleVotes/{voteId} {
+      allow read, create, update, delete: if false;
+    }
+
     match /magazalar/{storeId} {
       allow read: if true;
 

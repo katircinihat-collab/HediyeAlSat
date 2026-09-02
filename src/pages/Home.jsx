@@ -25,11 +25,11 @@ import AdBanner from "../components/AdBanner";
 import ProductSlider from "../components/ProductSlider";
 import FeaturedStores from "../components/FeaturedStores";
 import SpecialDays from "../components/SpecialDays";
-import UpcomingEvents from "../components/UpcomingEvents";
 import GiftAssistant from "../components/GiftAssistant";
 import Stats from "../components/Stats";
 import Footer from "../components/Footer";
 import TopDesignShowcase from "../components/TopDesignShowcase";
+import GiftBattle from "../components/GiftBattle";
 
 import "../styles/pages/home.css";
 
@@ -495,7 +495,7 @@ function Home() {
       <SpecialDays />
 
 
-      <UpcomingEvents />
+      <GiftBattle />
 
 
       <GiftAssistant />

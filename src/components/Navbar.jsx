@@ -469,7 +469,7 @@ function Navbar() {
             SAĞ TARAF
         ================================= */}
 
-        <div className="navbar-right">
+        <div className={`navbar-right${user ? "" : " navbar-right-guest"}`}>
 
 
           {/* FAVORİLER */}
@@ -889,26 +889,18 @@ function Navbar() {
 
           ) : (
 
-            /* GİRİŞ */
+            /* GİRİŞ / ÜYELİK */
 
-            <Link
-              to="/login"
-              className="login-link"
-            >
-
-              <button
-                className="login-btn"
-              >
-
-                <span>
-                  👤
-                </span>
-
+            <div className="guest-auth-actions" aria-label="Üyelik işlemleri">
+              <Link to="/login" className="guest-auth-btn guest-login-btn">
+                <span aria-hidden="true">👤</span>
                 Giriş Yap
+              </Link>
 
-              </button>
-
-            </Link>
+              <Link to="/login" className="guest-auth-btn guest-register-btn">
+                Üye Ol
+              </Link>
+            </div>
 
           )}
 

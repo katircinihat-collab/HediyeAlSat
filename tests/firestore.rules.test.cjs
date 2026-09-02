@@ -156,6 +156,20 @@ before(async () => {
         periodKey: "2026-W36",
         createdAt: new Date()
       }),
+      setDoc(doc(db, "giftBattles", "2026-09-02"), {
+        dateKey: "2026-09-02",
+        leftListingId: "published",
+        rightListingId: "other-listing",
+        leftVotes: 1,
+        rightVotes: 0,
+        createdAt: new Date()
+      }),
+      setDoc(doc(db, "giftBattleVotes", "2026-09-02_owner-uid"), {
+        dateKey: "2026-09-02",
+        voterUid: ownerAuth.uid,
+        selectedListingId: "published",
+        createdAt: new Date()
+      }),
       setDoc(doc(db, "admins", adminAuth.email), { aktif: true })
     ]);
   });
@@ -539,4 +553,31 @@ test("36 - client tasarimOylari belgesini güncelleyemez", async () => {
 
 test("37 - client tasarimOylari belgesini silemez", async () => {
   await assertFails(deleteDoc(doc(dbFor(ownerAuth), "tasarimOylari", "backend-vote")));
+});
+
+test("38 - client giftBattles belgesini okuyamaz veya yazamaz", async () => {
+  await assertFails(getDoc(doc(dbFor(), "giftBattles", "2026-09-02")));
+  await assertFails(setDoc(doc(dbFor(ownerAuth), "giftBattles", "client-battle"), {
+    dateKey: "2026-09-02",
+    leftListingId: "published",
+    rightListingId: "other-listing"
+  }));
+  await assertFails(updateDoc(doc(dbFor(ownerAuth), "giftBattles", "2026-09-02"), { leftVotes: 999 }));
+  await assertFails(deleteDoc(doc(dbFor(ownerAuth), "giftBattles", "2026-09-02")));
+});
+
+test("39 - client giftBattleVotes belgesi oluşturamaz", async () => {
+  await assertFails(setDoc(doc(dbFor(ownerAuth), "giftBattleVotes", "2026-09-02_client"), {
+    dateKey: "2026-09-02",
+    voterUid: ownerAuth.uid,
+    selectedListingId: "published",
+    createdAt: new Date()
+  }));
+});
+
+test("40 - client giftBattleVotes belgesini okuyamaz, değiştiremez veya silemez", async () => {
+  const ref = doc(dbFor(ownerAuth), "giftBattleVotes", "2026-09-02_owner-uid");
+  await assertFails(getDoc(ref));
+  await assertFails(updateDoc(ref, { selectedListingId: "other-listing" }));
+  await assertFails(deleteDoc(ref));
 });
