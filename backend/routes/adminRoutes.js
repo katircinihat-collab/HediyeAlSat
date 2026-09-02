@@ -2,6 +2,7 @@ const express = require("express");
 const authMiddleware = require("../middleware/authMiddleware");
 const adminMiddleware = require("../middleware/adminMiddleware");
 const adminListingController = require("../controllers/adminListingController");
+const orderStatusController = require("../controllers/orderStatusController");
 
 const router = express.Router();
 
@@ -13,5 +14,6 @@ router.put("/listings/:id/reject", adminListingController.reddet);
 router.patch("/listings/:id/flags", adminListingController.ozellikDegistir);
 router.delete("/listings/:id", adminListingController.sil);
 router.patch("/stores/:id/status", adminListingController.magazaDurumuGuncelle);
+router.post("/orders/:orderId/confirm-delivery", orderStatusController.confirmDeliveryAsAdmin);
 
 module.exports = router;

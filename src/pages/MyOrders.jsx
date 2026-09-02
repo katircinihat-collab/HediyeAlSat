@@ -10,12 +10,26 @@ import {
 } from "firebase/firestore";
 
 import { Link } from "react-router-dom";
+import { confirmOrderDelivery } from "../services/orderDeliveryApi";
 
 import "../styles/pages/myorders.css";
 
 function MyOrders() {
 
   const [siparisler, setSiparisler] = useState([]);
+  const [dogrulanan, setDogrulanan] = useState(null);
+
+  async function teslimAldim(siparis) {
+    if (!window.confirm("Ürünü teslim aldığınızı onaylıyor musunuz?")) return;
+    try {
+      setDogrulanan(siparis.id);
+      await confirmOrderDelivery(siparis.id);
+    } catch (error) {
+      alert(error.message);
+    } finally {
+      setDogrulanan(null);
+    }
+  }
 
   useEffect(() => {
 
@@ -194,6 +208,12 @@ function MyOrders() {
   </div>
 
   <div className="order-bottom">
+
+    {(siparis.durum === "Kargoda" || siparis.durum === "Kargoya Verildi") && (
+      <button type="button" className="buy-btn" disabled={dogrulanan === siparis.id} onClick={() => teslimAldim(siparis)}>
+        {dogrulanan === siparis.id ? "Doğrulanıyor..." : "Teslim Aldım"}
+      </button>
+    )}
 
     <Link
 

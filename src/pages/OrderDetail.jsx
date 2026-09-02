@@ -10,7 +10,8 @@ getDoc
 
 } from "firebase/firestore";
 
-import { db } from "../firebase";
+import { auth, db } from "../firebase";
+import { confirmOrderDelivery } from "../services/orderDeliveryApi";
 
 import "../styles/pages/order-detail.css";
 
@@ -21,6 +22,20 @@ const { id } = useParams();
 const [siparis,setSiparis]=useState(null);
 
 const [loading,setLoading]=useState(true);
+const [dogrulaniyor,setDogrulaniyor]=useState(false);
+
+async function teslimAldim(){
+if(!auth.currentUser||!window.confirm("Ürünü teslim aldığınızı onaylıyor musunuz?"))return;
+try{
+setDogrulaniyor(true);
+await confirmOrderDelivery(siparis.id);
+setSiparis((onceki)=>({...onceki,durum:"Teslim Edildi",teslimatDogrulandi:true}));
+}catch(error){
+alert(error.message);
+}finally{
+setDogrulaniyor(false);
+}
+}
 
 useEffect(()=>{
 
@@ -630,6 +645,12 @@ className="whatsapp-btn"
 
 </div>
 <div className="order-actions">
+
+{(siparis.durum==="Kargoda"||siparis.durum==="Kargoya Verildi")&&(
+<button type="button" className="buy-btn" disabled={dogrulaniyor} onClick={teslimAldim}>
+{dogrulaniyor?"Doğrulanıyor...":"Teslim Aldım"}
+</button>
+)}
 
 <button
 

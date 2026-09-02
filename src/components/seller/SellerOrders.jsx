@@ -1,5 +1,6 @@
 import { Fragment, useState } from "react";
 import { updateSellerOrderStatus } from "../../services/sellerOrderStatusApi";
+import { payoutDisplay } from "../../utils/orderDelivery";
 import "../../styles/pages/seller-orders.css";
 
 function tarihFormatla(siparis) {
@@ -166,6 +167,7 @@ function SellerOrders({ siparisler, getir }) {
               : siparisNo;
             const acik = acikSiparis === siparis.id;
             const canonicalDurum = normalizeOrderStatus(siparis.durum);
+            const hakEdis = payoutDisplay(siparis);
 
             return (
               <Fragment key={siparis.id}>
@@ -259,6 +261,7 @@ function SellerOrders({ siparisler, getir }) {
                       )}
                       {canonicalDurum === "Kargoda" && <span className="seller-order-badge shipping">Teslimat Bekleniyor</span>}
                       {canonicalDurum === "Teslim Edildi" && <span className="seller-order-badge delivered">Teslim Edildi</span>}
+                      {hakEdis && <span className="seller-order-payout-status"><strong>{hakEdis.label}</strong><small>{hakEdis.detail}</small></span>}
                       <button type="button" className="detail-btn" onClick={() => window.print()}>🖨 Yazdır</button>
                     </div>
                   </div>

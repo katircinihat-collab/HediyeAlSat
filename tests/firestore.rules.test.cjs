@@ -368,6 +368,27 @@ test("21d - admin sipariş durumunu güncelleyebilir", async () => {
   }));
 });
 
+test("21e - alıcı Firestore'dan doğrudan Teslim Edildi yapamaz", async () => {
+  await assertFails(updateDoc(doc(dbFor(ownerAuth), "siparisler", "owner-order"), { durum: "Teslim Edildi" }));
+});
+
+test("21f - satıcı Firestore'dan doğrudan Teslim Edildi yapamaz", async () => {
+  await assertFails(updateDoc(doc(dbFor(otherAuth), "siparisler", "owner-order"), { durum: "Teslim Edildi" }));
+});
+
+test("21g - alıcı teslimat doğrulama timestamp alanlarını yazamaz", async () => {
+  await assertFails(updateDoc(doc(dbFor(ownerAuth), "siparisler", "owner-order"), {
+    teslimatDogrulandi: true,
+    teslimatDogrulamaTarihi: new Date()
+  }));
+});
+
+test("21h - satıcı hakediş bloke bitişini değiştiremez", async () => {
+  await assertFails(updateDoc(doc(dbFor(otherAuth), "siparisler", "owner-order"), {
+    hakEdisBlokeBitis: new Date()
+  }));
+});
+
 test("22 - kullanıcı kendi ödeme kaydını okuyabilir ve başkasınınkini okuyamaz", async () => {
   await assertSucceeds(getDoc(doc(dbFor(ownerAuth), "odemeler", "owner-payment")));
   await assertFails(getDoc(doc(dbFor(ownerAuth), "odemeler", "other-payment")));

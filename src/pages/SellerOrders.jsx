@@ -2,6 +2,7 @@ import { useEffect,useState } from "react";
 
 import { auth,db } from "../firebase";
 import { updateSellerOrderStatus } from "../services/sellerOrderStatusApi";
+import { payoutDisplay } from "../utils/orderDelivery";
 
 import "../styles/pages/seller-orders.css";
 
@@ -414,6 +415,7 @@ s.id,
  </>)}
 {(s.durum==="Kargoda"||s.durum==="Kargoya Verildi")&&<span>Teslimat Bekleniyor</span>}
 {(s.durum==="Teslim"||s.durum==="Teslim Edildi")&&<span>Teslim Edildi</span>}
+{payoutDisplay(s)&&<span><b>{payoutDisplay(s).label}</b><br/>{payoutDisplay(s).detail}</span>}
 
 </div>
 
