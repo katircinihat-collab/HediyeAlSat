@@ -57,7 +57,30 @@ function validateRetrievedPayment(result, payment) {
     return { conversationId, paymentId: result.paymentId, expectedKurus: expected };
 }
 
-async function finalizePayment({ firestore, FieldValue, conversationId, paymentId }) {
+function mapPaymentItemTransactions(result, payment) {
+    if (!Array.isArray(payment?.paymentItems) || payment.paymentItems.length === 0) {
+        throw new PaymentCallbackError("Ödeme ürün eşlemesi bulunamadı.", "PAYMENT_ITEM_MAPPING_MISSING", "MANUAL_REVIEW");
+    }
+    if (!Array.isArray(result?.itemTransactions)) {
+        throw new PaymentCallbackError("Iyzico ürün işlem bilgisi bulunamadı.", "ITEM_TRANSACTIONS_MISSING", "MANUAL_REVIEW");
+    }
+    const available = [...result.itemTransactions];
+    return payment.paymentItems.map((item) => {
+        const index = available.findIndex((entry) => String(entry.itemId) === String(item.listingId));
+        if (index < 0) throw new PaymentCallbackError("Ödeme ürünü işlemle eşleştirilemedi.", "ITEM_TRANSACTION_MISMATCH", "MANUAL_REVIEW");
+        const providerItem = available.splice(index, 1)[0];
+        const expectedKurus = toKurus(item.expectedItemPrice);
+        const priceKurus = toKurus(providerItem.price);
+        const paidPriceKurus = toKurus(providerItem.paidPrice);
+        if (!providerItem.paymentTransactionId || !Number.isInteger(expectedKurus)
+            || priceKurus !== expectedKurus || paidPriceKurus !== expectedKurus) {
+            throw new PaymentCallbackError("Ürün tahsilat dağılımı güvenli biçimde doğrulanamadı.", "ITEM_AMOUNT_MISMATCH", "MANUAL_REVIEW");
+        }
+        return { orderId: item.orderId, listingId: item.listingId, paymentTransactionId: String(providerItem.paymentTransactionId), itemPrice: fromKurus(priceKurus), itemPaidPrice: fromKurus(paidPriceKurus), currency: result.currency, quantity: item.quantity };
+    });
+}
+
+async function finalizePayment({ firestore, FieldValue, conversationId, paymentId, itemTransactions = null, currency = "TRY" }) {
     return firestore.runTransaction(async (transaction) => {
         const paymentRef = firestore.collection("odemeler").doc(conversationId);
         const lockRef = firestore.collection("paymentFinalizations").doc(paymentId);
@@ -117,6 +140,7 @@ async function finalizePayment({ firestore, FieldValue, conversationId, paymentI
             const walletAdds = new Map();
 
             orders.forEach((order, index) => {
+                const itemTransaction = itemTransactions?.find((item) => item.orderId === order.id);
                 if (!movementSnapshots[index].exists) {
                     const hesap = calculateOrderEarnings(order);
                     walletAdds.set(order.satici, Number(((walletAdds.get(order.satici) || 0) + hesap.netTutar).toFixed(2)));
@@ -131,6 +155,7 @@ async function finalizePayment({ firestore, FieldValue, conversationId, paymentI
                 if (order.odemeDurumu !== true) {
                     transaction.update(order.ref, {
                         odemeDurumu: true, durum: "Ödendi", paymentId, conversationId,
+                        ...(itemTransaction ? { paymentTransactionId: itemTransaction.paymentTransactionId, iyzicoItemPrice: itemTransaction.itemPrice, iyzicoItemPaidPrice: itemTransaction.itemPaidPrice, paymentCurrency: itemTransaction.currency || currency } : {}),
                         odemeTarihi: FieldValue.serverTimestamp(), guncellenmeTarihi: FieldValue.serverTimestamp()
                     });
                 }
@@ -164,10 +189,11 @@ async function finalizePayment({ firestore, FieldValue, conversationId, paymentI
         transaction.set(lockRef, { conversationId, paymentId, createdAt: FieldValue.serverTimestamp() });
         transaction.update(paymentRef, {
             odemeDurumu: true, paymentStatus: "SUCCESS", callbackStatus: "SUCCESS", paymentId,
+            ...(itemTransactions ? { paymentItemTransactions: itemTransactions } : {}),
             guncellenmeTarihi: FieldValue.serverTimestamp()
         });
         return { alreadyFinalized: false, sponsor: Boolean(payment.sponsor) };
     });
 }
 
-module.exports = { PaymentCallbackError, validateRetrievedPayment, finalizePayment, calculateOrderEarnings, toKurus };
+module.exports = { PaymentCallbackError, validateRetrievedPayment, mapPaymentItemTransactions, finalizePayment, calculateOrderEarnings, toKurus };

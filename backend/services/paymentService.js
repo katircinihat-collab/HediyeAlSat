@@ -10,7 +10,7 @@ const walletService = require("./walletService");
 const { firestore, FieldValue } = require("../config/firebase");
 const orderModel = require("../models/orderModel");
 const { PaymentValidationError, validateNormalPayment, buildIyzicoBasket } = require("./paymentValidationService");
-const { validateRetrievedPayment, finalizePayment } = require("./paymentCallbackService");
+const { validateRetrievedPayment, mapPaymentItemTransactions, finalizePayment } = require("./paymentCallbackService");
 
 const KOMISYON_ORANI = 0.08;
 
@@ -60,6 +60,7 @@ async function createPayment(data, authenticatedUser) {
     let trustedProductTotal = 0;
     let trustedShipping = 0;
     let trustedShippingDetails = [];
+    let trustedPaymentItems = [];
 
     if (sponsorOdeme) {
         if (!sponsorBasvuruId) {
@@ -108,6 +109,12 @@ async function createPayment(data, authenticatedUser) {
         trustedShipping = verified.shipping;
         trustedShippingDetails = verified.shippingDetails;
         trustedBasketItems = buildIyzicoBasket(verified);
+        trustedPaymentItems = verified.verifiedItems.map((item) => ({
+            orderId: item.siparisId,
+            listingId: item.listingId,
+            quantity: item.quantity,
+            expectedItemPrice: item.total
+        }));
 
         await Promise.all(verified.verifiedItems.map((item) => orderModel.updateOrder(
             item.siparisId,
@@ -147,6 +154,8 @@ async function createPayment(data, authenticatedUser) {
         kargoUcreti: trustedShipping,
 
         kargoDetaylari: trustedShippingDetails,
+
+        paymentItems: trustedPaymentItems,
 
         komisyonOrani:
             sponsorOdeme
@@ -815,11 +824,18 @@ async function securePaymentCallback(token) {
 
     try {
         const verified = validateRetrievedPayment(result, payment);
+        // Daha önce güvenle tamamlanmış ödemelerin tekrarlanan callback'i yeniden
+        // finansal işlem üretmeden finalizePayment'in idempotent yoluna düşer.
+        const itemTransactions = payment?.sponsor || payment?.paymentStatus === "SUCCESS"
+            ? null
+            : mapPaymentItemTransactions(result, payment);
         const finalized = await finalizePayment({
             firestore,
             FieldValue,
             conversationId: verified.conversationId,
-            paymentId: verified.paymentId
+            paymentId: verified.paymentId,
+            itemTransactions,
+            currency: result.currency
         });
 
         if (!finalized.alreadyFinalized && payment?.kullanici) {

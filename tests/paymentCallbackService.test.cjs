@@ -1,6 +1,6 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { validateRetrievedPayment, finalizePayment, calculateOrderEarnings } = require("../backend/services/paymentCallbackService");
+const { validateRetrievedPayment, mapPaymentItemTransactions, finalizePayment, calculateOrderEarnings } = require("../backend/services/paymentCallbackService");
 
 function result(overrides = {}) {
     return { paymentStatus: "SUCCESS", conversationId: "conv-1", paymentId: "pay-1", currency: "USD", paidPrice: "100.00", price: "100.00", ...overrides };
@@ -17,6 +17,31 @@ test("paymentId yoksa reddedilir", () => assert.throws(() => validateRetrievedPa
 test("ödeme kaydı yoksa reddedilir", () => assert.throws(() => validateRetrievedPayment(result({ currency: "TRY" }), null), /bulunamadı/));
 test("conversationId uyuşmazlığı reddedilir", () => assert.throws(() => validateRetrievedPayment(result({ currency: "TRY", conversationId: "fake" }), payment()), /eşleşmiyor/));
 test("başarısız iyzico sonucu finalize için reddedilir", () => assert.throws(() => validateRetrievedPayment(result({ currency: "TRY", paymentStatus: "FAILURE" }), payment()), /başarılı değil/));
+
+test("iyzico ürün işlemleri güvenilir sipariş eşlemesine dönüştürülür", () => {
+    const mapped = mapPaymentItemTransactions({ currency: "TRY", itemTransactions: [
+        { itemId: "listing-1", paymentTransactionId: "tx-1", price: "600.00", paidPrice: "600.00" }
+    ] }, payment({ paymentItems: [{ orderId: "order-1", listingId: "listing-1", quantity: 2, expectedItemPrice: 600 }] }));
+    assert.deepEqual(mapped, [{ orderId: "order-1", listingId: "listing-1", paymentTransactionId: "tx-1", itemPrice: 600, itemPaidPrice: 600, currency: "TRY", quantity: 2 }]);
+});
+
+test("çok ürünlü ve çok satıcılı sepet itemTransaction bazında eşleşir", () => {
+    const mapped = mapPaymentItemTransactions({ currency: "TRY", itemTransactions: [
+        { itemId: "listing-b", paymentTransactionId: "tx-b", price: "200.00", paidPrice: "200.00" },
+        { itemId: "listing-a", paymentTransactionId: "tx-a", price: "600.00", paidPrice: "600.00" },
+        { itemId: "KARGO-1", paymentTransactionId: "shipping-tx", price: "79.90", paidPrice: "79.90" }
+    ] }, payment({ paymentItems: [
+        { orderId: "order-a", listingId: "listing-a", quantity: 2, expectedItemPrice: 600 },
+        { orderId: "order-b", listingId: "listing-b", quantity: 1, expectedItemPrice: 200 }
+    ] }));
+    assert.deepEqual(mapped.map((item) => item.paymentTransactionId), ["tx-a", "tx-b"]);
+});
+
+test("eksik paymentTransactionId ve tutar uyuşmazlığı manuel inceleme gerektirir", () => {
+    const trusted = payment({ paymentItems: [{ orderId: "order-1", listingId: "listing-1", quantity: 1, expectedItemPrice: 100 }] });
+    assert.throws(() => mapPaymentItemTransactions({ currency: "TRY", itemTransactions: [{ itemId: "listing-1", price: 100, paidPrice: 100 }] }, trusted), /güvenli biçimde/);
+    assert.throws(() => mapPaymentItemTransactions({ currency: "TRY", itemTransactions: [{ itemId: "listing-1", paymentTransactionId: "tx-1", price: 100, paidPrice: 99 }] }, trusted), /güvenli biçimde/);
+});
 
 test("300 TL x 2 için ürün, komisyon ve net hakediş doğru hesaplanır", () => {
     assert.deepEqual(calculateOrderEarnings({ fiyat: 300, adet: 2 }), {
@@ -91,6 +116,14 @@ test("çok adetli sipariş wallet ve hareket tutarlarına doğru yansır", async
     assert.equal(movement.komisyon, 48);
     assert.equal(movement.netTutar, 552);
     assert.equal(db.data.get("wallets/seller@example.com").pending, 552);
+});
+
+test("callback güvenilir paymentTransactionId bilgisini sipariş ve ödeme kaydına yazar", async () => {
+    const db = memoryFirestore(normalSeed());
+    const items = [{ orderId: "order-1", listingId: "listing-1", paymentTransactionId: "tx-1", itemPrice: 100, itemPaidPrice: 100, currency: "TRY", quantity: 1 }];
+    await finalizePayment({ firestore: db, FieldValue: { serverTimestamp: timestamp }, conversationId: "conv-1", paymentId: "pay-1", itemTransactions: items });
+    assert.equal(db.data.get("siparisler/order-1").paymentTransactionId, "tx-1");
+    assert.deepEqual(db.data.get("odemeler/conv-1").paymentItemTransactions, items);
 });
 
 test("aynı callback ikinci kez wallet ve hareketi artırmaz", async () => {

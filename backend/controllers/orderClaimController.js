@@ -1,8 +1,18 @@
 const { firestore } = require("../config/firebase");
 const { OrderClaimError, createClaim, cancelClaim, updateClaimStatus, submitReturnShipment, reportReturnReceived, confirmReturnReceived, correctReturnShipment } = require("../services/orderClaimService");
+const iyzipay = require("../config/iyzico");
+const { RefundError, executeRefund, createIyzicoRefundProvider } = require("../services/iyzicoRefundService");
 
 function sendError(res, error) {
-    return res.status(error.status || 500).json({ success: false, code: error.code || "ORDER_CLAIM_FAILED", message: error instanceof OrderClaimError ? error.message : "Talep işlemi tamamlanamadı." });
+    return res.status(error.status || 500).json({ success: false, code: error.code || "ORDER_CLAIM_FAILED", message: error instanceof OrderClaimError || error instanceof RefundError ? error.message : "Talep işlemi tamamlanamadı." });
+}
+function maskTransaction(value) { const text = String(value || ""); return text.length > 8 ? `${text.slice(0, 4)}…${text.slice(-4)}` : text ? "••••" : null; }
+async function withRefundPreview(claim) {
+    if (claim.tip !== "iade") return claim;
+    const orderSnap = await firestore.collection("siparisler").doc(claim.orderId).get();
+    if (!orderSnap.exists) return claim;
+    const order = orderSnap.data();
+    return { ...claim, refundPreview: { amount: order.iyzicoItemPaidPrice ?? null, currency: order.paymentCurrency || "TRY", paymentTransactionIdMasked: maskTransaction(order.paymentTransactionId), available: Boolean(order.paymentTransactionId && order.iyzicoItemPaidPrice) } };
 }
 exports.create = async (req, res) => {
     try {
@@ -17,11 +27,12 @@ exports.cancel = async (req, res) => {
 exports.listAdmin = async (_req, res) => {
     try {
         const snap = await firestore.collection("orderClaims").orderBy("createdAt", "desc").limit(200).get();
-        return res.json({ success: true, claims: snap.docs.map((doc) => ({ id: doc.id, ...doc.data() })) });
+        const claims = await Promise.all(snap.docs.map((doc) => withRefundPreview({ id: doc.id, ...doc.data() })));
+        return res.json({ success: true, claims });
     } catch { return res.status(500).json({ success: false, message: "Talepler yüklenemedi." }); }
 };
 exports.getAdmin = async (req, res) => {
-    try { const snap = await firestore.collection("orderClaims").doc(String(req.params.claimId || "")).get(); if (!snap.exists) throw new OrderClaimError("Talep bulunamadı.", 404, "CLAIM_NOT_FOUND"); return res.json({ success: true, claim: { id: snap.id, ...snap.data() } }); }
+    try { const snap = await firestore.collection("orderClaims").doc(String(req.params.claimId || "")).get(); if (!snap.exists) throw new OrderClaimError("Talep bulunamadı.", 404, "CLAIM_NOT_FOUND"); return res.json({ success: true, claim: await withRefundPreview({ id: snap.id, ...snap.data() }) }); }
     catch (error) { return sendError(res, error); }
 };
 exports.updateAdminStatus = async (req, res) => {
@@ -43,4 +54,11 @@ exports.confirmReturnReceived = async (req, res) => {
 exports.correctReturnShipment = async (req, res) => {
     try { return res.json({ success: true, ...(await correctReturnShipment({ firestore, claimId: String(req.params.claimId || "").trim(), admin: req.user, body: req.body })) }); }
     catch (error) { return sendError(res, error); }
+};
+exports.refund = async (req, res) => {
+    try {
+        const refundProvider = createIyzicoRefundProvider(iyzipay);
+        const result = await executeRefund({ firestore, claimId: String(req.params.claimId || "").trim(), admin: req.user, refundProvider, ip: req.ip, description: req.body?.description });
+        return res.json({ success: true, idempotent: result.idempotent, status: result.status, message: "Ödeme kuruluşu üzerinden para iadesi başlatıldı." });
+    } catch (error) { return sendError(res, error); }
 };

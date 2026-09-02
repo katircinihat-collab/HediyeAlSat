@@ -174,6 +174,9 @@ before(async () => {
         orderId: "owner-order", buyerUid: ownerAuth.uid, sellerUid: otherAuth.uid,
         tip: "itiraz", durum: "acik", payoutBlock: true, createdAt: new Date()
       }),
+      setDoc(doc(db, "refundFinalizations", "owner-refund"), {
+        claimId: "owner-claim", orderId: "owner-order", status: "PENDING"
+      }),
       setDoc(doc(db, "admins", adminAuth.email), { aktif: true })
     ]);
   });
@@ -666,4 +669,22 @@ test("52 - seller orderClaims geri teslim alanlarını doğrudan değiştiremez"
   await assertFails(updateDoc(doc(dbFor(otherAuth), "orderClaims", "owner-claim"), {
     returnFlowStatus: "teslim_dogrulandi", sellerReturnReceivedReported: true
   }));
+});
+
+test("53 - client refundFinalizations erişimi tamamen kapalıdır", async () => {
+  const ref = doc(dbFor(adminAuth), "refundFinalizations", "owner-refund");
+  await assertFails(getDoc(ref));
+  await assertFails(updateDoc(ref, { status: "PROVIDER_SUCCESS" }));
+  await assertFails(deleteDoc(ref));
+  await assertFails(setDoc(doc(dbFor(ownerAuth), "refundFinalizations", "client-refund"), { status: "PENDING" }));
+});
+
+test("54 - buyer ve seller claim refund alanlarını doğrudan değiştiremez", async () => {
+  await assertFails(updateDoc(doc(dbFor(ownerAuth), "orderClaims", "owner-claim"), { refundProviderStatus: "success" }));
+  await assertFails(updateDoc(doc(dbFor(otherAuth), "orderClaims", "owner-claim"), { refundAmount: 100 }));
+});
+
+test("55 - buyer ve seller sipariş refund alanlarını doğrudan değiştiremez", async () => {
+  await assertFails(updateDoc(doc(dbFor(ownerAuth), "siparisler", "owner-order"), { refundProviderStatus: "success" }));
+  await assertFails(updateDoc(doc(dbFor(otherAuth), "siparisler", "owner-order"), { refundClaimId: "owner-claim" }));
 });
