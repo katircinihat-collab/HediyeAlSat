@@ -330,15 +330,7 @@ service cloud.firestore {
     match /siparisler/{orderId} {
       allow read: if ownsOrder(resource.data) || isAdmin();
       allow create: if validOrderCreate();
-      allow update: if isAdmin()
-        || (hasEmail()
-          && resource.data.satici == request.auth.token.email
-          && onlyChanged([
-            "durum", "kargoFirma", "kargoNo", "kargoTarihi", "teslimTarihi"
-          ])
-          && request.resource.data.durum in [
-            "Hazırlanıyor", "Kargoda", "Kargoya Verildi", "Teslim", "Teslim Edildi"
-          ]);
+      allow update: if isAdmin();
       allow delete: if isAdmin();
     }
 

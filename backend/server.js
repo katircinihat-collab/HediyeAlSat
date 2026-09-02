@@ -51,6 +51,8 @@ const designVoteRoutes =
 
 const giftBattleRoutes =
     require("./routes/giftBattleRoutes");
+const orderStatusRoutes =
+    require("./routes/orderStatusRoutes");
 
 
 // =====================================================
@@ -129,6 +131,11 @@ app.use(
 app.use(
     "/api/gift-battle",
     giftBattleRoutes
+);
+
+app.use(
+    "/api/orders",
+    orderStatusRoutes
 );
 
 

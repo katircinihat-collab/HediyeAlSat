@@ -1,6 +1,7 @@
 import { useEffect,useState } from "react";
 
 import { auth,db } from "../firebase";
+import { updateSellerOrderStatus } from "../services/sellerOrderStatusApi";
 
 import "../styles/pages/seller-orders.css";
 
@@ -14,10 +15,6 @@ where,
 
 onSnapshot,
 
-doc,
-
-updateDoc
-
 } from "firebase/firestore";
 
 function SellerOrders(){
@@ -27,6 +24,8 @@ const [siparisler,setSiparisler]=useState([]);
 const [arama,setArama]=useState("");
 
 const [filtre,setFiltre]=useState("Tümü");
+const [kargoBilgileri,setKargoBilgileri]=useState({});
+const [guncellenen,setGuncellenen]=useState(null);
 
 useEffect(()=>{
 
@@ -68,20 +67,16 @@ return()=>unsub();
 
 },[]);
 
-async function durumGuncelle(id,durum){
-
-await updateDoc(
-
-doc(db,"siparisler",id),
-
-{
-
-durum
-
+async function durumGuncelle(id,payload){
+if(guncellenen)return;
+try{
+setGuncellenen(id);
+await updateSellerOrderStatus(id,payload);
+}catch(error){
+alert(error.message);
+}finally{
+setGuncellenen(null);
 }
-
-);
-
 }
 
 const liste=siparisler.filter((s)=>{
@@ -365,16 +360,17 @@ s.durum==="Kargoya Verildi"
 </div>
 
 <div className="seller-order-actions">
-
+{(s.durum==="Ödendi"||s.durum==="Bekliyor")&&(
 <button
 
 className="prepare-btn"
 
+disabled={guncellenen===s.id}
 onClick={()=>durumGuncelle(
 
 s.id,
 
-"Hazırlanıyor"
+{durum:"Hazırlanıyor"}
 
 )}
 
@@ -383,16 +379,30 @@ s.id,
 📦 Hazırla
 
 </button>
-
+)}
+{s.durum==="Hazırlanıyor"&&(<>
+<input
+type="text"
+placeholder="Kargo firması"
+value={kargoBilgileri[s.id]?.firma||""}
+onChange={(e)=>setKargoBilgileri((onceki)=>({...onceki,[s.id]:{...onceki[s.id],firma:e.target.value}}))}
+/>
+<input
+type="text"
+placeholder="Takip numarası"
+value={kargoBilgileri[s.id]?.no||""}
+onChange={(e)=>setKargoBilgileri((onceki)=>({...onceki,[s.id]:{...onceki[s.id],no:e.target.value}}))}
+/>
 <button
 
 className="cargo-btn"
 
+disabled={guncellenen===s.id}
 onClick={()=>durumGuncelle(
 
 s.id,
 
-"Kargoya Verildi"
+{durum:"Kargoda",kargoFirma:kargoBilgileri[s.id]?.firma||"",kargoNo:kargoBilgileri[s.id]?.no||""}
 
 )}
 
@@ -401,24 +411,9 @@ s.id,
 🚚 Kargoya Ver
 
 </button>
-
-<button
-
-className="complete-btn"
-
-onClick={()=>durumGuncelle(
-
-s.id,
-
-"Teslim Edildi"
-
-)}
-
->
-
-✅ Teslim
-
-</button>
+ </>)}
+{(s.durum==="Kargoda"||s.durum==="Kargoya Verildi")&&<span>Teslimat Bekleniyor</span>}
+{(s.durum==="Teslim"||s.durum==="Teslim Edildi")&&<span>Teslim Edildi</span>}
 
 </div>
 

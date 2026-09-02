@@ -1,6 +1,5 @@
 import { Fragment, useState } from "react";
-import { doc, updateDoc } from "firebase/firestore";
-import { db } from "../../firebase";
+import { updateSellerOrderStatus } from "../../services/sellerOrderStatusApi";
 import "../../styles/pages/seller-orders.css";
 
 function tarihFormatla(siparis) {
@@ -28,6 +27,13 @@ function tamamlanmisSiparisMi(siparis) {
   return siparis.durum === "Teslim Edildi" || siparis.durum === "Teslim";
 }
 
+function normalizeOrderStatus(durum) {
+  if (durum === "Bekliyor") return "Ödendi";
+  if (durum === "Kargoya Verildi") return "Kargoda";
+  if (durum === "Teslim") return "Teslim Edildi";
+  return durum;
+}
+
 function SellerOrderThumbnail({ src, baslik }) {
   const [gorselHatasi, setGorselHatasi] = useState(false);
 
@@ -53,6 +59,20 @@ function SellerOrders({ siparisler, getir }) {
   const [kargoBilgileri, setKargoBilgileri] = useState({});
   const [acikSiparis, setAcikSiparis] = useState(null);
   const [aktifSekme, setAktifSekme] = useState("aktif");
+  const [guncellenenSiparis, setGuncellenenSiparis] = useState(null);
+
+  async function durumGuncelle(siparis, payload) {
+    if (guncellenenSiparis) return;
+    try {
+      setGuncellenenSiparis(siparis.id);
+      await updateSellerOrderStatus(siparis.id, payload);
+      await getir();
+    } catch (error) {
+      alert(error.message);
+    } finally {
+      setGuncellenenSiparis(null);
+    }
+  }
 
   const toplamSatis = siparisler.reduce(
     (toplam, siparis) => toplam + Number(siparis.toplam ?? siparis.fiyat ?? 0),
@@ -145,6 +165,7 @@ function SellerOrders({ siparisler, getir }) {
               ? `${siparisNo.slice(0, 11)}…`
               : siparisNo;
             const acik = acikSiparis === siparis.id;
+            const canonicalDurum = normalizeOrderStatus(siparis.durum);
 
             return (
               <Fragment key={siparis.id}>
@@ -216,34 +237,28 @@ function SellerOrders({ siparisler, getir }) {
                     </div>
 
                     <div className="seller-order-status-actions">
-                      <button type="button" className="edit-btn" onClick={async () => {
-                        await updateDoc(doc(db, "siparisler", siparis.id), { durum: "Hazırlanıyor" });
-                        getir();
-                      }}>📦 Hazırla</button>
-                      <button type="button" className="cart-btn" onClick={async () => {
+                      {canonicalDurum === "Ödendi" && (
+                        <button type="button" className="edit-btn" disabled={guncellenenSiparis === siparis.id} onClick={() => durumGuncelle(siparis, { durum: "Hazırlanıyor" })}>
+                          📦 Hazırlamaya Başla
+                        </button>
+                      )}
+                      {canonicalDurum === "Hazırlanıyor" && (
+                        <button type="button" className="cart-btn" disabled={guncellenenSiparis === siparis.id} onClick={async () => {
                         const firma = kargoBilgileri[siparis.id]?.firma || "Yurtiçi";
                         const takipNo = kargoBilgileri[siparis.id]?.no || "";
                         if (!takipNo) {
                           alert("Takip numarası giriniz.");
                           return;
                         }
-                        await updateDoc(doc(db, "siparisler", siparis.id), {
+                        await durumGuncelle(siparis, {
                           durum: "Kargoda",
                           kargoFirma: firma,
-                          kargoNo: takipNo,
-                          kargoTarihi: new Date()
+                          kargoNo: takipNo
                         });
-                        alert("🚚 Kargo bilgisi kaydedildi.");
-                        getir();
                       }}>🚚 Kargoya Ver</button>
-                      <button type="button" className="buy-btn" onClick={async () => {
-                        await updateDoc(doc(db, "siparisler", siparis.id), {
-                          durum: "Teslim",
-                          teslimTarihi: new Date()
-                        });
-                        alert("✅ Sipariş teslim edildi.");
-                        getir();
-                      }}>✅ Teslim</button>
+                      )}
+                      {canonicalDurum === "Kargoda" && <span className="seller-order-badge shipping">Teslimat Bekleniyor</span>}
+                      {canonicalDurum === "Teslim Edildi" && <span className="seller-order-badge delivered">Teslim Edildi</span>}
                       <button type="button" className="detail-btn" onClick={() => window.print()}>🖨 Yazdır</button>
                     </div>
                   </div>

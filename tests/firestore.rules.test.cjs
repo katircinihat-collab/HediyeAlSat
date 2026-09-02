@@ -343,6 +343,31 @@ test("21 - kullanıcı kendi siparişini okuyabilir, başkasının siparişini o
   await assertFails(getDoc(doc(dbFor(ownerAuth), "siparisler", "other-order")));
 });
 
+test("21a - satıcı sipariş durumunu Firestore'dan doğrudan değiştiremez", async () => {
+  await assertFails(updateDoc(doc(dbFor(otherAuth), "siparisler", "owner-order"), {
+    durum: "Hazırlanıyor"
+  }));
+});
+
+test("21b - satıcı ödeme alanlarını Firestore'dan doğrudan değiştiremez", async () => {
+  await assertFails(updateDoc(doc(dbFor(otherAuth), "siparisler", "owner-order"), {
+    odemeDurumu: true,
+    paymentId: "fake"
+  }));
+});
+
+test("21c - yetkisiz kullanıcı siparişi değiştiremez", async () => {
+  await assertFails(updateDoc(doc(dbFor(ownerAuth), "siparisler", "other-order"), {
+    durum: "Hazırlanıyor"
+  }));
+});
+
+test("21d - admin sipariş durumunu güncelleyebilir", async () => {
+  await assertSucceeds(updateDoc(doc(dbFor(adminAuth), "siparisler", "owner-order"), {
+    durum: "Hazırlanıyor"
+  }));
+});
+
 test("22 - kullanıcı kendi ödeme kaydını okuyabilir ve başkasınınkini okuyamaz", async () => {
   await assertSucceeds(getDoc(doc(dbFor(ownerAuth), "odemeler", "owner-payment")));
   await assertFails(getDoc(doc(dbFor(ownerAuth), "odemeler", "other-payment")));
