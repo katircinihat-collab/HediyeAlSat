@@ -45,6 +45,7 @@ before(async () => {
         sahipUid: ownerAuth.uid,
         sahip: ownerAuth.email,
         baslik: "Yayındaki ilan",
+        fiyat: 100,
         trend: false,
         oneCikan: false
       }),
@@ -94,6 +95,60 @@ before(async () => {
         puan: 5,
         takipci: 0,
         sponsor: false
+      }),
+      setDoc(doc(db, "siparisler", "owner-order"), {
+        ilanId: "published",
+        alici: ownerAuth.email,
+        satici: otherAuth.email,
+        fiyat: 100,
+        durum: "Ödeme Bekleniyor",
+        odemeDurumu: false
+      }),
+      setDoc(doc(db, "siparisler", "other-order"), {
+        ilanId: "published",
+        alici: otherAuth.email,
+        satici: "seller@example.com",
+        fiyat: 100,
+        durum: "Ödeme Bekleniyor",
+        odemeDurumu: false
+      }),
+      setDoc(doc(db, "odemeler", "owner-payment"), {
+        kullanici: ownerAuth.email,
+        toplamTutar: 100,
+        paymentStatus: "SUCCESS"
+      }),
+      setDoc(doc(db, "odemeler", "other-payment"), {
+        kullanici: otherAuth.email,
+        toplamTutar: 200,
+        paymentStatus: "SUCCESS"
+      }),
+      setDoc(doc(db, "wallets", ownerAuth.email), {
+        email: ownerAuth.email,
+        balance: 100
+      }),
+      setDoc(doc(db, "wallets", otherAuth.email), {
+        email: otherAuth.email,
+        balance: 200
+      }),
+      setDoc(doc(db, "bakiyeHareketleri", "owner-movement"), {
+        satici: ownerAuth.email,
+        netTutar: 90,
+        durum: "Bekliyor"
+      }),
+      setDoc(doc(db, "geriCekmeTalepleri", "owner-withdraw"), {
+        email: ownerAuth.email,
+        miktar: 50,
+        durum: "Bekliyor"
+      }),
+      setDoc(doc(db, "geriCekmeTalepleri", "other-withdraw"), {
+        email: otherAuth.email,
+        miktar: 70,
+        durum: "Bekliyor"
+      }),
+      setDoc(doc(db, "digitalAssets", "protected-asset"), {
+        listingId: "published",
+        sellerUid: ownerAuth.uid,
+        status: "ready"
       }),
       setDoc(doc(db, "admins", adminAuth.email), { aktif: true })
     ]);
@@ -261,4 +316,198 @@ test("20 - admin ilan yönetimi yapabilir", async () => {
     oneCikan: true
   }));
   await assertSucceeds(deleteDoc(ref));
+});
+
+test("21 - kullanıcı kendi siparişini okuyabilir, başkasının siparişini okuyamaz", async () => {
+  await assertSucceeds(getDoc(doc(dbFor(ownerAuth), "siparisler", "owner-order")));
+  await assertFails(getDoc(doc(dbFor(ownerAuth), "siparisler", "other-order")));
+});
+
+test("22 - kullanıcı kendi ödeme kaydını okuyabilir ve başkasınınkini okuyamaz", async () => {
+  await assertSucceeds(getDoc(doc(dbFor(ownerAuth), "odemeler", "owner-payment")));
+  await assertFails(getDoc(doc(dbFor(ownerAuth), "odemeler", "other-payment")));
+});
+
+test("23 - client ödeme kaydı oluşturamaz, değiştiremez veya silemez", async () => {
+  const db = dbFor(ownerAuth);
+  await assertFails(setDoc(doc(db, "odemeler", "client-payment"), {
+    kullanici: ownerAuth.email,
+    toplamTutar: 1,
+    paymentStatus: "SUCCESS"
+  }));
+  await assertFails(updateDoc(doc(db, "odemeler", "owner-payment"), {
+    toplamTutar: 1
+  }));
+  await assertFails(deleteDoc(doc(db, "odemeler", "owner-payment")));
+});
+
+test("24 - kullanıcı kendi wallet kaydını okuyabilir, başka wallet okuyamaz", async () => {
+  await assertSucceeds(getDoc(doc(dbFor(ownerAuth), "wallets", ownerAuth.email)));
+  await assertFails(getDoc(doc(dbFor(ownerAuth), "wallets", otherAuth.email)));
+});
+
+test("25 - client wallet ve bakiye değerlerini değiştiremez", async () => {
+  await assertFails(updateDoc(doc(dbFor(ownerAuth), "wallets", ownerAuth.email), {
+    balance: 999999
+  }));
+  await assertFails(updateDoc(doc(dbFor(ownerAuth), "bakiyeHareketleri", "owner-movement"), {
+    netTutar: 999999
+  }));
+});
+
+test("26 - kullanıcı kendi çekim talebini okuyabilir, başkasınınkini okuyamaz", async () => {
+  await assertSucceeds(getDoc(doc(dbFor(ownerAuth), "geriCekmeTalepleri", "owner-withdraw")));
+  await assertFails(getDoc(doc(dbFor(ownerAuth), "geriCekmeTalepleri", "other-withdraw")));
+});
+
+test("27 - çekim talebi client tarafından oluşturulamaz veya admin durumuna geçirilemez", async () => {
+  const db = dbFor(ownerAuth);
+  await assertFails(setDoc(doc(db, "geriCekmeTalepleri", "client-withdraw"), {
+    email: ownerAuth.email,
+    miktar: 10,
+    durum: "Bekliyor"
+  }));
+  await assertFails(updateDoc(doc(db, "geriCekmeTalepleri", "owner-withdraw"), {
+    durum: "Ödendi"
+  }));
+});
+
+test("28 - admin finansal kayıtları okuyup gerekli operasyonel alanı güncelleyebilir", async () => {
+  const db = dbFor(adminAuth);
+  await assertSucceeds(getDoc(doc(db, "siparisler", "other-order")));
+  await assertSucceeds(getDoc(doc(db, "odemeler", "other-payment")));
+  await assertSucceeds(getDoc(doc(db, "wallets", otherAuth.email)));
+  await assertSucceeds(updateDoc(doc(db, "geriCekmeTalepleri", "other-withdraw"), {
+    durum: "Ödendi"
+  }));
+});
+
+test("29 - digitalAssets client ve admin erişimine tamamen kapalıdır", async () => {
+  await assertFails(getDoc(doc(dbFor(ownerAuth), "digitalAssets", "protected-asset")));
+  await assertFails(getDoc(doc(dbFor(adminAuth), "digitalAssets", "protected-asset")));
+  await assertFails(setDoc(doc(dbFor(ownerAuth), "digitalAssets", "client-asset"), {
+    listingId: "published"
+  }));
+});
+
+test("30 - alıcı yalnız onaylı ilanın gerçek fiyatı ve satıcısıyla sipariş oluşturabilir", async () => {
+  const db = dbFor(otherAuth);
+  const validOrder = {
+    ilanId: "published",
+    ilanBaslik: "Yayındaki ilan",
+    satici: ownerAuth.email,
+    alici: otherAuth.email,
+    fiyat: 100,
+    adet: 1,
+    toplam: 100,
+    durum: "Ödeme Bekleniyor",
+    odemeDurumu: false,
+    tarih: new Date()
+  };
+
+  await assertSucceeds(setDoc(doc(db, "siparisler", "valid-order"), validOrder));
+  await assertFails(setDoc(doc(db, "siparisler", "manipulated-order"), {
+    ...validOrder,
+    fiyat: 1,
+    toplam: 1
+  }));
+});
+
+test("31 - dijital ilan güvenli başlangıç alanlarıyla oluşturulabilir", async () => {
+  await assertSucceeds(setDoc(doc(dbFor(ownerAuth), "ilanlar", "digital-listing"), {
+    ilanNo: "digital-1",
+    baslik: "Dijital poster",
+    fiyat: 100,
+    eskiFiyat: 0,
+    kategori: "A4 Tasarım",
+    altKategori: "Poster",
+    tip: "Satılık",
+    sehir: "Sakarya",
+    telefon: "",
+    adet: 1,
+    stok: 1,
+    marka: "",
+    renk: "",
+    aciklama: "Özgün dijital poster",
+    resim: "https://example.com/preview.jpg",
+    resimler: ["https://example.com/preview.jpg"],
+    video: "",
+    ozelGunler: [],
+    sahipUid: ownerAuth.uid,
+    sahip: ownerAuth.email,
+    magazaId: "store",
+    magazaAdi: "Mağaza",
+    paraBirimi: "TRY",
+    puan: 5,
+    yorumSayisi: 0,
+    favoriSayisi: 0,
+    satisSayisi: 0,
+    goruntulenme: 0,
+    onay: false,
+    oneCikan: false,
+    trend: false,
+    kampanyali: false,
+    indirim: 0,
+    ucretsizKargo: false,
+    ayniGunKargo: false,
+    guvenliOdeme: true,
+    kargoUcreti: 0,
+    teslimatSuresi: "1-3 Gün",
+    aktif: true,
+    tarih: new Date(),
+    urunTipi: "dijital",
+    dosyaFormatlari: ["PDF"],
+    dijitalTeslimat: true,
+    fizikselKargo: false,
+    hakOnayi: true,
+    hakOnayiTarihi: new Date(),
+    hakOnayiSurumu: "digital-rights-v1",
+    dijitalDosyaDurumu: "bekleniyor"
+  }));
+});
+
+test("32 - legacy client toplamlarıyla sipariş oluşturma kapalıdır", async () => {
+  await assertFails(setDoc(doc(dbFor(ownerAuth), "siparisler", "legacy-order"), {
+    siparisNo: "legacy-1",
+    kullanici: ownerAuth.email,
+    urunler: [{ fiyat: 1 }],
+    toplam: 1,
+    kargo: 0,
+    genelToplam: 1,
+    adres: {},
+    odemeTipi: "kart",
+    durum: "Ödeme Bekleniyor",
+    odemeDurumu: false,
+    tarih: new Date()
+  }));
+});
+
+test("33 - sponsor başvuru e-postası token e-postasıyla aynı olmalıdır", async () => {
+  const validApplication = {
+    magazaAdi: "Mağaza",
+    yetkiliAdi: "Yetkili",
+    telefon: "05000000000",
+    email: ownerAuth.email,
+    webSitesi: "",
+    hakkinda: "Yeterince uzun mağaza açıklaması",
+    kullaniciId: ownerAuth.uid,
+    paketId: "standart",
+    paketAdi: "Standart Sponsor",
+    paketFiyati: 499,
+    sponsorSuresi: 7,
+    durum: "Ödeme Bekliyor",
+    odemeDurumu: false,
+    odemeTarihi: null,
+    basvuruTarihi: new Date(),
+    okunmadi: true
+  };
+
+  await assertSucceeds(setDoc(
+    doc(dbFor(ownerAuth), "sponsorBasvurular", "valid-application"),
+    validApplication
+  ));
+  await assertFails(setDoc(
+    doc(dbFor(ownerAuth), "sponsorBasvurular", "spoofed-email-application"),
+    { ...validApplication, email: otherAuth.email }
+  ));
 });

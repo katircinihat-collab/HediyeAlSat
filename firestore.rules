@@ -29,6 +29,53 @@ service cloud.firestore {
       return request.resource.data.diff(resource.data).affectedKeys().hasOnly(fields);
     }
 
+    function ownsOrder(data) {
+      return hasEmail()
+        && (("alici" in data && data.alici == request.auth.token.email)
+          || ("satici" in data && data.satici == request.auth.token.email)
+          || ("kullanici" in data && data.kullanici == request.auth.token.email));
+    }
+
+    function validOrderCreate() {
+      return hasEmail()
+        && request.resource.data.keys().hasOnly([
+          "ilanId", "ilanBaslik", "magazaId", "satici", "alici",
+          "fiyat", "adet", "toplam", "adSoyad", "telefon", "adres",
+          "il", "ilce", "kargo", "siparisNotu", "durum", "odemeDurumu",
+          "kargoNo", "teslimEdildi", "tarih", "olusturmaTarihi"
+        ])
+        && request.resource.data.alici == request.auth.token.email
+        && request.resource.data.alici != request.resource.data.satici
+        && request.resource.data.ilanId is string
+        && exists(/databases/$(database)/documents/ilanlar/$(request.resource.data.ilanId))
+        && get(/databases/$(database)/documents/ilanlar/$(request.resource.data.ilanId)).data.onay == true
+        && request.resource.data.satici == get(/databases/$(database)/documents/ilanlar/$(request.resource.data.ilanId)).data.sahip
+        && request.resource.data.fiyat == get(/databases/$(database)/documents/ilanlar/$(request.resource.data.ilanId)).data.fiyat
+        && request.resource.data.fiyat is number
+        && request.resource.data.fiyat >= 0
+        && (!("adet" in request.resource.data)
+          || (request.resource.data.adet is number && request.resource.data.adet > 0))
+        && (!("toplam" in request.resource.data)
+          || request.resource.data.toplam == request.resource.data.fiyat * request.resource.data.adet)
+        && request.resource.data.durum == "Ödeme Bekleniyor"
+        && request.resource.data.odemeDurumu == false;
+    }
+
+    function validSponsorPackage() {
+      return (request.resource.data.paketId == "standart"
+          && request.resource.data.paketAdi == "Standart Sponsor"
+          && request.resource.data.paketFiyati == 499
+          && request.resource.data.sponsorSuresi == 7)
+        || (request.resource.data.paketId == "premium"
+          && request.resource.data.paketAdi == "Premium Sponsor"
+          && request.resource.data.paketFiyati == 999
+          && request.resource.data.sponsorSuresi == 15)
+        || (request.resource.data.paketId == "vip"
+          && request.resource.data.paketAdi == "VIP Sponsor"
+          && request.resource.data.paketFiyati == 1999
+          && request.resource.data.sponsorSuresi == 30);
+    }
+
     function emailOwnedCreate() {
       return hasEmail()
         && request.resource.data.kullanici == request.auth.token.email;
@@ -267,46 +314,89 @@ service cloud.firestore {
       allow delete: if emailOwnedExisting() || isAdmin();
     }
 
-    // TODO SECURITY: Sipariş sahipliği ve izin verilen durum geçişleri backend'e
-    // taşındıktan sonra alıcı/satıcı bazlı alan seviyesi kurallara sıkılaştırılmalı.
     match /siparisler/{orderId} {
-      allow read, create, update, delete: if signedIn();
+      allow read: if ownsOrder(resource.data) || isAdmin();
+      allow create: if validOrderCreate();
+      allow update: if isAdmin()
+        || (hasEmail()
+          && resource.data.satici == request.auth.token.email
+          && onlyChanged([
+            "durum", "kargoFirma", "kargoNo", "kargoTarihi", "teslimTarihi"
+          ])
+          && request.resource.data.durum in [
+            "Hazırlanıyor", "Kargoda", "Kargoya Verildi", "Teslim", "Teslim Edildi"
+          ]);
+      allow delete: if isAdmin();
     }
 
-    // TODO SECURITY: Ödeme kayıtlarına istemci yazımı tamamen kapatılmalı.
     match /odemeler/{paymentId} {
-      allow read, create, update, delete: if signedIn();
+      allow read: if (hasEmail() && resource.data.kullanici == request.auth.token.email)
+        || isAdmin();
+      allow create, update, delete: if false;
     }
 
-    // TODO SECURITY: Cüzdan ve bakiye hareketleri yalnız Admin SDK tarafından yazılmalı.
     match /wallets/{walletId} {
-      allow read, create, update, delete: if signedIn();
+      allow read: if isAdmin()
+        || (hasEmail()
+          && (walletId == request.auth.token.email
+            || resource.data.email == request.auth.token.email));
+      allow create, update, delete: if false;
     }
 
     match /bakiyeHareketleri/{movementId} {
-      allow read, create, update, delete: if signedIn();
+      allow read: if isAdmin()
+        || (hasEmail() && resource.data.satici == request.auth.token.email);
+      allow create, delete: if false;
+      allow update: if isAdmin();
     }
 
-    // TODO SECURITY: Tüm para çekme modelleri tek backend sahiplik modelinde birleştirilmeli.
     match /paraCekmeTalepleri/{requestId} {
-      allow read, create, update, delete: if signedIn();
+      allow read: if isAdmin()
+        || (hasEmail() && resource.data.email == request.auth.token.email);
+      allow create, delete: if false;
+      allow update: if isAdmin();
     }
 
     match /geriCekmeTalepleri/{requestId} {
-      allow read, create, update, delete: if signedIn();
+      allow read: if isAdmin()
+        || (hasEmail() && resource.data.email == request.auth.token.email);
+      allow create, delete: if false;
+      allow update: if isAdmin();
     }
 
     match /cekmeTalepleri/{requestId} {
-      allow read, create, update, delete: if signedIn();
+      allow read: if isAdmin()
+        || (hasEmail() && resource.data.satici == request.auth.token.email);
+      allow create, delete: if false;
+      allow update: if isAdmin();
     }
 
     match /withdrawRequests/{requestId} {
-      allow read, create, update, delete: if signedIn();
+      allow read: if isAdmin()
+        || (signedIn() && resource.data.uid == request.auth.uid);
+      allow create, delete: if false;
+      allow update: if isAdmin();
     }
 
-    // TODO SECURITY: Paket ve ödeme alanları backend tarafından oluşturulup kilitlenmeli.
     match /sponsorBasvurular/{applicationId} {
-      allow read, create, update, delete: if signedIn();
+      allow read: if isAdmin()
+        || (signedIn() && resource.data.kullaniciId == request.auth.uid);
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly([
+          "magazaAdi", "yetkiliAdi", "telefon", "email", "webSitesi",
+          "hakkinda", "kullaniciId", "paketId", "paketAdi", "paketFiyati",
+          "sponsorSuresi", "durum", "odemeDurumu", "odemeTarihi",
+          "basvuruTarihi", "okunmadi"
+        ])
+        && request.resource.data.kullaniciId == request.auth.uid
+        && request.resource.data.email == request.auth.token.email
+        && validSponsorPackage()
+        && request.resource.data.durum == "Ödeme Bekliyor"
+        && request.resource.data.odemeDurumu == false
+        && request.resource.data.odemeTarihi == null
+        && request.resource.data.okunmadi == true;
+      allow update: if isAdmin();
+      allow delete: if false;
     }
 
     match /{document=**} {

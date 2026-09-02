@@ -45,7 +45,6 @@ function SponsorApplication() {
     magazaAdi: "",
     yetkiliAdi: "",
     telefon: "",
-    email: "",
     webSitesi: "",
     hakkinda: ""
   });
@@ -70,11 +69,16 @@ function SponsorApplication() {
 
     e.preventDefault();
 
+    const kullanici = auth.currentUser;
+    if (!kullanici?.email) {
+      alert("Sponsor başvurusu için giriş yapmalısınız.");
+      return;
+    }
+
     if (
       !form.magazaAdi.trim() ||
       !form.yetkiliAdi.trim() ||
       !form.telefon.trim() ||
-      !form.email.trim() ||
       !form.hakkinda.trim()
     ) {
 
@@ -102,8 +106,8 @@ function SponsorApplication() {
 
       setGonderiliyor(true);
 
-      const kullaniciId =
-        auth.currentUser?.uid || "";
+      const kullaniciId = kullanici.uid;
+      const hesapEmail = kullanici.email;
 
       const basvuruRef = await addDoc(
         collection(db, "sponsorBasvurular"),
@@ -117,7 +121,7 @@ function SponsorApplication() {
             form.telefon.trim(),
 
           email:
-            form.email.trim(),
+            hesapEmail,
 
           webSitesi:
             form.webSitesi.trim(),
@@ -188,7 +192,7 @@ function SponsorApplication() {
             form.yetkiliAdi.trim(),
 
           email:
-            form.email.trim(),
+            hesapEmail,
 
           telefon:
             form.telefon.trim()
@@ -489,8 +493,8 @@ function SponsorApplication() {
                   <input
                     type="email"
                     name="email"
-                    value={form.email}
-                    onChange={degistir}
+                    value={auth.currentUser?.email || ""}
+                    readOnly
                     placeholder="ornek@mail.com"
                     maxLength={150}
                   />

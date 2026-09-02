@@ -710,14 +710,6 @@ function DetailPage() {
         ) || 0;
 
 
-      const komisyon =
-        fiyat * 0.05;
-
-
-      const netTutar =
-        fiyat - komisyon;
-
-
       const siparisRef =
         await addDoc(
 
@@ -745,12 +737,6 @@ function DetailPage() {
 
             fiyat:
               fiyat,
-
-            komisyon:
-              komisyon,
-
-            netTutar:
-              netTutar,
 
             durum:
               "Ödeme Bekleniyor",
