@@ -1,0 +1,57 @@
+.my-store-page {
+  width: min(1040px, calc(100% - 32px));
+  margin: 32px auto 64px;
+}
+
+.my-store-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  margin-bottom: 22px;
+}
+
+.my-store-heading h1 { margin: 4px 0 8px; }
+.my-store-heading p { margin: 0; color: #667085; }
+.my-store-heading > div > span { color: #b00020; font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; }
+.my-store-status { padding: 7px 12px; border-radius: 999px; font-size: 13px; font-weight: 800; }
+.my-store-status.active { background: #dcfce7; color: #166534; }
+.my-store-status.closed { background: #fee2e2; color: #991b1b; }
+
+.my-store-card { overflow: hidden; border: 1px solid #e6e8ec; border-radius: 20px; background: #fff; box-shadow: 0 14px 38px rgba(15, 23, 42, .08); }
+.my-store-cover { position: relative; height: 250px; background: linear-gradient(135deg, #fff1f3, #f7f8fb); }
+.my-store-cover > img { width: 100%; height: 100%; object-fit: cover; }
+.my-store-cover-placeholder { display: grid; height: 100%; place-content: center; justify-items: center; color: #8a94a6; }
+.my-store-cover-placeholder span { font-size: 46px; }
+.my-store-cover-placeholder small { margin-top: 8px; font-weight: 700; }
+.my-store-logo { position: absolute; left: 34px; bottom: -45px; display: grid; width: 96px; height: 96px; place-items: center; overflow: hidden; border: 5px solid #fff; border-radius: 50%; background: #f1f3f6; box-shadow: 0 8px 24px rgba(15, 23, 42, .18); font-size: 38px; }
+.my-store-logo img { width: 100%; height: 100%; object-fit: cover; }
+
+.my-store-image-actions { display: flex; justify-content: flex-end; gap: 10px; padding: 14px 34px 0; }
+.my-store-image-action { border: 1px solid #e2e8f0; border-radius: 10px; background: #fff; color: #334155; padding: 9px 14px; font: inherit; font-size: .86rem; font-weight: 700; cursor: pointer; transition: border-color .2s ease, color .2s ease, background .2s ease; }
+.my-store-image-action:hover { border-color: #b00020; background: #fff8f8; color: #b00020; }
+
+.my-store-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; padding: 28px 34px 34px; }
+.my-store-field { min-width: 0; }
+.my-store-field-wide { grid-column: 1 / -1; }
+.my-store-field label { display: block; margin-bottom: 7px; color: #344054; font-size: 14px; font-weight: 800; }
+.my-store-field input,
+.my-store-field textarea { width: 100%; box-sizing: border-box; margin: 0; border: 1px solid #d8dde6; border-radius: 11px; background: #fff; font: inherit; }
+.my-store-field textarea { resize: vertical; line-height: 1.55; }
+.my-store-field input:focus,
+.my-store-field textarea:focus { border-color: #b00020; box-shadow: 0 0 0 3px rgba(176, 0, 32, .1); outline: 0; }
+.my-store-actions { display: flex; justify-content: flex-end; padding-top: 2px; }
+.my-store-actions .buy-btn { width: auto; min-width: 190px; }
+.my-store-actions .buy-btn:disabled { background: #d0d5dd; color: #667085; cursor: not-allowed; opacity: .85; transform: none; }
+
+@media (max-width: 640px) {
+  .my-store-page { width: min(100% - 20px, 1040px); margin-top: 18px; }
+  .my-store-heading { align-items: flex-start; flex-direction: column; gap: 12px; }
+  .my-store-cover { height: 180px; }
+  .my-store-logo { left: 20px; bottom: -38px; width: 80px; height: 80px; }
+  .my-store-image-actions { flex-direction: column; padding: 52px 18px 0; }
+  .my-store-image-action { width: 100%; }
+  .my-store-form { grid-template-columns: 1fr; gap: 15px; padding: 22px 18px; }
+  .my-store-field-wide { grid-column: auto; }
+  .my-store-actions .buy-btn { width: 100%; }
+}

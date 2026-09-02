@@ -1,364 +1,94 @@
 import "../../styles/pages/seller-performance.css";
 
-function SellerPerformance({
-
-urunler,
-
-siparisler,
-
-toplamKazanc
-
-}){
-
-const tamamlanan=siparisler.filter(
-
-s=>s.durum==="Teslim"
-
-).length;
-
-const silver=toplamKazanc>=50000;
-
-const gold=toplamKazanc>=250000;
-
-const enCokSatan=
-
-siparisler.length
-
-?
-
-siparisler
-
-.sort(
-
-(a,b)=>
-
-Number(b.toplam||0)-
-
-Number(a.toplam||0)
-
-)[0]
-
-:
-
-null;
-
-const hedef=
-
-Math.min(
-
-100,
-
-(
-
-toplamKazanc/
-
-50000
-
-)
-
-*100
-
-);
-
-return(
-
-<>
-
-<h2 className="section-title">
-
-🏆 Satıcı Performansı
-
-</h2>
-
-<div className="performance-grid">
-<div className="performance-card">
-
-<h3>🥉 Satıcı Rozeti</h3>
-
-<h1>
-
-{
-
-gold
-
-?
-
-"🥇 Gold"
-
-:
-
-silver
-
-?
-
-"🥈 Silver"
-
-:
-
-"🥉 Bronze"
-
-}
-
-</h1>
-
-<p>
-
-Aktif Satıcı Seviyesi
-
-</p>
-
-</div>
-
-<div className="performance-card">
-
-<h3>🔥 En Çok Satan Ürün</h3>
-
-<h2>
-
-{
-
-enCokSatan
-
-?
-
-enCokSatan.ilanBaslik
-
-:
-
-"Henüz Yok"
-
-}
-
-</h2>
-
-<p>
-
-{
-
-enCokSatan
-
-?
-
-"₺"+
-
-Number(
-
-enCokSatan.toplam||0
-
-).toLocaleString("tr-TR")
-
-:
-
-""
-
-}
-
-</p>
-
-</div>
-
-<div className="performance-card">
-
-<h3>📦 Toplam Ürün</h3>
-
-<h1>
-
-{urunler.length}
-
-</h1>
-
-<p>
-
-Yayındaki Ürün
-
-</p>
-
-</div>
-
-<div className="performance-card">
-
-<h3>🛒 Toplam Sipariş</h3>
-
-<h1>
-
-{siparisler.length}
-
-</h1>
-
-<p>
-
-Alınan Sipariş
-
-</p>
-
-</div>
-<div className="performance-progress">
-
-<h3>
-
-🎯 Satış Hedefi
-
-</h3>
-
-<div className="progress-bar">
-
-<div
-
-className="progress-fill"
-
-style={{
-
-width:`${hedef}%`
-
-}}
-
->
-
-{hedef.toFixed(0)}%
-
-</div>
-
-</div>
-
-<p>
-
-50.000 TL hedefi
-
-</p>
-
-</div>
-
-<div className="performance-grid second-row">
-
-<div className="performance-card">
-
-<h3>
-
-🚀 Sonraki Rozet
-
-</h3>
-
-<h2>
-
-{
-
-gold
-
-?
-
-"💎 Platinum"
-
-:
-
-silver
-
-?
-
-"🥇 Gold"
-
-:
-
-"🥈 Silver"
-
-}
-
-</h2>
-
-<p>
-
-Bir üst seviyeye ilerliyorsunuz.
-
-</p>
-
-</div>
-
-<div className="performance-card">
-
-<h3>
-
-⭐ Performans Puanı
-
-</h3>
-
-<h1>
-
-{
-
-Math.min(
-
-100,
-
-tamamlanan*10
-
-)
-
-}
-
-</h1>
-
-<p>
-
-100 üzerinden
-
-</p>
-
-</div>
-
-<div className="performance-card">
-
-<h3>
-
-✅ Tamamlanan Sipariş
-
-</h3>
-
-<h1>
-
-{tamamlanan}
-
-</h1>
-
-<p>
-
-Başarıyla teslim edildi
-
-</p>
-
-</div>
-
-<div className="performance-card">
-
-<h3>
-
-💰 Toplam Ciro
-
-</h3>
-
-<h1>
-
-₺{
-
-toplamKazanc.toLocaleString("tr-TR")
-
-}
-
-</h1>
-
-<p>
-
-Genel satış hacmi
-
-</p>
-
-</div>
-
-</div>
-</div>
-
-</>
-
-);
-
+function SellerPerformance({ urunler, siparisler, toplamKazanc }) {
+  const tamamlanan = siparisler.filter((siparis) => siparis.durum === "Teslim").length;
+  const silver = toplamKazanc >= 50000;
+  const gold = toplamKazanc >= 250000;
+  const enCokSatan = siparisler.length
+    ? siparisler.sort(
+      (birinci, ikinci) => Number(ikinci.toplam || 0) - Number(birinci.toplam || 0)
+    )[0]
+    : null;
+  const hedef = Math.min(100, (toplamKazanc / 50000) * 100);
+
+  const rozet = gold ? "🥇 Gold" : silver ? "🥈 Silver" : "🥉 Bronze";
+  const sonrakiRozet = gold ? "💎 Platinum" : silver ? "🥇 Gold" : "🥈 Silver";
+
+  return (
+    <section className="seller-performance-section">
+      <h2 className="section-title">🏆 Satıcı Performansı</h2>
+
+      <div className="seller-performance-kpi-grid">
+        <article className="seller-performance-card">
+          <span className="seller-performance-label">Satıcı Rozeti</span>
+          <strong>{rozet}</strong>
+          <small>Aktif satıcı seviyesi</small>
+        </article>
+
+        <article className="seller-performance-card seller-performance-product-card">
+          <span className="seller-performance-label">En Çok Satan Ürün</span>
+          <strong>{enCokSatan ? enCokSatan.ilanBaslik : "Henüz Yok"}</strong>
+          <small>
+            {enCokSatan
+              ? `₺${Number(enCokSatan.toplam || 0).toLocaleString("tr-TR")}`
+              : "Satış verisi oluşmadı"}
+          </small>
+        </article>
+
+        <article className="seller-performance-card">
+          <span className="seller-performance-label">Toplam Ürün</span>
+          <strong>{urunler.length}</strong>
+          <small>Yayındaki ürün</small>
+        </article>
+
+        <article className="seller-performance-card">
+          <span className="seller-performance-label">Toplam Sipariş</span>
+          <strong>{siparisler.length}</strong>
+          <small>Alınan sipariş</small>
+        </article>
+      </div>
+
+      <div className="seller-performance-details-grid">
+        <article className="seller-performance-progress-card">
+          <div className="seller-performance-progress-heading">
+            <div>
+              <span className="seller-performance-label">Satış Hedefi</span>
+              <strong>₺50.000</strong>
+            </div>
+            <b>{hedef.toFixed(0)}%</b>
+          </div>
+          <div className="seller-performance-progress-track" aria-label={`Satış hedefinin yüzde ${hedef.toFixed(0)} kadarı tamamlandı`}>
+            <div className="seller-performance-progress-fill" style={{ width: `${hedef}%` }} />
+          </div>
+          <small>50.000 TL hedefine ilerleme</small>
+        </article>
+
+        <article className="seller-performance-card">
+          <span className="seller-performance-label">Sonraki Rozet</span>
+          <strong>{sonrakiRozet}</strong>
+          <small>Bir üst seviyeye ilerliyorsunuz</small>
+        </article>
+
+        <article className="seller-performance-card">
+          <span className="seller-performance-label">Performans Puanı</span>
+          <strong>{Math.min(100, tamamlanan * 10)}</strong>
+          <small>100 üzerinden</small>
+        </article>
+
+        <article className="seller-performance-card">
+          <span className="seller-performance-label">Tamamlanan Sipariş</span>
+          <strong>{tamamlanan}</strong>
+          <small>Başarıyla teslim edildi</small>
+        </article>
+
+        <article className="seller-performance-card">
+          <span className="seller-performance-label">Toplam Ciro</span>
+          <strong>₺{toplamKazanc.toLocaleString("tr-TR")}</strong>
+          <small>Genel satış hacmi</small>
+        </article>
+      </div>
+    </section>
+  );
 }
 
 export default SellerPerformance;

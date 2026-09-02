@@ -4,7 +4,7 @@ function SellerProducts({ urunler }) {
 
   return (
 
-    <>
+    <section className="seller-products-section">
 
       <h2 className="section-title">
 
@@ -16,54 +16,46 @@ function SellerProducts({ urunler }) {
 
         urunler.length === 0 ?
 
-        <div className="empty-box">
+        <div className="seller-products-empty">
 
-          Henüz ürün eklenmemiş.
+          <span>📦</span>
+          <strong>Henüz ürün eklenmemiş</strong>
+          <p>Eklediğiniz ürünler bu bölümde görüntülenecek.</p>
 
         </div>
 
         :
 
-        <div className="products-grid">
+        <div className="seller-products-grid">
 
           {
 
             urunler.map((urun)=>(
 
               <div
-                className="product-card"
+                className="seller-product-card"
                 key={urun.id}
               >
 
-                <img
+                <div className="seller-product-image">
+                  <img src={urun.resim || "/no-image.png"} alt={urun.baslik || "Ürün görseli"} />
+                </div>
 
-                  src={
+                <div className="seller-product-body">
 
-                    urun.resim ||
-
-                    "/no-image.png"
-
-                  }
-
-                  alt={urun.baslik}
-
-                />
-
-                <div className="product-body">
-
-                  <div className="product-title">
+                  <div className="seller-product-title">
 
                     {urun.baslik}
 
                   </div>
 
-                  <div className="product-price">
+                  <div className="seller-product-price">
 
                     ₺{Number(urun.fiyat).toLocaleString("tr-TR")}
 
                   </div>
 
-                  <div className="product-stats">
+                  <div className="seller-product-stats">
 
                     <span>
 
@@ -85,7 +77,7 @@ function SellerProducts({ urunler }) {
 
                   </div>
 
-                  <div style={{marginBottom:"15px"}}>
+                  <div className="seller-product-status">
 
                     {
 
@@ -109,7 +101,7 @@ function SellerProducts({ urunler }) {
 
                   </div>
 
-                  <div className="product-buttons">
+                  <div className="seller-product-buttons">
 
                     <button
 
@@ -161,7 +153,7 @@ function SellerProducts({ urunler }) {
 
       }
 
-    </>
+    </section>
 
   );
 
