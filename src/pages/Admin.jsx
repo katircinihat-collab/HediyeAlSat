@@ -12,6 +12,7 @@ import { Link } from "react-router-dom";
 import { adminApi } from "../config/adminApi";
 import { formatListingCategory } from "../data/categories";
 import AdminStores from "../components/admin/AdminStores";
+import AdminOrderClaims from "../components/admin/AdminOrderClaims";
 
 import "../styles/pages/admin.css";
 function fiyatFormat(fiyat) {
@@ -600,6 +601,8 @@ onClick={()=>odemeYap(b.id)}
 magazalar={magazalar}
 onStatusChanged={magazaDurumunuGuncelle}
 />
+
+<AdminOrderClaims />
 
 <div className="admin-section">
 

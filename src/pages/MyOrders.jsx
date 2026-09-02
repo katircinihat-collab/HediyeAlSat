@@ -11,6 +11,7 @@ import {
 
 import { Link } from "react-router-dom";
 import { confirmOrderDelivery } from "../services/orderDeliveryApi";
+import OrderClaimForm from "../components/OrderClaimForm";
 
 import "../styles/pages/myorders.css";
 
@@ -214,6 +215,7 @@ function MyOrders() {
         {dogrulanan === siparis.id ? "Doğrulanıyor..." : "Teslim Aldım"}
       </button>
     )}
+    <OrderClaimForm order={siparis} />
 
     <Link
 

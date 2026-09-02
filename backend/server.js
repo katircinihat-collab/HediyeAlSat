@@ -53,6 +53,8 @@ const giftBattleRoutes =
     require("./routes/giftBattleRoutes");
 const orderStatusRoutes =
     require("./routes/orderStatusRoutes");
+const orderClaimRoutes =
+    require("./routes/orderClaimRoutes");
 
 
 // =====================================================
@@ -136,6 +138,10 @@ app.use(
 app.use(
     "/api/orders",
     orderStatusRoutes
+);
+app.use(
+    "/api/order-claims",
+    orderClaimRoutes
 );
 
 

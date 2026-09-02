@@ -1,4 +1,5 @@
 export function payoutDisplay(order, now = new Date()) {
+  if (order.hakEdisBlokeli === true) return { label: "İade/İtiraz İncelemede", detail: "İnceleme nedeniyle hakediş bekletiliyor." };
   if (order.teslimatDogrulandi !== true) return null;
   const value = order.hakEdisBlokeBitis;
   const release = value?.toDate ? value.toDate() : new Date(value);

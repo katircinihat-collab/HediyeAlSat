@@ -12,6 +12,7 @@ getDoc
 
 import { auth, db } from "../firebase";
 import { confirmOrderDelivery } from "../services/orderDeliveryApi";
+import OrderClaimForm from "../components/OrderClaimForm";
 
 import "../styles/pages/order-detail.css";
 
@@ -645,6 +646,7 @@ className="whatsapp-btn"
 
 </div>
 <div className="order-actions">
+<OrderClaimForm order={siparis} onSubmitted={(result)=>setSiparis((onceki)=>({...onceki,hakEdisBlokeli:true,aktifTalepId:result.claimId}))} onCancelled={()=>setSiparis((onceki)=>({...onceki,hakEdisBlokeli:false,aktifTalepId:null}))}/>
 
 {(siparis.durum==="Kargoda"||siparis.durum==="Kargoya Verildi")&&(
 <button type="button" className="buy-btn" disabled={dogrulaniyor} onClick={teslimAldim}>

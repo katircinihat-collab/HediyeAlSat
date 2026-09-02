@@ -58,9 +58,12 @@ function getPayoutEligibility(order, now = new Date()) {
     const releaseTime = parseDate(order?.hakEdisBlokeBitis);
     const trustedDelivery = order?.teslimatDogrulandi === true
         && normalizeOrderStatus(order?.durum) === ORDER_STATUSES.TESLIM_EDILDI;
-    const blocked = order?.durum === ORDER_STATUSES.IPTAL || order?.durum === ORDER_STATUSES.IADE
-        || order?.iadeTalebi === true || order?.itirazAcik === true;
+    const claimBlocked = order?.hakEdisBlokeli === true;
+    const blocked = order?.durum === ORDER_STATUSES.IPTAL || order?.durum === ORDER_STATUSES.IADE;
     const alreadyPaid = order?.walletAktarildi === true || order?.hakEdisOdendi === true || order?.payoutCompleted === true;
+    if (claimBlocked) {
+        return { eligible: false, status: "İncelemede", reason: "ACTIVE_CLAIM", remainingMs: releaseTime ? Math.max(0, releaseTime.getTime() - now.getTime()) : null };
+    }
     if (order?.odemeDurumu !== true || !trustedDelivery || !releaseTime || blocked || alreadyPaid) {
         return { eligible: false, status: "Beklemede", remainingMs: releaseTime ? Math.max(0, releaseTime.getTime() - now.getTime()) : null };
     }

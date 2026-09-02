@@ -32,5 +32,5 @@ test("49 saatte eligible true", () => assert.equal(getPayoutEligibility(delivere
 test("ödeme başarısızsa eligible false", () => assert.equal(getPayoutEligibility({ ...deliveredAt(), odemeDurumu: false }, new Date(deliveryTime.getTime() + 49 * 3600000)).eligible, false));
 test("teslim doğrulanmamışsa eligible false", () => assert.equal(getPayoutEligibility({ ...deliveredAt(), teslimatDogrulandi: false }, new Date(deliveryTime.getTime() + 49 * 3600000)).eligible, false));
 test("legacy Teslim kaydı otomatik güvenilir sayılmaz", () => assert.equal(getPayoutEligibility({ ...deliveredAt(), durum: "Teslim", teslimatDogrulandi: false }, new Date(deliveryTime.getTime() + 49 * 3600000)).eligible, false));
-test("iade veya itiraz varsa eligible false", () => assert.equal(getPayoutEligibility({ ...deliveredAt(), itirazAcik: true }, new Date(deliveryTime.getTime() + 49 * 3600000)).eligible, false));
+test("legacy itiraz alanı tek başına güvenilir claim blokesi sayılmaz", () => assert.equal(getPayoutEligibility({ ...deliveredAt(), itirazAcik: true }, new Date(deliveryTime.getTime() + 49 * 3600000)).eligible, true));
 test("daha önce payout yapılmışsa eligible false", () => assert.equal(getPayoutEligibility({ ...deliveredAt(), walletAktarildi: true }, new Date(deliveryTime.getTime() + 49 * 3600000)).eligible, false));

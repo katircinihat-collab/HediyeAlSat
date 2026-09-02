@@ -249,6 +249,19 @@ service cloud.firestore {
       allow read, create, update, delete: if false;
     }
 
+    match /orderClaims/{claimId} {
+      allow read: if isAdmin()
+        || (signedIn() && (resource.data.buyerUid == request.auth.uid
+          || resource.data.sellerUid == request.auth.uid
+          || (hasEmail() && resource.data.buyerEmail == request.auth.token.email)
+          || (hasEmail() && resource.data.sellerEmail == request.auth.token.email)));
+      allow create, update, delete: if false;
+    }
+
+    match /orderClaimGuards/{orderId} {
+      allow read, create, update, delete: if false;
+    }
+
     match /magazalar/{storeId} {
       allow read: if true;
 

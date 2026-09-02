@@ -170,6 +170,10 @@ before(async () => {
         selectedListingId: "published",
         createdAt: new Date()
       }),
+      setDoc(doc(db, "orderClaims", "owner-claim"), {
+        orderId: "owner-order", buyerUid: ownerAuth.uid, sellerUid: otherAuth.uid,
+        tip: "itiraz", durum: "acik", payoutBlock: true, createdAt: new Date()
+      }),
       setDoc(doc(db, "admins", adminAuth.email), { aktif: true })
     ]);
   });
@@ -626,4 +630,28 @@ test("40 - client giftBattleVotes belgesini okuyamaz, değiştiremez veya sileme
   await assertFails(getDoc(ref));
   await assertFails(updateDoc(ref, { selectedListingId: "other-listing" }));
   await assertFails(deleteDoc(ref));
+});
+
+test("45 - buyer orderClaims belgesini doğrudan oluşturamaz", async () => {
+  await assertFails(setDoc(doc(dbFor(ownerAuth), "orderClaims", "client-claim"), { orderId: "owner-order", buyerUid: ownerAuth.uid, sellerUid: otherAuth.uid, durum: "acik" }));
+});
+test("46 - buyer kendi claim kaydını, seller ilgili kaydı ve admin kaydı okuyabilir", async () => {
+  await assertSucceeds(getDoc(doc(dbFor(ownerAuth), "orderClaims", "owner-claim")));
+  await assertSucceeds(getDoc(doc(dbFor(otherAuth), "orderClaims", "owner-claim")));
+  await assertSucceeds(getDoc(doc(dbFor(adminAuth), "orderClaims", "owner-claim")));
+});
+test("47 - yetkisiz kullanıcı claim okuyamaz", async () => {
+  await assertFails(getDoc(doc(dbFor({ uid: "stranger", email: "stranger@example.com" }), "orderClaims", "owner-claim")));
+});
+test("48 - buyer ve seller claim durumunu değiştiremez", async () => {
+  await assertFails(updateDoc(doc(dbFor(ownerAuth), "orderClaims", "owner-claim"), { durum: "iptal_edildi" }));
+  await assertFails(updateDoc(doc(dbFor(otherAuth), "orderClaims", "owner-claim"), { durum: "reddedildi" }));
+});
+test("49 - client orderClaimGuards erişimi tamamen kapalıdır", async () => {
+  await assertFails(setDoc(doc(dbFor(ownerAuth), "orderClaimGuards", "owner-order"), { claimId: "x" }));
+  await assertFails(getDoc(doc(dbFor(ownerAuth), "orderClaimGuards", "owner-order")));
+});
+test("50 - buyer ve seller sipariş payout blokesini doğrudan değiştiremez", async () => {
+  await assertFails(updateDoc(doc(dbFor(ownerAuth), "siparisler", "owner-order"), { hakEdisBlokeli: true }));
+  await assertFails(updateDoc(doc(dbFor(otherAuth), "siparisler", "owner-order"), { hakEdisBlokeli: false }));
 });
