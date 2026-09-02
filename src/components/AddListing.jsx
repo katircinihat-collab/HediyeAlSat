@@ -142,11 +142,34 @@ function AddListing() {
     return "JPG / JPEG";
   }
 
+  async function apiJsonCevabiniOku(cevap, varsayilanMesaj) {
+    const govde = await cevap.text();
+
+    if (!govde.trim()) {
+      return {
+        success: false,
+        message: `${varsayilanMesaj} Sunucu boş yanıt verdi (${cevap.status || "bağlantı hatası"}).`
+      };
+    }
+
+    try {
+      return JSON.parse(govde);
+    } catch {
+      return {
+        success: false,
+        message: `${varsayilanMesaj} Sunucudan geçersiz bir yanıt alındı (${cevap.status || "bağlantı hatası"}).`
+      };
+    }
+  }
+
   async function korumaliDosyaServisiniKontrolEt(token) {
     const cevap = await fetch(apiUrl("/api/digital-assets/status"), {
       headers: { Authorization: `Bearer ${token}` }
     });
-    const veri = await cevap.json();
+    const veri = await apiJsonCevabiniOku(cevap, "Korumalı dosya servisi kontrol edilemedi.");
+    if (!cevap.ok) {
+      throw new Error(veri.message || veri.error || "Korumalı dosya servisi kontrol edilemedi.");
+    }
     return cevap.ok && veri.configured === true;
   }
 
@@ -159,8 +182,10 @@ function AddListing() {
       },
       body: orijinalDosya
     });
-    const veri = await cevap.json();
-    if (!cevap.ok) throw new Error(veri.message || "Orijinal dosya yüklenemedi.");
+    const veri = await apiJsonCevabiniOku(cevap, "Orijinal dosya yüklenemedi.");
+    if (!cevap.ok || veri.success !== true) {
+      throw new Error(veri.message || veri.error || "Orijinal dosya yüklenemedi.");
+    }
   }
 
 

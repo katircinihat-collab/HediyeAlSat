@@ -236,6 +236,10 @@ service cloud.firestore {
       allow read, create, update, delete: if false;
     }
 
+    match /tasarimOylari/{voteId} {
+      allow read, create, update, delete: if false;
+    }
+
     match /magazalar/{storeId} {
       allow read: if true;
 

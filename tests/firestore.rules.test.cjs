@@ -150,6 +150,12 @@ before(async () => {
         sellerUid: ownerAuth.uid,
         status: "ready"
       }),
+      setDoc(doc(db, "tasarimOylari", "backend-vote"), {
+        listingId: "published",
+        voterUid: ownerAuth.uid,
+        periodKey: "2026-W36",
+        createdAt: new Date()
+      }),
       setDoc(doc(db, "admins", adminAuth.email), { aktif: true })
     ]);
   });
@@ -510,4 +516,27 @@ test("33 - sponsor başvuru e-postası token e-postasıyla aynı olmalıdır", a
     doc(dbFor(ownerAuth), "sponsorBasvurular", "spoofed-email-application"),
     { ...validApplication, email: otherAuth.email }
   ));
+});
+
+test("34 - client tasarimOylari belgesi oluşturamaz", async () => {
+  await assertFails(setDoc(doc(dbFor(ownerAuth), "tasarimOylari", "client-vote"), {
+    listingId: "published",
+    voterUid: ownerAuth.uid,
+    periodKey: "2026-W36",
+    createdAt: new Date()
+  }));
+});
+
+test("35 - client tasarimOylari belgesini okuyamaz", async () => {
+  await assertFails(getDoc(doc(dbFor(ownerAuth), "tasarimOylari", "backend-vote")));
+});
+
+test("36 - client tasarimOylari belgesini güncelleyemez", async () => {
+  await assertFails(updateDoc(doc(dbFor(ownerAuth), "tasarimOylari", "backend-vote"), {
+    listingId: "other-listing"
+  }));
+});
+
+test("37 - client tasarimOylari belgesini silemez", async () => {
+  await assertFails(deleteDoc(doc(dbFor(ownerAuth), "tasarimOylari", "backend-vote")));
 });

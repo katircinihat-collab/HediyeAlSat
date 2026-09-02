@@ -29,6 +29,7 @@ import UpcomingEvents from "../components/UpcomingEvents";
 import GiftAssistant from "../components/GiftAssistant";
 import Stats from "../components/Stats";
 import Footer from "../components/Footer";
+import TopDesignShowcase from "../components/TopDesignShowcase";
 
 import "../styles/pages/home.css";
 
@@ -424,6 +425,8 @@ function Home() {
           <Link to="/a4-tasarimlar">Tasarımları Gör</Link>
         </article>
       </section>
+
+      <TopDesignShowcase />
 
 
       <ProductSlider

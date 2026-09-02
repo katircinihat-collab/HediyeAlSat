@@ -108,6 +108,10 @@ export function isA4Listing(listing) {
   return getListingMainCategory(listing) === "A4 Tasarım";
 }
 
+export function isDigitalA4Listing(listing = {}) {
+  return listing.urunTipi === "dijital" && listing.kategori === "A4 Tasarım";
+}
+
 export function isLegacySecondHandListing(listing = {}) {
   const values = [
     listing.anaKategori, listing.kategori, listing.altKategori,

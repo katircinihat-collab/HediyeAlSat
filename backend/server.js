@@ -46,6 +46,9 @@ const adminRoutes =
 const digitalAssetRoutes =
     require("./routes/digitalAssetRoutes");
 
+const designVoteRoutes =
+    require("./routes/designVoteRoutes");
+
 
 // =====================================================
 // API ROUTELARI
@@ -113,6 +116,11 @@ app.use(
 app.use(
     "/api/digital-assets",
     digitalAssetRoutes
+);
+
+app.use(
+    "/api/design-votes",
+    designVoteRoutes
 );
 
 

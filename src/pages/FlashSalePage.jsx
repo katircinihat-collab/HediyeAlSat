@@ -6,7 +6,7 @@ import { Link } from "react-router-dom";
 import { db } from "../firebase";
 import Navbar from "../components/Navbar";
 import ProductCard from "../components/ProductCard";
-import { isLegacySecondHandListing } from "../data/categories";
+import { isA4Listing, isLegacySecondHandListing } from "../data/categories";
 
 import "../styles/pages/flash-sale-page.css";
 
@@ -31,7 +31,9 @@ function FlashSalePage() {
             ...d.data()
           }))
           .filter((ilan) =>
-            ilan.trend === true && !isLegacySecondHandListing(ilan)
+            ilan.trend === true &&
+            !isLegacySecondHandListing(ilan) &&
+            !isA4Listing(ilan)
           );
 
         setIlanlar(liste);

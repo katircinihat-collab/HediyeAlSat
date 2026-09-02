@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { collection, getDocs, query, where } from "firebase/firestore";
+import { useSearchParams } from "react-router-dom";
 import { db } from "../firebase";
 
 import Navbar from "../components/Navbar";
@@ -8,6 +9,7 @@ import Footer from "../components/Footer";
 import CategoryBar from "../components/CategoryBar";
 import categories, {
   getListingSubcategory,
+  isA4Listing,
   isLegacySecondHandListing,
   matchesMainCategory
 } from "../data/categories";
@@ -15,6 +17,9 @@ import categories, {
 import "../styles/pages/product.css";
 
 function Listings() {
+
+  const [searchParams] = useSearchParams();
+  const arama = (searchParams.get("search") || "").trim();
 
   const [ilanlar, setIlanlar] = useState([]);
   const [yukleniyor, setYukleniyor] = useState(true);
@@ -69,8 +74,32 @@ function Listings() {
 
   const filtrelenmisIlanlar = ilanlar.filter((ilan) => {
 
+    if (isA4Listing(ilan)) {
+      return false;
+    }
+
     if (isLegacySecondHandListing(ilan)) {
       return false;
+    }
+
+    if (arama) {
+      const aranabilirMetin = [
+        ilan.baslik,
+        ilan.urunAdi,
+        ilan.ilanAdi,
+        ilan.ad,
+        ilan.aciklama,
+        ilan.kategori,
+        ilan.altKategori,
+        getListingSubcategory(ilan)
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLocaleLowerCase("tr-TR");
+
+      if (!aranabilirMetin.includes(arama.toLocaleLowerCase("tr-TR"))) {
+        return false;
+      }
     }
 
     // Kategori filtresi

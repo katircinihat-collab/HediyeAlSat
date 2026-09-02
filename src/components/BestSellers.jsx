@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "../firebase";
 import ProductCard from "./ProductCard";
-import { isLegacySecondHandListing } from "../data/categories";
+import { isA4Listing, isLegacySecondHandListing } from "../data/categories";
 
 function BestSellers() {
 
@@ -21,7 +21,7 @@ function BestSellers() {
           id: doc.id,
           ...doc.data()
         }))
-        .filter((item) => !isLegacySecondHandListing(item))
+        .filter((item) => !isLegacySecondHandListing(item) && !isA4Listing(item))
         .sort((a, b) => (b.satisSayisi || 0) - (a.satisSayisi || 0))
         .slice(0, 8);
 

@@ -12,7 +12,7 @@ import { db } from "../firebase";
 
 import Navbar from "../components/Navbar";
 import ProductCard from "../components/ProductCard";
-import { isLegacySecondHandListing } from "../data/categories";
+import { isA4Listing, isLegacySecondHandListing } from "../data/categories";
 
 import "../styles/pages/special-day.css";
 
@@ -150,6 +150,7 @@ function SpecialDay() {
             (ilan) => {
 
               if (isLegacySecondHandListing(ilan)) return false;
+              if (isA4Listing(ilan)) return false;
 
               if (
                 !Array.isArray(

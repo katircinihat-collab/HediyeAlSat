@@ -2,6 +2,13 @@
 .store-back-link { display: inline-flex; margin-bottom: 20px; color: #5f5963; font-weight: 700; text-decoration: none; }
 .store-back-link:hover { color: #c1121f; }
 .store-content { display: flex; flex-direction: column; gap: 34px; min-width: 0; }
+.store-catalog { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.store-catalog-tabs { display: flex; gap: 8px; padding: 6px; width: fit-content; max-width: 100%; border: 1px solid #eadfe2; border-radius: 14px; background: #fff; box-shadow: 0 8px 24px rgba(55, 35, 42, .06); }
+.store-catalog-tabs button { min-height: 44px; padding: 10px 17px; border: 0; border-radius: 10px; background: transparent; color: #625a65; font: inherit; font-weight: 800; cursor: pointer; white-space: nowrap; transition: background .2s ease, color .2s ease, box-shadow .2s ease; }
+.store-catalog-tabs button span { display: inline-flex; align-items: center; justify-content: center; min-width: 24px; height: 24px; margin-left: 5px; padding: 0 7px; border-radius: 999px; background: #f2ecee; color: #665d67; font-size: 12px; }
+.store-catalog-tabs button.active { background: #c1121f; color: #fff; box-shadow: 0 6px 16px rgba(193, 18, 31, .2); }
+.store-catalog-tabs button.active span { background: rgba(255, 255, 255, .2); color: #fff; }
+.store-catalog-tabs button:focus-visible { outline: 3px solid rgba(193, 18, 31, .22); outline-offset: 2px; }
 .store-information-grid { display: grid; grid-template-columns: minmax(0, 2fr) minmax(280px, .8fr); gap: 28px; align-items: start; }
 .store-information-main, .store-information-side { min-width: 0; }
 .store-information-side { position: sticky; top: 95px; }
@@ -14,4 +21,4 @@
 @keyframes store-spin { to { transform: rotate(360deg); } }
 
 @media (max-width: 960px) { .store-information-grid { grid-template-columns: 1fr; } .store-information-side { position: static; } }
-@media (max-width: 480px) { .store-page { padding: 20px 12px 55px; } .store-content { gap: 24px; } }
+@media (max-width: 480px) { .store-page { padding: 20px 12px 55px; } .store-content { gap: 24px; } .store-catalog-tabs { width: 100%; box-sizing: border-box; } .store-catalog-tabs button { flex: 1 1 0; min-width: 0; padding: 10px 8px; white-space: normal; line-height: 1.25; } }

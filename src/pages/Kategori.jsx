@@ -17,6 +17,7 @@ import {
   getCategoryBySlug,
   getDefaultSubcategoryForSlug,
   getListingSubcategory,
+  isA4Listing,
   isLegacySecondHandListing,
   matchesMainCategory
 } from "../data/categories";
@@ -96,6 +97,7 @@ function Kategori() {
             (item) =>
 
               !isLegacySecondHandListing(item) &&
+              !isA4Listing(item) &&
               matchesMainCategory(item, bilgi.ad)
 
           );

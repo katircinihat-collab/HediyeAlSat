@@ -6,7 +6,7 @@ import { db } from "../firebase";
 import cities from "../data/cities";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-import { isLegacySecondHandListing } from "../data/categories";
+import { isA4Listing, isLegacySecondHandListing } from "../data/categories";
 
 import "../styles/pages/kiralik.css";
 
@@ -44,7 +44,9 @@ function Kiralik() {
           ...doc.data()
         }))
         .filter((ilan) =>
-          ilan.tip === "Kiralık" && !isLegacySecondHandListing(ilan)
+          ilan.tip === "Kiralık" &&
+          !isLegacySecondHandListing(ilan) &&
+          !isA4Listing(ilan)
         );
 
       setIlanlar(liste);

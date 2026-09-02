@@ -48,6 +48,7 @@ import Checkout from "./pages/Checkout";
 import NotFound from "./pages/NotFound";
 import AdminRoute from "./components/AdminRoute";
 import SpecialListingsPage from "./pages/SpecialListingsPage";
+import TopDesigns from "./pages/TopDesigns";
 
 
 /* ==============================
@@ -145,6 +146,11 @@ function App() {
         <Route
           path="/a4-tasarimlar"
           element={<SpecialListingsPage tur="a4-tasarim" />}
+        />
+
+        <Route
+          path="/top-10-tasarim"
+          element={<TopDesigns />}
         />
 
 

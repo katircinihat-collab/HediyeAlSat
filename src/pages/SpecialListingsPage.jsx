@@ -1,15 +1,23 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { onAuthStateChanged } from "firebase/auth";
 import { collection, getDocs, query, where } from "firebase/firestore";
-import { db } from "../firebase";
+import { auth, db } from "../firebase";
 import Navbar from "../components/Navbar";
 import ProductCard from "../components/ProductCard";
 import Footer from "../components/Footer";
 import "../styles/pages/special-listings.css";
 import {
   isA4Listing,
+  isDigitalA4Listing,
   isLegacySecondHandListing
 } from "../data/categories";
+import {
+  addDesignVote,
+  getDesignVoteSummary,
+  getMyDesignVotes,
+  removeDesignVote
+} from "../services/designVoteApi";
 
 function fiyatSayiyaCevir(deger) {
   if (typeof deger === "number") return Number.isFinite(deger) ? deger : null;
@@ -32,8 +40,13 @@ function fiyatSayiyaCevir(deger) {
 }
 
 function SpecialListingsPage({ tur }) {
+  const navigate = useNavigate();
   const [ilanlar, setIlanlar] = useState([]);
   const [yukleniyor, setYukleniyor] = useState(true);
+  const [kullanici, setKullanici] = useState(auth.currentUser);
+  const [oySayilari, setOySayilari] = useState({});
+  const [oyVerilenler, setOyVerilenler] = useState(new Set());
+  const [oyIslemindekiId, setOyIslemindekiId] = useState("");
 
   const yuzTlSayfasi = tur === "100-tl";
   const baslik = yuzTlSayfasi ? "💯 Ne Alırsan 100 TL" : "🎨 A4 Tasarım Pazarı";
@@ -70,6 +83,94 @@ function SpecialListingsPage({ tur }) {
 
     getir();
   }, [baslik, yuzTlSayfasi]);
+
+  useEffect(() => onAuthStateChanged(auth, setKullanici), []);
+
+  useEffect(() => {
+    if (yuzTlSayfasi) return;
+    const dijitalIds = ilanlar
+      .filter(isDigitalA4Listing)
+      .map((ilan) => ilan.id);
+
+    if (!dijitalIds.length) {
+      setOySayilari({});
+      setOyVerilenler(new Set());
+      return;
+    }
+
+    getDesignVoteSummary(dijitalIds)
+      .then((data) => setOySayilari(data.counts || {}))
+      .catch((error) => console.error("Tasarım oyları alınamadı:", error));
+
+    if (kullanici) {
+      getMyDesignVotes()
+        .then((data) => setOyVerilenler(new Set(data.listingIds || [])))
+        .catch((error) => console.error("Kullanıcı oyları alınamadı:", error));
+    } else {
+      setOyVerilenler(new Set());
+    }
+  }, [ilanlar, kullanici, yuzTlSayfasi]);
+
+  async function oyDegistir(ilanId, oyVerildi) {
+    if (!auth.currentUser) {
+      navigate("/login");
+      return;
+    }
+
+    try {
+      setOyIslemindekiId(ilanId);
+      if (oyVerildi) await removeDesignVote(ilanId);
+      else await addDesignVote(ilanId);
+
+      const [ozet, kullaniciOylari] = await Promise.all([
+        getDesignVoteSummary(ilanlar.filter(isDigitalA4Listing).map((ilan) => ilan.id)),
+        getMyDesignVotes()
+      ]);
+      setOySayilari(ozet.counts || {});
+      setOyVerilenler(new Set(kullaniciOylari.listingIds || []));
+    } catch (error) {
+      alert(error.message);
+    } finally {
+      setOyIslemindekiId("");
+    }
+  }
+
+  function a4Karti(ilan) {
+    const dijital = isDigitalA4Listing(ilan);
+    const kendiTasarimi = Boolean(kullanici && (
+      ilan.sahipUid === kullanici.uid || ilan.sahip === kullanici.email
+    ));
+    const oyVerildi = oyVerilenler.has(ilan.id);
+
+    return (
+      <ProductCard
+        key={ilan.id}
+        ilan={ilan}
+        cardExtra={dijital ? (
+          <div className="a4-card-vote" aria-label={`${ilan.baslik || "Tasarım"} oy alanı`}>
+            {kendiTasarimi ? (
+              <span className="a4-own-design">Kendi tasarımın</span>
+            ) : (
+              <button
+                type="button"
+                className={oyVerildi ? "voted" : ""}
+                disabled={oyIslemindekiId === ilan.id}
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  oyDegistir(ilan.id, oyVerildi);
+                }}
+              >
+                {oyIslemindekiId === ilan.id ? "İşleniyor..." : oyVerildi ? "✓ Oy Verildi" : "👍 Oy Ver"}
+              </button>
+            )}
+            <i aria-hidden="true">·</i>
+            <strong>{oySayilari[ilan.id] || 0} Oy</strong>
+          </div>
+        ) : null}
+      />
+    );
+  }
 
   const oneCikanA4Tasarımları = yuzTlSayfasi ? [] : ilanlar.slice(0, 8);
   const digerA4Tasarımları = yuzTlSayfasi ? [] : ilanlar.slice(8);
@@ -113,8 +214,8 @@ function SpecialListingsPage({ tur }) {
                 </article>
                 <article>
                   <span>🏪</span>
-                  <h3>Mağazana Ekle</h3>
-                  <p>İlan verirken A4 Tasarım kategorisini seç ve çalışmanı mağazana ekle.</p>
+                  <h3>Tasarımını Yükle</h3>
+                  <p>İlan verirken A4 Tasarım kategorisini seç, tasarımını yükle ve gerekli bilgileri doldur.</p>
                 </article>
                 <article>
                   <span>💰</span>
@@ -164,7 +265,7 @@ function SpecialListingsPage({ tur }) {
               <h2 className="a4-products-title">✨ Öne Çıkan A4 Tasarımları</h2>
               <div className="a4-showcase-grid">
                 {oneCikanA4Tasarımları.map((ilan) => (
-                  <ProductCard key={ilan.id} ilan={ilan} />
+                  a4Karti(ilan)
                 ))}
               </div>
             </section>
@@ -174,7 +275,7 @@ function SpecialListingsPage({ tur }) {
                 <h2 className="a4-products-title">🎨 Tüm A4 Tasarımları</h2>
                 <div className="a4-showcase-grid">
                   {digerA4Tasarımları.map((ilan) => (
-                    <ProductCard key={ilan.id} ilan={ilan} />
+                    a4Karti(ilan)
                   ))}
                 </div>
               </section>

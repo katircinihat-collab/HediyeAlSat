@@ -25,7 +25,7 @@ import {
 import useFavorite from "../hooks/useFavorite";
 
 
-function ProductCard({ ilan }) {
+function ProductCard({ ilan, cardExtra = null }) {
 
 
   /* =========================
@@ -600,6 +600,9 @@ function ProductCard({ ilan }) {
 
 
         </div>
+
+
+        {cardExtra}
 
 
         {/* SEPET */}

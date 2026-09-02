@@ -251,7 +251,7 @@ function Navbar() {
 
     if (!temizArama) {
 
-      navigate("/");
+      navigate("/ilanlar");
 
       return;
 
@@ -260,7 +260,7 @@ function Navbar() {
     setAramaAcik(false);
 
     navigate(
-      "/?arama=" +
+      "/ilanlar?search=" +
       encodeURIComponent(
         temizArama
       )
@@ -277,7 +277,7 @@ function Navbar() {
 
     setArama("");
 
-    navigate("/");
+    navigate("/ilanlar");
 
   }
 

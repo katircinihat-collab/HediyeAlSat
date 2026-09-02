@@ -1,6 +1,7 @@
 .store-products { min-width: 0; padding: 30px; border: 1px solid #ebe7ed; border-radius: 22px; background: #fff; box-shadow: 0 10px 30px rgba(55, 33, 62, .07); }
 .store-products-header { display: flex; justify-content: space-between; align-items: end; gap: 16px; margin-bottom: 22px; }
 .store-products-header h2 { margin: 5px 0 0; font-size: clamp(25px, 3.5vw, 34px); }
+.store-products-header p { margin: 7px 0 0; color: #746c78; }
 .store-products-header strong { color: #615968; }
 .store-products-kicker { color: #b10f1b; font-size: 12px; font-weight: 900; letter-spacing: .12em; }
 .store-product-controls { display: grid; grid-template-columns: minmax(230px, 1.5fr) repeat(3, minmax(150px, .7fr)); gap: 12px; margin-bottom: 26px; }

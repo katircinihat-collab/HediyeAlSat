@@ -156,6 +156,43 @@
   gap: 25px;
 }
 
+.a4-card-vote {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 46px;
+  margin: 4px 0 14px;
+  padding: 8px 12px;
+  border: 1px solid #e9e1ef;
+  border-radius: 12px;
+  background: #fff;
+  color: #655d6b;
+  font-size: 13px;
+}
+
+.a4-card-vote button {
+  min-height: 34px;
+  border: 0;
+  border-radius: 8px;
+  background: #f7f2ff;
+  color: #6f3fa0;
+  padding: 7px 11px;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.a4-card-vote button.voted {
+  background: #ecfdf3;
+  color: #067647;
+}
+
+.a4-card-vote button:disabled { cursor: wait; opacity: .65; }
+.a4-card-vote i { color: #c5bdca; font-style: normal; }
+.a4-card-vote strong { color: #443c49; white-space: nowrap; }
+.a4-own-design { color: #746c78; font-weight: 800; }
+
 .a4-all-designs {
   margin-top: 52px;
 }
@@ -172,5 +209,6 @@
   .a4-market-intro { margin-bottom: 38px; border-radius: 18px; }
   .a4-steps-grid { grid-template-columns: 1fr; }
   .a4-showcase-grid { grid-template-columns: minmax(0, 1fr); gap: 18px; }
+  .a4-card-vote { min-height: 50px; }
   .a4-seller-cta { width: 100%; justify-content: center; text-align: center; }
 }

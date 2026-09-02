@@ -22,7 +22,15 @@ function tarihSayisi(ilan) {
   return Number.isFinite(sonuc) ? sonuc : 0;
 }
 
-function StoreProducts({ ilanlar }) {
+function StoreProducts({
+  ilanlar,
+  baslik = "Ürünleri Keşfet",
+  altMetin = "",
+  kicker = "MAĞAZA VİTRİNİ",
+  bosBaslik = "Bu mağazada henüz aktif ürün yok.",
+  bosMetin = "Yeni ürünler eklendiğinde burada gösterilecek.",
+  bosIkon = "🏪"
+}) {
   const [arama, setArama] = useState("");
   const [anaKategori, setAnaKategori] = useState("");
   const [altKategori, setAltKategori] = useState("");
@@ -78,7 +86,11 @@ function StoreProducts({ ilanlar }) {
   return (
     <section className="store-products">
       <div className="store-products-header">
-        <div><span className="store-products-kicker">MAĞAZA VİTRİNİ</span><h2>Ürünleri Keşfet</h2></div>
+        <div>
+          <span className="store-products-kicker">{kicker}</span>
+          <h2>{baslik}</h2>
+          {altMetin && <p>{altMetin}</p>}
+        </div>
         <strong>{gorunenIlanlar.length} ürün bulundu</strong>
       </div>
 
@@ -109,7 +121,7 @@ function StoreProducts({ ilanlar }) {
       )}
 
       {ilanlar.length === 0 ? (
-        <div className="empty-products"><span>🏪</span><h3>Bu mağazada henüz aktif ürün yok.</h3><p>Yeni ürünler eklendiğinde burada gösterilecek.</p></div>
+        <div className="empty-products"><span>{bosIkon}</span><h3>{bosBaslik}</h3><p>{bosMetin}</p></div>
       ) : gorunenIlanlar.length === 0 ? (
         <div className="empty-products"><span>🔎</span><h3>Aramanıza uygun ürün bulunamadı.</h3><p>Arama veya kategori seçiminizi değiştirmeyi deneyin.</p></div>
       ) : (

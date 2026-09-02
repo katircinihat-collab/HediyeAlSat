@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "../firebase";
 import ProductCard from "./ProductCard";
-import { isLegacySecondHandListing } from "../data/categories";
+import { isA4Listing, isLegacySecondHandListing } from "../data/categories";
 
 function TrendingProducts() {
 
@@ -21,7 +21,7 @@ function TrendingProducts() {
           id: doc.id,
           ...doc.data()
         }))
-        .filter(item => item.oneCikan === true && !isLegacySecondHandListing(item));
+        .filter(item => item.oneCikan === true && !isLegacySecondHandListing(item) && !isA4Listing(item));
 
       setUrunler(trend);
 

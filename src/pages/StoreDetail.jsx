@@ -3,7 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, query, where } from "firebase/firestore";
 import { auth, db } from "../firebase";
-import { getListingMainCategory, isLegacySecondHandListing } from "../data/categories";
+import { getListingMainCategory, isA4Listing, isDigitalA4Listing, isLegacySecondHandListing } from "../data/categories";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import StoreHero from "../components/StoreHero";
@@ -27,9 +27,20 @@ function StoreDetail() {
   const [takipDoc, setTakipDoc] = useState(null);
   const [yukleniyor, setYukleniyor] = useState(true);
   const [hata, setHata] = useState("");
+  const [urunSekmesi, setUrunSekmesi] = useState("urunler");
 
   const kategoriler = useMemo(
     () => [...new Set(ilanlar.map(getListingMainCategory).filter(Boolean))],
+    [ilanlar]
+  );
+
+  const dijitalTasarımlar = useMemo(
+    () => ilanlar.filter(isDigitalA4Listing),
+    [ilanlar]
+  );
+
+  const normalUrunler = useMemo(
+    () => ilanlar.filter((ilan) => !isA4Listing(ilan)),
     [ilanlar]
   );
 
@@ -213,7 +224,43 @@ function StoreDetail() {
             <div className="store-content">
               <StoreHero magaza={magaza} takipEdiyor={takipEdiyor} takipEt={takipEt} takipBirak={takipBirak} ortalamaPuan={ortalamaPuan} oySayisi={oySayisi} ilanSayisi={ilanlar.length} kategoriler={kategoriler} />
               <StoreStats ilanSayisi={ilanlar.length} ortalamaPuan={ortalamaPuan} oySayisi={oySayisi} />
-              <StoreProducts ilanlar={ilanlar} />
+              <section className="store-catalog" aria-label="Mağaza ürünleri">
+                <div className="store-catalog-tabs" role="tablist" aria-label="Ürün türü">
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={urunSekmesi === "urunler"}
+                    className={urunSekmesi === "urunler" ? "active" : ""}
+                    onClick={() => setUrunSekmesi("urunler")}
+                  >
+                    Ürünler <span>{normalUrunler.length}</span>
+                  </button>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={urunSekmesi === "dijital"}
+                    className={urunSekmesi === "dijital" ? "active" : ""}
+                    onClick={() => setUrunSekmesi("dijital")}
+                  >
+                    Dijital Tasarımlar <span>{dijitalTasarımlar.length}</span>
+                  </button>
+                </div>
+
+                {urunSekmesi === "urunler" ? (
+                  <StoreProducts key="urunler" ilanlar={normalUrunler} />
+                ) : (
+                <StoreProducts
+                  key="dijital"
+                  ilanlar={dijitalTasarımlar}
+                  baslik="Dijital Tasarımlar"
+                  altMetin="Bu mağazanın dijital A4 tasarımları"
+                  kicker="DİJİTAL VİTRİN"
+                  bosBaslik="Bu mağazada henüz dijital tasarım yok."
+                  bosMetin="Yeni dijital tasarımlar eklendiğinde burada gösterilecek."
+                  bosIkon="🎨"
+                />
+                )}
+              </section>
 
               <div className="store-information-grid">
                 <div className="store-information-main">

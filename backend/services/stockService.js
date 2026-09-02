@@ -32,6 +32,9 @@ async function stokDus(urunId, adet = 1) {
 
     const urun = urunDoc.data();
 
+    // Dijital tasarımlar tekrar satılabilir; stokları düşmez ve pasife alınmaz.
+    if (urun.urunTipi === "dijital") return;
+
     const mevcutStok =
         Number(urun.stok || 0);
 
@@ -80,6 +83,9 @@ async function stokEkle(urunId, adet = 1) {
     if (!urunDoc.exists) return;
 
     const urun = urunDoc.data();
+
+    // Dijital tasarımlar stok tabanlı olmadığı için iade sırasında da stok değişmez.
+    if (urun.urunTipi === "dijital") return;
 
     await urunRef.update({
 
