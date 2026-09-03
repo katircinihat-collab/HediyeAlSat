@@ -208,3 +208,14 @@
   }
 
 }
+
+.ad-banner { width: calc(100% - 48px); max-width: 1560px; box-sizing: border-box; margin: 34px auto; padding: 0; gap: 14px; }
+.ad-card { min-height: 126px; padding: 22px 24px; border: 1px solid #dedfe3; border-radius: 16px; box-shadow: 0 6px 20px rgba(15,23,42,.06); }
+.ad-card.red { background: linear-gradient(135deg, #ae1020, #dc2927); }
+.ad-card.orange { background: linear-gradient(135deg, #df4c13, #f58420); }
+.ad-card.chocolate { background: linear-gradient(135deg, #9d2922, #d9571e); }
+.ad-card h3 { font-size: 18px; }
+.ad-card p { color: #e5e7eb; }
+@media (max-width: 650px) {
+  .ad-banner { width: calc(100% - 24px); margin: 26px auto; padding: 0; }
+}

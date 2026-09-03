@@ -1,4 +1,3 @@
-
 import SEO from "../components/SEO";
 
 import { useEffect, useState } from "react";
@@ -10,6 +9,7 @@ import {
 
 import { db } from "../firebase";
 import {
+  categoryDefinitions,
   getListingMainCategory,
   getListingSubcategory,
   isA4Listing,
@@ -32,7 +32,6 @@ import TopDesignShowcase from "../components/TopDesignShowcase";
 import GiftBattle from "../components/GiftBattle";
 
 import "../styles/pages/home.css";
-
 
 function Home() {
 
@@ -74,10 +73,8 @@ function Home() {
       yeniKategori
     );
 
-
     const yeniParams =
       new URLSearchParams(searchParams);
-
 
     if (yeniKategori) {
 
@@ -91,7 +88,6 @@ function Home() {
       yeniParams.delete("kategori");
 
     }
-
 
     setSearchParams(
       yeniParams,
@@ -123,12 +119,10 @@ function Home() {
             )
           );
 
-
         console.log(
           "Toplam ilan:",
           snap.docs.length
         );
-
 
         const veriler =
           snap.docs.map(
@@ -140,7 +134,6 @@ function Home() {
 
             })
           );
-
 
         setIlanlar(
           veriler
@@ -157,7 +150,6 @@ function Home() {
 
     }
 
-
     getir();
 
   }, []);
@@ -173,7 +165,10 @@ function Home() {
     ilanlar.filter(
       (item) => {
 
-        if (isA4Listing(item) || isLegacySecondHandListing(item)) {
+        if (
+          isA4Listing(item) ||
+          isLegacySecondHandListing(item)
+        ) {
           return false;
         }
 
@@ -192,22 +187,21 @@ function Home() {
             (item.sehir || "")
           ).toLowerCase();
 
-
         const aramaUygun =
           text.includes(
             arama.toLowerCase()
           );
 
-
         const kategoriUygun =
           !kategori ||
-          matchesMainCategory(item, kategori);
-
+          matchesMainCategory(
+            item,
+            kategori
+          );
 
         const tipUygun =
           tip === "Tümü" ||
           item.tip === tip;
-
 
         const ozelGunUygun =
           !ozelGun ||
@@ -219,7 +213,6 @@ function Home() {
               ozelGun
             )
           );
-
 
         return (
 
@@ -266,7 +259,6 @@ function Home() {
         x.trend === true
     );
 
-
   const gosterTrend =
     gununFirsatlari.length > 0
       ? gununFirsatlari
@@ -309,10 +301,8 @@ function Home() {
           const ta =
             a.tarih?.seconds || 0;
 
-
           const tb =
             b.tarih?.seconds || 0;
-
 
           return tb - ta;
 
@@ -349,7 +339,6 @@ function Home() {
         x.oneCikan === true
     );
 
-
   const gosterEditor =
     editorSecimi.length > 0
       ? editorSecimi
@@ -370,95 +359,230 @@ function Home() {
     <>
 
       <SEO
-
         title="HediyeAlSat | Türkiye'nin Hediye Pazaryeri"
-
         description="Türkiye'nin en yeni hediye pazaryeri. El yapımı ürünler, butik mağazalar ve binlerce hediye ilanı HediyeAlSat'ta."
-
         canonical="https://hediyealsat.com/"
-
         image="https://hediyealsat.com/logo192.png"
-
       />
-
 
       <Navbar />
 
+      <FlashSale ilanlar={gosterTrend} />
 
-      <FlashSale />
+      <section
+        className="marketplace-trust"
+        aria-label="HediyeAlSat avantajları"
+      >
+
+        <div>
+          <span aria-hidden="true">
+            🔒
+          </span>
+
+          <strong>
+            Güvenli Ödeme
+          </strong>
+
+          <small>
+            iyzico altyapısıyla ödeme
+          </small>
+        </div>
+
+        <div>
+          <span aria-hidden="true">
+            🛡️
+          </span>
+
+          <strong>
+            Alıcı Güvencesi
+          </strong>
+
+          <small>
+            Teslimat ve talep takibi
+          </small>
+        </div>
+
+        <div>
+          <span aria-hidden="true">
+            🚚
+          </span>
+
+          <strong>
+            Satıcı Bazlı Kargo
+          </strong>
+
+          <small>
+            Aynı satıcıda 500 TL ve üzeri avantaj
+          </small>
+        </div>
+
+        <div>
+          <span aria-hidden="true">
+            🏪
+          </span>
+
+          <strong>
+            Gerçek Mağazalar
+          </strong>
+
+          <small>
+            Mağaza ve ürünleri keşfet
+          </small>
+        </div>
+
+      </section>
+
+
+      {/* =========================================
+          ÖZEL GÜNLER
+          Popüler Kategorilerin eski yerine taşındı
+      ========================================= */}
+
+      <SpecialDays />
+
+
+      {/* =========================================
+          POPÜLER KATEGORİLER
+          Özel Günlerin eski yerine taşındı
+      ========================================= */}
+
+      <section
+        className="popular-categories"
+        aria-labelledby="popular-categories-title"
+      >
+
+        <div className="marketplace-section-heading">
+
+          <div>
+
+            <span>
+              KEŞFET
+            </span>
+
+            <h2 id="popular-categories-title">
+              Popüler Kategoriler
+            </h2>
+
+          </div>
+
+        </div>
+
+        <div className="popular-category-grid">
+
+          {categoryDefinitions.map(
+            (category) => (
+
+              <Link
+                key={category.id}
+                to={
+                  category.name === "A4 Tasarım"
+                    ? "/a4-tasarimlar"
+                    : `/kategori/${category.id}`
+                }
+                className="popular-category-card"
+              >
+
+                <span aria-hidden="true">
+                  {category.icon}
+                </span>
+
+                <strong>
+                  {category.name}
+                </strong>
+
+                <small>
+                  {category.subcategories.length} alt kategori
+                </small>
+
+              </Link>
+
+            )
+          )}
+
+        </div>
+
+      </section>
 
 
       <CategoryBar
-
-        kategori={
-          kategori
-        }
-
-        setKategori={
-          kategoriDegistir
-        }
-
+        kategori={kategori}
+        setKategori={kategoriDegistir}
       />
-
 
       <FilterBar />
 
-
       <AdBanner />
 
-      <section className="shopping-hubs" aria-label="Özel alışveriş bölümleri">
-        <article className="shopping-hub-card shopping-hub-card-budget">
-          <span className="shopping-hub-icon">💯</span>
+
+      <section
+        className="shopping-hubs"
+        aria-label="Özel alışveriş bölümleri"
+      >
+
+        <article
+          className="shopping-hub-card shopping-hub-card-budget"
+        >
+
+          <span className="shopping-hub-icon">
+            💯
+          </span>
+
           <div>
-            <h2>Ne Alırsan 100 TL</h2>
-            <p>100 TL ve altındaki hediyeleri keşfet.</p>
+
+            <h2>
+              Ne Alırsan 100 TL
+            </h2>
+
+            <p>
+              100 TL ve altındaki hediyeleri keşfet.
+            </p>
+
           </div>
-          <Link to="/100-tl-alti">Ürünleri Gör</Link>
+
+          <Link to="/100-tl-alti">
+            Ürünleri Gör
+          </Link>
+
         </article>
 
-        <article className="shopping-hub-card shopping-hub-card-design">
-          <span className="shopping-hub-icon">🎨</span>
+
+        <article
+          className="shopping-hub-card shopping-hub-card-design"
+        >
+
+          <span className="shopping-hub-icon">
+            🎨
+          </span>
+
           <div>
-            <h2>A4 Tasarım Pazarı</h2>
-            <p>Özgün poster ve A4 tasarımları keşfet.</p>
+
+            <h2>
+              A4 Tasarım Pazarı
+            </h2>
+
+            <p>
+              Özgün poster ve A4 tasarımları keşfet.
+            </p>
+
           </div>
-          <Link to="/a4-tasarimlar">Tasarımları Gör</Link>
+
+          <Link to="/a4-tasarimlar">
+            Tasarımları Gör
+          </Link>
+
         </article>
+
       </section>
 
-      <TopDesignShowcase />
-
 
       <ProductSlider
-
-        title="⚡ Günün Fırsatları"
-
-        ilanlar={
-          gosterTrend
-        }
-
-      />
-
-
-      <ProductSlider
-
         title="🔥 En Çok Satan Hediyeler"
-
-        ilanlar={
-          enCokSatan
-        }
-
+        ilanlar={enCokSatan}
       />
 
-
       <ProductSlider
-
         title="🆕 Yeni Gelen Hediyeler"
-
-        ilanlar={
-          sonEklenen
-        }
-
+        ilanlar={sonEklenen}
       />
 
 
@@ -466,43 +590,27 @@ function Home() {
         premiumMagazalar.length > 0 &&
 
         <ProductSlider
-
           title="👑 Premium Mağazalar"
-
-          ilanlar={
-            premiumMagazalar
-          }
-
+          ilanlar={premiumMagazalar}
         />
-
       }
 
 
       <ProductSlider
-
         title="✨ Editörün Seçimi"
-
-        ilanlar={
-          gosterEditor
-        }
-
+        ilanlar={gosterEditor}
       />
 
 
       <FeaturedStores />
 
-
-      <SpecialDays />
-
-
       <GiftBattle />
-
 
       <GiftAssistant />
 
+      <TopDesignShowcase />
 
       <Stats />
-
 
       <Footer />
 
@@ -511,6 +619,5 @@ function Home() {
   );
 
 }
-
 
 export default Home;

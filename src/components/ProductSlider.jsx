@@ -134,7 +134,7 @@ useEffect(() => {
 
               >
 
-                <ProductCard ilan={ilan}/>
+                <ProductCard ilan={ilan} variant="home" />
 
               </div>
 

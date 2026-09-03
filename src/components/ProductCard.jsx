@@ -25,7 +25,7 @@ import {
 import useFavorite from "../hooks/useFavorite";
 
 
-function ProductCard({ ilan, cardExtra = null }) {
+function ProductCard({ ilan, cardExtra = null, variant = "" }) {
 
 
   /* =========================
@@ -322,7 +322,7 @@ function ProductCard({ ilan, cardExtra = null }) {
         isA4Listing(ilan)
           ? "product-card--a4"
           : ""
-      }`}
+      } ${variant ? `product-card--${variant}` : ""}`}
 
     >
 

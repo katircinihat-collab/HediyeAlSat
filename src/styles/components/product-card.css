@@ -530,6 +530,69 @@
   }
 }
 
+/* Shared ProductCard'ın yalnız ana sayfa sunumu */
+.product-card--home { min-height: 356px; border-radius: 13px; border-color: #e2e4e8; box-shadow: 0 4px 16px rgba(15,23,42,.055); }
+.product-card--home.featured-product { transform: none; border-width: 1px; border-color: #d8dbe0; }
+.product-card--home .product-image { aspect-ratio: 1 / .86; background: #f5f5f5; }
+.product-card--home .product-image img { height: 100%; object-fit: contain; padding: 7px; box-sizing: border-box; }
+.product-card--home .product-body { padding: 11px; }
+.product-card--home .product-category { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.product-card--home .product-title { min-height: 39px; font-size: 14px; }
+.product-card--home .current-price { font-size: 19px; color: #171717; }
+.product-card--home .product-rating { min-height: 18px; margin-top: 5px; overflow: hidden; font-size: 11px; white-space: nowrap; }
+.product-card--home .product-stats { margin-top: 5px; padding-top: 6px; font-size: 10px; }
+.product-card--home .cart-btn { min-height: 39px; background: #171717; }
+.product-card--home .cart-btn:hover { background: #c1121f; }
+
+/* Günün Fırsatları banner'ındaki dört kartlık kompakt sunum */
+.product-card--deal {
+  height: 100%;
+  min-height: 300px;
+  border: 0;
+  border-radius: 13px;
+  background: #fff;
+  box-shadow: 0 8px 22px rgba(72, 15, 15, .16);
+}
+.product-card--deal.featured-product { transform: none; border: 0; }
+.product-card--deal .product-image { aspect-ratio: auto; height: 132px; background: #f7f7f7; }
+.product-card--deal .product-image img { height: 100%; padding: 7px; box-sizing: border-box; object-fit: contain; }
+.product-card--deal .product-body { padding: 9px 10px 10px; }
+.product-card--deal .product-category { overflow: hidden; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+.product-card--deal .product-title { min-height: 35px; font-size: 13px; line-height: 1.35; }
+.product-card--deal .current-price { color: #b70f20; font-size: 17px; }
+.product-card--deal .old-price { font-size: 10px; }
+.product-card--deal .product-rating { min-height: 16px; margin-top: 4px; overflow: hidden; font-size: 10px; white-space: nowrap; }
+.product-card--deal .product-stats { display: none; }
+.product-card--deal .cart-btn { min-height: 35px; padding: 6px; background: #c1121f; font-size: 10px; }
+.product-card--deal .favorite-btn { top: 6px; right: 6px; width: 31px; height: 31px; font-size: 15px; }
+.product-card--deal .trend-badge,
+.product-card--deal .featured-badge,
+.product-card--deal .discount-badge { padding: 4px 5px; font-size: 8px; }
+
+@media (max-width: 600px) {
+  .product-card--home { min-height: 314px; }
+  .product-card--home .product-image { aspect-ratio: 1; }
+  .product-card--home .product-image img { height: 100%; padding: 4px; }
+  .product-card--home .product-body { padding: 8px; }
+  .product-card--home .product-title { min-height: 34px; font-size: 12px; line-height: 1.35; }
+  .product-card--home .product-category { font-size: 9px; }
+  .product-card--home .current-price { font-size: 15px; }
+  .product-card--home .old-price { font-size: 10px; }
+  .product-card--home .product-rating { font-size: 9px; }
+  .product-card--home .product-stats { gap: 3px; font-size: 8px; }
+  .product-card--home .cart-btn { min-height: 38px; padding: 7px 4px; font-size: 10px; }
+  .product-card--home .favorite-btn { top: 6px; right: 6px; width: 32px; height: 32px; font-size: 16px; }
+  .product-card--home .trend-badge,
+  .product-card--home .featured-badge,
+  .product-card--home .discount-badge { padding: 4px 5px; font-size: 8px; }
+  .product-card--deal { min-height: 286px; }
+  .product-card--deal .product-image { height: 116px; }
+  .product-card--deal .product-body { padding: 8px; }
+  .product-card--deal .product-title { min-height: 33px; font-size: 11px; }
+  .product-card--deal .current-price { font-size: 14px; }
+  .product-card--deal .cart-btn { min-height: 36px; font-size: 9px; }
+}
+
 /* A4 posterler kırpılmadan, dikey bir vitrin alanında gösterilir. */
 .product-card.product-card--a4 .product-image,
 .product-card.product-card--a4.featured-product .product-image {

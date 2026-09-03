@@ -340,3 +340,7 @@
   }
 
 }
+
+.gift-assistant { width: calc(100% - 48px); max-width: 1560px; box-sizing: border-box; padding: 0; }
+.assistant-box { background: linear-gradient(125deg, #a90f1b, #d92520 62%, #f36b16); box-shadow: 0 14px 36px rgba(193,18,31,.18); }
+@media (max-width: 600px) { .gift-assistant { width: calc(100% - 24px); padding: 0; } }

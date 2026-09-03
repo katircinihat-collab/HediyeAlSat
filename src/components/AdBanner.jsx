@@ -20,7 +20,7 @@ function AdBanner() {
         </h3>
 
         <p>
-          Bugüne özel fırsatları kaçırmayın.
+          Yayındaki fırsat ürünlerini keşfedin.
         </p>
 
       </Link>

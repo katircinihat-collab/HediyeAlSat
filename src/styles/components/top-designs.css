@@ -46,3 +46,21 @@
   .top-design-preview { flex-basis: min(430px, 115vw); height: min(430px, 115vw); }
   .top-design-actions { flex-direction: column; }
 }
+
+.top-design-showcase { width: calc(100% - 48px); max-width: 1560px; }
+.top-design-grid { gap: 14px; }
+.top-design-card { border-radius: 15px; box-shadow: 0 5px 18px rgba(15,23,42,.06); }
+.top-design-preview { flex-basis: 255px; height: 255px; }
+.top-design-info { gap: 10px; padding: 14px; }
+@media (max-width: 700px) {
+  .top-design-showcase { width: calc(100% - 24px); }
+  .top-design-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .top-design-preview { flex-basis: 48vw; height: 48vw; padding: 7px; }
+  .top-design-info { padding: 10px; }
+  .top-design-info h3 { min-height: 34px; font-size: 13px; }
+  .top-design-meta { align-items: flex-start; flex-direction: column; gap: 5px; }
+  .top-design-meta strong { font-size: 15px; }
+  .top-design-actions { gap: 6px; }
+  .top-design-actions button,
+  .top-design-actions a { padding: 8px 4px; font-size: 10px; }
+}

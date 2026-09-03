@@ -1,59 +1,22 @@
 
 import "../styles/components/flash-sale.css";
-import { useEffect, useState } from "react";
+import { useRef } from "react";
 import { Link } from "react-router-dom";
+import ProductCard from "./ProductCard";
 
-function FlashSale() {
+function FlashSale({ ilanlar = [] }) {
+  const trackRef = useRef(null);
 
-  const [time, setTime] = useState("00:00:00");
-
-  useEffect(() => {
-
-    const timer = setInterval(() => {
-
-      const now = new Date();
-
-      const finish = new Date();
-
-      finish.setHours(23, 59, 59, 999);
-
-      const diff = finish - now;
-
-      const saat = Math.floor(
-        diff / 1000 / 60 / 60
-      );
-
-      const dakika = Math.floor(
-        (diff / 1000 / 60) % 60
-      );
-
-      const saniye = Math.floor(
-        (diff / 1000) % 60
-      );
-
-      setTime(
-        `${String(saat).padStart(2, "0")}:${String(dakika).padStart(2, "0")}:${String(saniye).padStart(2, "0")}`
-      );
-
-    }, 1000);
-
-    return () => clearInterval(timer);
-
-  }, []);
+  function kaydir(direction) {
+    trackRef.current?.scrollBy({ left: direction * 260, behavior: "smooth" });
+  }
 
   return (
 
-    <Link
-      to="/gunun-firsatlari"
-      className="flash-sale"
-      style={{
-        textDecoration: "none",
-        color: "inherit",
-        display: "flex"
-      }}
-    >
+    <section className="flash-sale" aria-labelledby="flash-sale-title">
 
-      <div className="flash-left">
+      <div className="flash-intro">
+        <div className="flash-left">
 
         <span className="flash-icon">
           ⚡
@@ -61,32 +24,35 @@ function FlashSale() {
 
         <div>
 
-          <h2>
+          <h2 id="flash-sale-title">
             Günün Fırsatları
           </h2>
 
           <p>
-            Gece 23:59'a kadar geçerli kampanyalar
+            Yayındaki fırsat ürünlerini tek yerde keşfet
           </p>
 
         </div>
 
+        </div>
+        <Link className="flash-all-link" to="/gunun-firsatlari">Tümünü Gör <span aria-hidden="true">→</span></Link>
       </div>
 
+      {ilanlar.length > 0 && (
+        <div className="flash-products-wrap">
+          <button type="button" className="flash-arrow flash-arrow-prev" onClick={() => kaydir(-1)} aria-label="Önceki fırsatlar">‹</button>
+          <div className="flash-products" ref={trackRef}>
+            {ilanlar.map((ilan) => (
+              <div className="flash-product-item" key={ilan.id}>
+                <ProductCard ilan={ilan} variant="deal" />
+              </div>
+            ))}
+          </div>
+          <button type="button" className="flash-arrow flash-arrow-next" onClick={() => kaydir(1)} aria-label="Sonraki fırsatlar">›</button>
+        </div>
+      )}
 
-      <div className="flash-right">
-
-        <span>
-          ⏰
-        </span>
-
-        <strong>
-          {time}
-        </strong>
-
-      </div>
-
-    </Link>
+    </section>
 
   );
 

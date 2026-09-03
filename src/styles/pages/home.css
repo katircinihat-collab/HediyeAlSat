@@ -267,6 +267,92 @@ grid-template-columns:repeat(2,1fr);
   grid-template-columns: 1fr;
 }
 
+}
+
+/* Marketplace ana sayfa sistemi */
+.marketplace-trust,
+.popular-categories,
+.shopping-hubs,
+.top-design-showcase,
+.featured-stores,
+.gift-assistant,
+.stats {
+  width: calc(100% - 48px);
+  max-width: 1560px;
+  box-sizing: border-box;
+}
+
+.marketplace-trust {
+  margin: 18px auto 42px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 8px 26px rgba(15, 23, 42, .06);
+}
+
+.marketplace-trust > div {
+  min-width: 0;
+  padding: 18px 22px;
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  column-gap: 12px;
+  align-items: center;
+  border-right: 1px solid #eef0f2;
+}
+
+.marketplace-trust > div:last-child { border-right: 0; }
+.marketplace-trust span { grid-row: 1 / 3; display: grid; width: 42px; height: 42px; place-items: center; border-radius: 12px; background: #fff1ed; font-size: 20px; }
+.marketplace-trust strong { color: #171717; font-size: 14px; }
+.marketplace-trust small { margin-top: 3px; overflow: hidden; color: #6b7280; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+
+.popular-categories { margin: 42px auto; }
+.marketplace-section-heading { display: flex; align-items: end; justify-content: space-between; margin-bottom: 18px; }
+.marketplace-section-heading span { color: #c1121f; font-size: 11px; font-weight: 900; letter-spacing: .13em; }
+.marketplace-section-heading h2 { margin: 4px 0 0; color: #171717; font-size: clamp(22px, 2.5vw, 30px); letter-spacing: -.03em; }
+.popular-category-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.popular-category-card { min-width: 0; min-height: 118px; padding: 18px; display: grid; grid-template-columns: 50px minmax(0, 1fr); align-content: center; column-gap: 14px; border: 1px solid #e5e7eb; border-radius: 16px; background: #fff; color: #171717; text-decoration: none; box-shadow: 0 5px 18px rgba(15,23,42,.05); transition: .2s ease; }
+.popular-category-card:hover { transform: translateY(-3px); border-color: #c9cdd3; box-shadow: 0 12px 24px rgba(15,23,42,.09); }
+.popular-category-card > span { grid-row: 1 / 3; display: grid; width: 50px; height: 50px; place-items: center; border-radius: 14px; background: #fff1ed; font-size: 25px; }
+.popular-category-card strong { align-self: end; overflow: hidden; font-size: 15px; text-overflow: ellipsis; white-space: nowrap; }
+.popular-category-card small { align-self: start; margin-top: 5px; color: #737983; }
+
+.shopping-hubs { max-width: 1560px; margin: 30px auto 48px; }
+.shopping-hub-card { min-height: 170px; border-color: #e2e4e8; border-radius: 18px; box-shadow: 0 8px 24px rgba(15,23,42,.06); }
+.shopping-hub-card-budget { background: linear-gradient(135deg, #f5f5f5, #fff); }
+.shopping-hub-card-design { background: linear-gradient(135deg, #f1f3f6, #fff); }
+
+@media (max-width: 900px) {
+  .marketplace-trust { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .marketplace-trust > div:nth-child(2) { border-right: 0; }
+  .marketplace-trust > div:nth-child(-n+2) { border-bottom: 1px solid #eef0f2; }
+  .popular-category-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 600px) {
+  .marketplace-trust,
+  .popular-categories,
+  .shopping-hubs,
+  .top-design-showcase,
+  .featured-stores,
+  .gift-assistant,
+  .stats { width: calc(100% - 24px); }
+  .marketplace-trust { margin-bottom: 30px; grid-template-columns: 1fr; }
+  .marketplace-trust > div { padding: 13px 14px; border-right: 0; border-bottom: 1px solid #eef0f2; }
+  .marketplace-trust > div:nth-child(3) { border-bottom: 1px solid #eef0f2; }
+  .marketplace-trust > div:last-child { border-bottom: 0; }
+  .popular-categories { margin: 30px auto; }
+  .popular-category-grid { gap: 9px; }
+  .popular-category-card { min-height: 92px; padding: 12px; grid-template-columns: 38px minmax(0, 1fr); column-gap: 9px; border-radius: 13px; }
+  .popular-category-card > span { width: 38px; height: 38px; border-radius: 11px; font-size: 20px; }
+  .popular-category-card strong { font-size: 12px; white-space: normal; line-height: 1.25; }
+  .popular-category-card small { font-size: 10px; }
+}
+
+@media(max-width:700px){
+
 .features-section{
 
 grid-template-columns:1fr;

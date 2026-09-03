@@ -4,15 +4,22 @@
 
 .special-day-page {
   min-height: 100vh;
+
   background: #f8f9fc;
-  padding-bottom: 60px;
+
+  padding:
+    25px
+    max(24px, calc((100vw - 1560px) / 2))
+    60px;
+
+  box-sizing: border-box;
 }
 
 .special-day-container {
-  width: min(1200px, 92%);
+  width: min(1560px, 100%);
   margin: 0 auto;
-  padding-top: 25px;
 }
+
 
 /* =====================================================
    GERİ BUTONU
@@ -20,29 +27,36 @@
 
 .special-day-back {
   display: inline-flex;
+
   align-items: center;
+
   gap: 8px;
 
   margin-bottom: 25px;
+
   padding: 10px 18px;
 
   background: white;
+
   color: #333;
 
   border-radius: 12px;
+
   text-decoration: none;
 
   font-weight: 600;
 
-  box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
 
   transition: 0.2s;
 }
 
 .special-day-back:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
 }
+
 
 /* =====================================================
    HEADER
@@ -59,11 +73,12 @@
 
   margin-bottom: 35px;
 
-  box-shadow: 0 5px 25px rgba(0,0,0,0.07);
+  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.07);
 }
 
 .special-day-big-emoji {
   font-size: 64px;
+
   margin-bottom: 10px;
 }
 
@@ -86,6 +101,7 @@
 
   line-height: 1.6;
 }
+
 
 /* =====================================================
    PRODUCTS
@@ -130,36 +146,188 @@
 
   color: #555;
 
-  box-shadow: 0 3px 10px rgba(0,0,0,0.07);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
 }
+
 
 /* =====================================================
    PRODUCT GRID
+   SADECE ÖZEL GÜN SAYFALARINI ETKİLER
 ===================================================== */
 
 .special-day-grid {
   display: grid;
 
   grid-template-columns:
-    repeat(4, minmax(0, 1fr));
+    repeat(auto-fill, minmax(190px, 210px));
 
-  grid-auto-rows: auto;
+  justify-content: start;
 
   align-items: stretch;
 
-  gap: 20px;
+  gap: 18px;
 }
 
-/*
-  ProductCard'ın genel height: 100% kuralı bu grid içinde bazı içerik
-  kombinasyonlarında kartı satır yüksekliğine kilitleyip overflow: hidden
-  nedeniyle alt bilgileri kesebiliyordu. Özel Gün kartları içerikleri kadar
-  büyür; aynı satırdaki kartlar grid tarafından dengeli biçimde esnetilir.
-*/
+
+/* =====================================================
+   ÖZEL GÜN ÜRÜN KARTI
+   ANA SAYFADAKİ KARTLARA DOKUNMAZ
+===================================================== */
+
 .special-day-grid > .product-card {
+  width: 100%;
+
+  max-width: 210px;
+
   height: auto;
+
+  min-height: 350px;
+
   align-self: stretch;
 }
+
+
+/* =====================================================
+   ÖZEL GÜN ÜRÜN GÖRSELİ
+   FOTOĞRAF KESİLMEZ
+===================================================== */
+
+.special-day-grid .product-card .product-image {
+  width: 100%;
+
+  height: 175px;
+
+  aspect-ratio: auto;
+
+  background: #f7f7f7;
+
+  overflow: hidden;
+}
+
+.special-day-grid .product-card .product-image img {
+  display: block;
+
+  width: 100%;
+
+  height: 100%;
+
+  object-fit: contain;
+
+  padding: 6px;
+
+  box-sizing: border-box;
+}
+
+
+/*
+  Genel ProductCard hover zoom'u burada çok hafif tutulur.
+  Böylece görsel tekrar kenarlardan kesilmez.
+*/
+.special-day-grid .product-card:hover .product-image img {
+  transform: scale(1.01);
+}
+
+
+/* =====================================================
+   ÖZEL GÜN KART İÇERİĞİ
+===================================================== */
+
+.special-day-grid .product-card .product-body {
+  padding: 10px;
+}
+
+.special-day-grid .product-card .product-category {
+  font-size: 10px;
+
+  margin-bottom: 4px;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
+}
+
+.special-day-grid .product-card .product-title {
+  font-size: 13px;
+
+  line-height: 1.35;
+
+  min-height: 35px;
+
+  display: -webkit-box;
+
+  -webkit-line-clamp: 2;
+
+  -webkit-box-orient: vertical;
+
+  overflow: hidden;
+}
+
+.special-day-grid .product-card .current-price {
+  font-size: 18px;
+}
+
+.special-day-grid .product-card .old-price {
+  font-size: 11px;
+}
+
+.special-day-grid .product-card .product-rating {
+  margin-top: 5px;
+
+  min-height: 18px;
+
+  font-size: 10px;
+
+  overflow: hidden;
+
+  white-space: nowrap;
+}
+
+.special-day-grid .product-card .rating-count,
+.special-day-grid .product-card .rating-empty {
+  font-size: 10px;
+}
+
+.special-day-grid .product-card .product-stats {
+  gap: 5px;
+
+  margin-top: 5px;
+
+  padding-top: 6px;
+
+  font-size: 9px;
+}
+
+.special-day-grid .product-card .product-actions {
+  padding-top: 7px;
+}
+
+.special-day-grid .product-card .cart-btn {
+  min-height: 36px;
+
+  padding: 7px 8px;
+
+  font-size: 10px;
+}
+
+
+/* =====================================================
+   FAVORİ BUTONU
+===================================================== */
+
+.special-day-grid .product-card .favorite-btn {
+  top: 7px;
+
+  right: 7px;
+
+  width: 32px;
+
+  height: 32px;
+
+  font-size: 16px;
+}
+
 
 /* =====================================================
    LOADING
@@ -174,7 +342,7 @@
 
   text-align: center;
 
-  box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
 }
 
 .special-day-spinner {
@@ -188,6 +356,7 @@
 
   margin: 0;
 }
+
 
 /* =====================================================
    EMPTY
@@ -203,7 +372,7 @@
 
   text-align: center;
 
-  box-shadow: 0 5px 25px rgba(0,0,0,0.07);
+  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.07);
 
   margin-top: 30px;
 }
@@ -227,6 +396,7 @@
 
   margin-bottom: 25px;
 }
+
 
 /* =====================================================
    ANA SAYFAYA DÖN
@@ -260,27 +430,54 @@
   opacity: 0.9;
 }
 
+
 /* =====================================================
-   MOBİL
+   TABLET
 ===================================================== */
 
-@media (max-width: 1000px) {
+@media (max-width: 1100px) {
+
+  .special-day-page {
+    padding-left: 20px;
+
+    padding-right: 20px;
+  }
 
   .special-day-grid {
     grid-template-columns:
-      repeat(3, minmax(0, 1fr));
+      repeat(auto-fill, minmax(180px, 1fr));
+
+    gap: 16px;
+  }
+
+  .special-day-grid > .product-card {
+    max-width: none;
   }
 
 }
 
+
+/* =====================================================
+   MOBİL
+===================================================== */
+
 @media (max-width: 700px) {
 
+  .special-day-page {
+    padding:
+      18px
+      12px
+      45px;
+  }
+
   .special-day-container {
-    width: 94%;
+    width: 100%;
   }
 
   .special-day-header {
-    padding: 30px 15px;
+    padding: 28px 14px;
+
+    margin-bottom: 24px;
   }
 
   .special-day-big-emoji {
@@ -288,11 +485,11 @@
   }
 
   .special-day-header h1 {
-    font-size: 30px;
+    font-size: 29px;
   }
 
   .special-day-header p {
-    font-size: 15px;
+    font-size: 14px;
   }
 
   .special-day-products-header {
@@ -307,15 +504,103 @@
     grid-template-columns:
       repeat(2, minmax(0, 1fr));
 
-    gap: 12px;
+    gap: 10px;
+  }
+
+  .special-day-grid > .product-card {
+    width: 100%;
+
+    max-width: none;
+
+    min-width: 0;
+
+    min-height: 305px;
+  }
+
+  .special-day-grid .product-card .product-image {
+    height: 145px;
+  }
+
+  .special-day-grid .product-card .product-image img {
+    object-fit: contain;
+
+    padding: 4px;
+  }
+
+  .special-day-grid .product-card .product-body {
+    padding: 8px;
+  }
+
+  .special-day-grid .product-card .product-category {
+    font-size: 8px;
+  }
+
+  .special-day-grid .product-card .product-title {
+    min-height: 32px;
+
+    font-size: 11px;
+  }
+
+  .special-day-grid .product-card .current-price {
+    font-size: 15px;
+  }
+
+  .special-day-grid .product-card .old-price {
+    font-size: 9px;
+  }
+
+  .special-day-grid .product-card .product-rating {
+    font-size: 8px;
+
+    min-height: 15px;
+  }
+
+  .special-day-grid .product-card .rating-count,
+  .special-day-grid .product-card .rating-empty {
+    font-size: 8px;
+  }
+
+  .special-day-grid .product-card .product-stats {
+    gap: 3px;
+
+    font-size: 7px;
+  }
+
+  .special-day-grid .product-card .cart-btn {
+    min-height: 34px;
+
+    padding: 6px 3px;
+
+    font-size: 9px;
+  }
+
+  .special-day-grid .product-card .favorite-btn {
+    width: 29px;
+
+    height: 29px;
+
+    font-size: 14px;
   }
 
 }
 
+
+/* =====================================================
+   KÜÇÜK TELEFON
+   375 - 430 PX'TE DE 2 KART
+===================================================== */
+
 @media (max-width: 450px) {
 
   .special-day-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+
+    gap: 8px;
+  }
+
+  .special-day-grid .product-card .product-image {
+    height: 135px;
   }
 
 }
