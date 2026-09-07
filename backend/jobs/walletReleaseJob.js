@@ -1,5 +1,5 @@
 const cron = require("node-cron");
-const walletReleaseService = require("../services/walletReleaseService");
+const { runMaintenance } = require("../services/maintenanceService");
 
 let running = false;
 
@@ -9,14 +9,14 @@ function startWalletReleaseJob() {
         running = true;
 
         try {
-            const result = await walletReleaseService.blokajiDolanlariAktar();
-            console.log("Hakediş kontrolü tamamlandı.", {
-                checked: result.toplam || 0,
-                released: result.basarili || 0,
-                failed: result.basarisiz || 0
+            const result = await runMaintenance();
+            console.log("Yedek bakım kontrolü tamamlandı.", {
+                alreadyRunning: result.alreadyRunning,
+                reservationsReleased: result.stockReservations?.released || 0,
+                payoutsReleased: result.walletReleases?.basarili || 0
             });
         } catch {
-            console.error("Hakediş kontrolü tamamlanamadı.");
+            console.error("Yedek bakım kontrolü tamamlanamadı.");
         } finally {
             running = false;
         }

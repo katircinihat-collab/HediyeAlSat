@@ -71,6 +71,8 @@ const orderStatusRoutes =
     require("./routes/orderStatusRoutes");
 const orderClaimRoutes =
     require("./routes/orderClaimRoutes");
+const maintenanceRoutes =
+    require("./routes/maintenanceRoutes");
 const { startWalletReleaseJob } =
     require("./jobs/walletReleaseJob");
 
@@ -160,6 +162,10 @@ app.use(
 app.use(
     "/api/order-claims",
     orderClaimRoutes
+);
+app.use(
+    "/api/internal/maintenance",
+    maintenanceRoutes
 );
 
 

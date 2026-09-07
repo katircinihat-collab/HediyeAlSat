@@ -15,17 +15,13 @@ function memoryFirestore(seed = {}) {
             return {
                 doc(id) { return ref(`${name}/${id}`); },
                 where(field, operator, value) {
-                    assert.equal(operator, "<=");
+                    assert.equal(operator, "==");
                     return {
-                        limit() {
-                            return {
-                                async get() {
-                                    const docs = [...data.entries()]
-                                        .filter(([path, item]) => path.startsWith(`${name}/`) && item[field] <= value)
-                                        .map(([path, item]) => ({ id: path.split("/").pop(), data: () => item }));
-                                    return { docs, size: docs.length };
-                                }
-                            };
+                        async get() {
+                            const docs = [...data.entries()]
+                                .filter(([path, item]) => path.startsWith(`${name}/`) && item[field] === value)
+                                .map(([path, item]) => ({ id: path.split("/").pop(), data: () => item }));
+                            return { docs, size: docs.length };
                         }
                     };
                 }
@@ -82,6 +78,21 @@ test("süresi dolan rezervasyon stoğu bir kez serbest bırakır", async () => {
     await releaseExpiredReservations({ firestore: db, FieldValue, now: expiry });
     assert.equal(db.data.get("ilanlar/item-1").stok, 1);
     assert.equal(db.data.get(`stockReservations/${reservation.id}`).status, "RELEASED");
+});
+
+test("finalize edilmiş rezervasyon cleanup sırasında stoğa geri eklenmez", async () => {
+    const now = new Date("2026-09-07T12:00:00Z");
+    const db = memoryFirestore({
+        "ilanlar/item-1": { stok: 0, urunTipi: "fiziksel", aktif: false },
+        "stockReservations/finalized": {
+            status: "FINALIZED",
+            expiresAt: new Date(now.getTime() - 1000),
+            items: [{ listingId: "item-1", quantity: 1 }]
+        }
+    });
+    const result = await releaseExpiredReservations({ firestore: db, FieldValue, now });
+    assert.equal(result.released, 0);
+    assert.equal(db.data.get("ilanlar/item-1").stok, 0);
 });
 
 test("başarısız ödeme rezervasyonu serbest bırakabilir", async () => {

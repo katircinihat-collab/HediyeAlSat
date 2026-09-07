@@ -85,12 +85,17 @@ async function releaseReservation({ firestore, FieldValue, reservationId: id, re
 
 async function releaseExpiredReservations({ firestore, FieldValue, now = new Date() }) {
     const snapshot = await firestore.collection("stockReservations")
-        .where("expiresAt", "<=", now).limit(100).get();
+        .where("status", "==", "ACTIVE").get();
     const results = [];
-    for (const document of snapshot.docs) {
+    const expiredDocuments = snapshot.docs.filter((document) => {
+        const value = document.data().expiresAt;
+        const expiresAt = value?.toDate ? value.toDate() : value;
+        return expiresAt instanceof Date && expiresAt.getTime() <= now.getTime();
+    });
+    for (const document of expiredDocuments) {
         results.push(await releaseReservation({ firestore, FieldValue, reservationId: document.id, reason: "EXPIRED", now }));
     }
-    return { checked: snapshot.size, released: results.filter((result) => result.released).length };
+    return { checked: snapshot.size, expired: expiredDocuments.length, released: results.filter((result) => result.released).length };
 }
 
 module.exports = { RESERVATION_TTL_MS, StockReservationError, reservationId, reserveStock, releaseReservation, releaseExpiredReservations };
