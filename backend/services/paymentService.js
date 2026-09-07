@@ -1,5 +1,6 @@
 
 const iyzipay = require("../config/iyzico");
+const crypto = require("crypto");
 
 const paymentModel = require("../models/paymentModel");
 
@@ -11,6 +12,7 @@ const { firestore, FieldValue } = require("../config/firebase");
 const orderModel = require("../models/orderModel");
 const { PaymentValidationError, validateNormalPayment, buildIyzicoBasket } = require("./paymentValidationService");
 const { validateRetrievedPayment, mapPaymentItemTransactions, finalizePayment } = require("./paymentCallbackService");
+const { reserveStock, releaseReservation, releaseExpiredReservations } = require("./stockReservationService");
 
 const KOMISYON_ORANI = 0.08;
 
@@ -39,7 +41,7 @@ async function createPayment(data, authenticatedUser, requestContext = {}) {
 
 
     const conversationId =
-        Date.now().toString();
+        `${Date.now()}_${crypto.randomUUID()}`;
 
 
     /*
@@ -62,6 +64,7 @@ async function createPayment(data, authenticatedUser, requestContext = {}) {
     let trustedShippingDetails = [];
     let trustedPaymentItems = [];
     let trustedBuyer = null;
+    let stockReservation = null;
 
     if (sponsorOdeme) {
         if (!sponsorBasvuruId) {
@@ -95,6 +98,8 @@ async function createPayment(data, authenticatedUser, requestContext = {}) {
             price: trustedPrice.toFixed(2)
         }];
     } else {
+        await releaseExpiredReservations({ firestore, FieldValue });
+
         const verified = await validateNormalPayment({
             siparisIds,
             user: authenticatedUser,
@@ -118,6 +123,13 @@ async function createPayment(data, authenticatedUser, requestContext = {}) {
             itemType: item.itemType
         }));
         trustedBuyer = verified.verifiedItems[0]?.buyer || null;
+
+        stockReservation = await reserveStock({
+            firestore,
+            FieldValue,
+            conversationId,
+            verifiedItems: verified.verifiedItems
+        });
 
         await Promise.all(verified.verifiedItems.map((item) => orderModel.updateOrder(
             item.siparisId,
@@ -159,6 +171,10 @@ async function createPayment(data, authenticatedUser, requestContext = {}) {
         kargoDetaylari: trustedShippingDetails,
 
         paymentItems: trustedPaymentItems,
+
+        stockReservationId: stockReservation?.id || null,
+
+        stockReservationExpiresAt: stockReservation?.expiresAt || null,
 
         komisyonOrani:
             sponsorOdeme
@@ -325,7 +341,8 @@ if (!iyzipay) {
     throw new Error("Iyzico henüz yapılandırılmadı.");
 }
 
-    return new Promise((resolve, reject) => {
+    try {
+        return await new Promise((resolve, reject) => {
 
         iyzipay.checkoutFormInitialize.create(
 
@@ -353,7 +370,18 @@ if (!iyzipay) {
 
         );
 
-    });
+        });
+    } catch (error) {
+        if (stockReservation?.id) {
+            await releaseReservation({
+                firestore,
+                FieldValue,
+                reservationId: stockReservation.id,
+                reason: "PAYMENT_INITIALIZATION_FAILED"
+            }).catch(() => undefined);
+        }
+        throw error;
+    }
 
 }
 
@@ -862,6 +890,14 @@ async function securePaymentCallback(token) {
                 paymentStatus: error.paymentStatus,
                 callbackStatus: error.code
             });
+        }
+        if (payment?.stockReservationId && error.code === "PAYMENT_NOT_SUCCESS") {
+            await releaseReservation({
+                firestore,
+                FieldValue,
+                reservationId: payment.stockReservationId,
+                reason: "PAYMENT_NOT_SUCCESS"
+            }).catch(() => undefined);
         }
         console.error("Callback doğrulama/finalize hatası:", {
             conversationId: conversationId || null,

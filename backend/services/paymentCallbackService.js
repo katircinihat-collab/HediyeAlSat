@@ -119,6 +119,20 @@ async function finalizePayment({ firestore, FieldValue, conversationId, paymentI
                 if (!snapshot.exists) throw new PaymentCallbackError("Sipariş bulunamadı.", "ORDER_NOT_FOUND");
                 return { id: snapshot.id, ref: orderRefs[index], ...snapshot.data() };
             });
+            let reservationRef = null;
+            let reservation = null;
+            if (payment.stockReservationId) {
+                reservationRef = firestore.collection("stockReservations").doc(payment.stockReservationId);
+                const reservationSnapshot = await transaction.get(reservationRef);
+                if (!reservationSnapshot.exists || reservationSnapshot.data().status !== "ACTIVE") {
+                    throw new PaymentCallbackError(
+                        "Ödeme alındı ancak stok rezervasyonu doğrulanamadı; manuel inceleme gerekli.",
+                        "STOCK_RESERVATION_MISSING",
+                        "MANUAL_REVIEW"
+                    );
+                }
+                reservation = reservationSnapshot.data();
+            }
             for (const order of orders) {
                 if (order.odemeDurumu === true && order.paymentId !== paymentId) {
                     throw new PaymentCallbackError("Sipariş başka bir ödeme ile tamamlanmış.", "ORDER_PAYMENT_CONFLICT");
@@ -172,7 +186,29 @@ async function finalizePayment({ firestore, FieldValue, conversationId, paymentI
                 }, { merge: true });
             });
 
-            listingIds.forEach((listingId) => {
+            if (reservation) {
+                const expected = new Map();
+                stockOrders.forEach((order) => {
+                    const listingId = order.ilanId || order.urunId;
+                    const listing = listingData.get(listingId)?.data?.();
+                    if (listing?.urunTipi === "dijital" || listing?.fizikselKargo === false) return;
+                    expected.set(listingId, (expected.get(listingId) || 0) + Number(order.adet || 1));
+                });
+                const reserved = new Map((reservation.items || []).map((item) => [item.listingId, Number(item.quantity)]));
+                if (expected.size !== reserved.size || [...expected].some(([id, quantity]) => reserved.get(id) !== quantity)) {
+                    throw new PaymentCallbackError(
+                        "Stok rezervasyonu siparişle eşleşmiyor; manuel inceleme gerekli.",
+                        "STOCK_RESERVATION_MISMATCH",
+                        "MANUAL_REVIEW"
+                    );
+                }
+                transaction.update(reservationRef, {
+                    status: "FINALIZED",
+                    paymentId,
+                    finalizedAt: FieldValue.serverTimestamp(),
+                    updatedAt: FieldValue.serverTimestamp()
+                });
+            } else listingIds.forEach((listingId) => {
                 const snapshot = listingData.get(listingId);
                 if (!snapshot.exists || snapshot.data().urunTipi === "dijital") return;
                 const decrement = stockOrders

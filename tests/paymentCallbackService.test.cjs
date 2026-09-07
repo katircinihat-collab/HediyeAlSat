@@ -212,3 +212,28 @@ test("callback modern ilanId stokunu bir kez atomik düşürür", async () => {
     await finalizePayment({ firestore: db, FieldValue: { serverTimestamp: timestamp }, conversationId: "conv-1", paymentId: "pay-1" });
     assert.equal(db.data.get("ilanlar/listing-1").stok, 1);
 });
+
+test("başarılı callback aktif rezervasyonu finalize eder ve stoğu ikinci kez düşmez", async () => {
+    const seed = normalSeed();
+    seed["odemeler/conv-1"] = payment({ siparisIds: ["order-1"], stockReservationId: "reservation-1" });
+    seed["siparisler/order-1"] = { ...seed["siparisler/order-1"], ilanId: "listing-1", adet: 2 };
+    seed["ilanlar/listing-1"] = { stok: 1, urunTipi: "fiziksel" };
+    seed["stockReservations/reservation-1"] = { status: "ACTIVE", items: [{ listingId: "listing-1", quantity: 2 }] };
+    const db = memoryFirestore(seed);
+    await finalizePayment({ firestore: db, FieldValue: { serverTimestamp: timestamp }, conversationId: "conv-1", paymentId: "pay-1" });
+    await finalizePayment({ firestore: db, FieldValue: { serverTimestamp: timestamp }, conversationId: "conv-1", paymentId: "pay-1" });
+    assert.equal(db.data.get("ilanlar/listing-1").stok, 1);
+    assert.equal(db.data.get("stockReservations/reservation-1").status, "FINALIZED");
+});
+
+test("rezervasyon kayıpsa callback manuel incelemeye düşer", async () => {
+    const seed = normalSeed();
+    seed["odemeler/conv-1"] = payment({ siparisIds: ["order-1"], stockReservationId: "missing" });
+    seed["siparisler/order-1"] = { ...seed["siparisler/order-1"], ilanId: "listing-1" };
+    seed["ilanlar/listing-1"] = { stok: 0, urunTipi: "fiziksel" };
+    const db = memoryFirestore(seed);
+    await assert.rejects(
+        finalizePayment({ firestore: db, FieldValue: { serverTimestamp: timestamp }, conversationId: "conv-1", paymentId: "pay-1" }),
+        (error) => error.code === "STOCK_RESERVATION_MISSING" && error.paymentStatus === "MANUAL_REVIEW"
+    );
+});
