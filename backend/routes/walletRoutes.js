@@ -97,6 +97,7 @@ router.put(
     "/admin/withdraw/reject/:id",
     authMiddleware,
     adminMiddleware,
+    financialRateLimit,
     walletController.reddet
 );
 

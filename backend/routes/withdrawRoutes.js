@@ -74,6 +74,7 @@ router.put(
     "/reject/:id",
     authMiddleware,
     adminMiddleware,
+    financialRateLimit,
     walletController.reddet
 );
 

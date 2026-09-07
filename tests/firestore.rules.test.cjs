@@ -47,6 +47,19 @@ before(async () => {
         baslik: "Yayındaki ilan",
         fiyat: 100,
         trend: false,
+        oneCikan: false,
+        urunTipi: "fiziksel",
+        fizikselKargo: true
+      }),
+      setDoc(doc(db, "ilanlar", "published-digital"), {
+        onay: true,
+        sahipUid: ownerAuth.uid,
+        sahip: ownerAuth.email,
+        baslik: "Yayındaki dijital ilan",
+        fiyat: 125,
+        urunTipi: "dijital",
+        fizikselKargo: false,
+        trend: false,
         oneCikan: false
       }),
       setDoc(doc(db, "ilanlar", "pending"), {
@@ -478,6 +491,8 @@ test("30 - alıcı yalnız onaylı ilanın gerçek fiyatı ve satıcısıyla sip
     toplam: 100,
     durum: "Ödeme Bekleniyor",
     odemeDurumu: false,
+    urunTipi: "fiziksel",
+    fizikselKargo: true,
     tarih: new Date()
   };
 
@@ -486,6 +501,34 @@ test("30 - alıcı yalnız onaylı ilanın gerçek fiyatı ve satıcısıyla sip
     ...validOrder,
     fiyat: 1,
     toplam: 1
+  }));
+});
+
+test("30a - güncel Checkout fiziksel ve dijital sipariş türlerini güvenli oluşturur", async () => {
+  const db = dbFor(otherAuth);
+  const physical = {
+    ilanId: "published", ilanBaslik: "Yayındaki ilan",
+    satici: ownerAuth.email, alici: otherAuth.email,
+    fiyat: 100, adet: 1, toplam: 100,
+    adSoyad: "Test Alıcı", telefon: "05000000000", adres: "Test adresi",
+    il: "Sakarya", ilce: "Adapazarı", kargo: "Standart Kargo", siparisNotu: "",
+    durum: "Ödeme Bekleniyor", odemeDurumu: false,
+    urunTipi: "fiziksel", fizikselKargo: true, tarih: new Date()
+  };
+  const digital = {
+    ...physical,
+    ilanId: "published-digital", ilanBaslik: "Yayındaki dijital ilan",
+    fiyat: 125, toplam: 125, adres: "", il: "", ilce: "",
+    kargo: "Dijital Teslimat", urunTipi: "dijital", fizikselKargo: false
+  };
+
+  await assertSucceeds(setDoc(doc(db, "siparisler", "checkout-physical"), physical));
+  await assertSucceeds(setDoc(doc(db, "siparisler", "checkout-digital"), digital));
+  await assertFails(setDoc(doc(db, "siparisler", "fake-product-type"), {
+    ...physical, urunTipi: "dijital"
+  }));
+  await assertFails(setDoc(doc(db, "siparisler", "fake-shipping-type"), {
+    ...digital, fizikselKargo: true
   }));
 });
 

@@ -37,12 +37,16 @@ service cloud.firestore {
     }
 
     function validOrderCreate() {
+      let listing = get(/databases/$(database)/documents/ilanlar/$(request.resource.data.ilanId)).data;
+      let listingIsDigital = (("urunTipi" in listing) && listing.urunTipi == "dijital")
+        || (("fizikselKargo" in listing) && listing.fizikselKargo == false);
       return hasEmail()
         && request.resource.data.keys().hasOnly([
           "ilanId", "ilanBaslik", "magazaId", "satici", "alici",
           "fiyat", "adet", "toplam", "adSoyad", "telefon", "adres",
           "il", "ilce", "kargo", "siparisNotu", "durum", "odemeDurumu",
-          "kargoNo", "teslimEdildi", "tarih", "olusturmaTarihi"
+          "kargoNo", "teslimEdildi", "tarih", "olusturmaTarihi",
+          "urunTipi", "fizikselKargo"
         ])
         && request.resource.data.alici == request.auth.token.email
         && request.resource.data.alici != request.resource.data.satici
@@ -53,6 +57,14 @@ service cloud.firestore {
         && request.resource.data.fiyat == get(/databases/$(database)/documents/ilanlar/$(request.resource.data.ilanId)).data.fiyat
         && request.resource.data.fiyat is number
         && request.resource.data.fiyat >= 0
+        && request.resource.data.urunTipi is string
+        && request.resource.data.fizikselKargo is bool
+        && ((listingIsDigital
+              && request.resource.data.urunTipi == "dijital"
+              && request.resource.data.fizikselKargo == false)
+          || (!listingIsDigital
+              && request.resource.data.urunTipi == "fiziksel"
+              && request.resource.data.fizikselKargo == true))
         && (!("adet" in request.resource.data)
           || (request.resource.data.adet is number && request.resource.data.adet > 0))
         && (!("toplam" in request.resource.data)

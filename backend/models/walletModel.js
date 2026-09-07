@@ -1102,32 +1102,25 @@ async function paraCekmeReddet(
                     walletSnapshot.data();
 
 
-                const miktar =
-                    Number(
-                        withdrawal.tutar || 0
+                const miktarKurus = Math.round(Number(withdrawal.tutar) * 100);
+                const balanceKurus = Math.round(Number(wallet.balance) * 100);
+                const withdrawalPendingKurus = Math.round(Number(wallet.withdrawalPending) * 100);
+
+                if (!Number.isInteger(miktarKurus) || miktarKurus <= 0
+                    || !Number.isInteger(balanceKurus) || balanceKurus < 0
+                    || !Number.isInteger(withdrawalPendingKurus) || withdrawalPendingKurus < miktarKurus) {
+                    throw new Error(
+                        "Rezerve çekim bakiyesi talep tutarını karşılamıyor; manuel mutabakat gerekli."
                     );
+                }
+
+                const miktar = Number((miktarKurus / 100).toFixed(2));
 
 
-                const yeniBalance =
-                    Number(
-                        (
-                            Number(
-                                wallet.balance || 0
-                            ) +
-                            miktar
-                        ).toFixed(2)
-                    );
+                const yeniBalance = Number(((balanceKurus + miktarKurus) / 100).toFixed(2));
 
 
-                const yeniPending =
-                    Number(
-                        (
-                            Number(
-                                wallet.withdrawalPending || 0
-                            ) -
-                            miktar
-                        ).toFixed(2)
-                    );
+                const yeniPending = Number(((withdrawalPendingKurus - miktarKurus) / 100).toFixed(2));
 
 
                 transaction.update(
@@ -1140,10 +1133,7 @@ async function paraCekmeReddet(
                             yeniBalance,
 
                         withdrawalPending:
-                            Math.max(
-                                0,
-                                yeniPending
-                            ),
+                            yeniPending,
 
                         guncellenmeTarihi:
                             FieldValue.serverTimestamp()
