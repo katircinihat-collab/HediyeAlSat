@@ -10,6 +10,7 @@ const authMiddleware =
 
 const adminMiddleware =
     require("../middleware/adminMiddleware");
+const { financialRateLimit } = require("../middleware/rateLimit");
 
 
 // =====================================================
@@ -82,6 +83,7 @@ router.put(
     "/admin/withdraw/approve/:id",
     authMiddleware,
     adminMiddleware,
+    financialRateLimit,
     walletController.onayla
 );
 

@@ -249,10 +249,22 @@ function AdminWithdraw() {
             return;
         }
 
-        const onay =
-            window.confirm(
-                "Bu para çekme talebini ÖDENDİ olarak işaretlemek istediğinize emin misiniz?"
-            );
+        const providerReference = window.prompt(
+            "Banka transferi tamamlandıysa dekont/işlem referansını girin:"
+        );
+
+        if (providerReference === null) return;
+
+        const note = window.prompt(
+            "Operasyon notu (isteğe bağlı):",
+            ""
+        );
+
+        if (note === null) return;
+
+        const onay = window.confirm(
+            "Bu işlem para göndermez. Banka transferini gerçekten yaptığınızı ve referansı doğruladığınızı onaylıyor musunuz?"
+        );
 
         if (!onay) {
             return;
@@ -280,8 +292,10 @@ function AdminWithdraw() {
                                 `Bearer ${token}`
                         },
 
-                        body:
-                            JSON.stringify({})
+                        body: JSON.stringify({
+                            providerReference,
+                            note
+                        })
                     }
                 );
 
@@ -296,7 +310,7 @@ function AdminWithdraw() {
             }
 
             setMesaj(
-                "✅ Para çekme talebi ödendi olarak işaretlendi."
+                "✅ Manuel banka transferi doğrulandı ve muhasebe kaydı güvenle finalize edildi."
             );
 
             await talepleriGetir();
@@ -639,6 +653,7 @@ function AdminWithdraw() {
                             const durum =
                                 talep.durum ||
                                 "Bekliyor";
+                            const bekliyor = durum === "BEKLIYOR" || durum === "Bekliyor";
 
                             return (
                                 <div
@@ -954,6 +969,7 @@ function AdminWithdraw() {
                                             }
                                             disabled={
                                                 islemLoading ||
+                                                !bekliyor ||
                                                 blokaj.durum !==
                                                     "Serbest"
                                             }
@@ -969,8 +985,7 @@ function AdminWithdraw() {
                                                 borderRadius:
                                                     "8px",
                                                 background:
-                                                    blokaj.durum ===
-                                                    "Serbest"
+                                                    bekliyor && blokaj.durum === "Serbest"
                                                         ? "#16803c"
                                                         : "#9ca3af",
                                                 color:
@@ -978,18 +993,18 @@ function AdminWithdraw() {
                                                 fontWeight:
                                                     "700",
                                                 cursor:
-                                                    blokaj.durum ===
-                                                    "Serbest"
+                                                    bekliyor && blokaj.durum === "Serbest"
                                                         ? "pointer"
                                                         : "not-allowed"
                                             }}
                                         >
                                             {islemLoading
                                                 ? "⏳ İşleniyor..."
-                                                : blokaj.durum ===
-                                                  "Serbest"
-                                                ? "💸 Ödendi Yap"
-                                                : "🔒 Blokaj Devam Ediyor"}
+                                                : bekliyor && blokaj.durum === "Serbest"
+                                                ? "🏦 Manuel Transferi Doğrula"
+                                                : bekliyor
+                                                ? "🔒 Blokaj Devam Ediyor"
+                                                : "İşlem Tamamlandı"}
                                         </button>
 
                                         <button
@@ -999,7 +1014,7 @@ function AdminWithdraw() {
                                                 )
                                             }
                                             disabled={
-                                                islemLoading
+                                                islemLoading || !bekliyor
                                             }
                                             style={{
                                                 flex:

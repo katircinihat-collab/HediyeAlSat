@@ -377,35 +377,39 @@ service cloud.firestore {
       allow read: if isAdmin()
         || (hasEmail() && resource.data.satici == request.auth.token.email);
       allow create, delete: if false;
-      allow update: if isAdmin();
+      allow update: if false;
     }
 
     match /paraCekmeTalepleri/{requestId} {
       allow read: if isAdmin()
         || (hasEmail() && resource.data.email == request.auth.token.email);
       allow create, delete: if false;
-      allow update: if isAdmin();
+      allow update: if false;
     }
 
     match /geriCekmeTalepleri/{requestId} {
       allow read: if isAdmin()
         || (hasEmail() && resource.data.email == request.auth.token.email);
       allow create, delete: if false;
-      allow update: if isAdmin();
+      allow update: if false;
     }
 
     match /cekmeTalepleri/{requestId} {
       allow read: if isAdmin()
         || (hasEmail() && resource.data.satici == request.auth.token.email);
       allow create, delete: if false;
-      allow update: if isAdmin();
+      allow update: if false;
     }
 
     match /withdrawRequests/{requestId} {
       allow read: if isAdmin()
         || (signedIn() && resource.data.uid == request.auth.uid);
       allow create, delete: if false;
-      allow update: if isAdmin();
+      allow update: if false;
+    }
+
+    match /withdrawalFinalizations/{finalizationId} {
+      allow read, create, update, delete: if false;
     }
 
     match /sponsorBasvurular/{applicationId} {

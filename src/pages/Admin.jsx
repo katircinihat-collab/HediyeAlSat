@@ -2,9 +2,7 @@ import { useEffect, useState } from "react";
 
 import {
   collection,
-  getDocs,
-  updateDoc,
-  doc
+  getDocs
 } from "firebase/firestore";
 
 import { db } from "../firebase";
@@ -221,29 +219,6 @@ function Admin() {
     await adminApi(`/listings/${id}`, { method: "DELETE" });
 
     getir();
-
-    dashboardGetir();
-
-  }
-
-  async function odemeYap(id) {
-
-    if (!window.confirm("Satıcı ödemesi yapılsın mı?"))
-      return;
-
-    await updateDoc(
-
-      doc(db, "bakiyeHareketleri", id),
-
-      {
-
-        durum: "Ödendi",
-
-        odemeTarihi: new Date()
-
-      }
-
-    );
 
     dashboardGetir();
 
@@ -490,7 +465,7 @@ s.odemeDurumu ?
 
 <th>Durum</th>
 
-<th>İşlem</th>
+<th>Açıklama</th>
 
 </tr>
 
@@ -566,23 +541,7 @@ b.durum==="Bekliyor"
 
 <td>
 
-{
-
-b.durum==="Bekliyor" &&
-
-<button
-
-className="admin-action-btn admin-approve"
-
-onClick={()=>odemeYap(b.id)}
-
->
-
-💸 Öde
-
-</button>
-
-}
+{b.durum === "Bekliyor" ? "48 saat/claim kontrolleri backend tarafından yönetilir." : "-"}
 
 </td>
 

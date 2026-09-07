@@ -445,12 +445,15 @@ test("27 - çekim talebi client tarafından oluşturulamaz veya admin durumuna g
   }));
 });
 
-test("28 - admin finansal kayıtları okuyup gerekli operasyonel alanı güncelleyebilir", async () => {
+test("28 - admin finansal kayıtları okuyabilir ancak client tarafından değiştiremez", async () => {
   const db = dbFor(adminAuth);
   await assertSucceeds(getDoc(doc(db, "siparisler", "other-order")));
   await assertSucceeds(getDoc(doc(db, "odemeler", "other-payment")));
   await assertSucceeds(getDoc(doc(db, "wallets", otherAuth.email)));
-  await assertSucceeds(updateDoc(doc(db, "geriCekmeTalepleri", "other-withdraw"), {
+  await assertFails(updateDoc(doc(db, "geriCekmeTalepleri", "other-withdraw"), {
+    durum: "Ödendi"
+  }));
+  await assertFails(updateDoc(doc(db, "bakiyeHareketleri", "owner-movement"), {
     durum: "Ödendi"
   }));
 });
@@ -705,4 +708,14 @@ test("57 - financial reconciliation audit kayıtlarına client erişimi kapalıd
   await assertFails(setDoc(ref, { reconciliationId: "review-1" }));
   await assertFails(updateDoc(ref, { newNote: "değiştir" }));
   await assertFails(deleteDoc(ref));
+});
+
+test("58 - withdrawal finalization audit kaydı client ve admin client erişimine kapalıdır", async () => {
+  const ownerRef = doc(dbFor(ownerAuth), "withdrawalFinalizations", "withdrawal-1");
+  const adminRef = doc(dbFor(adminAuth), "withdrawalFinalizations", "withdrawal-1");
+  await assertFails(getDoc(ownerRef));
+  await assertFails(getDoc(adminRef));
+  await assertFails(setDoc(ownerRef, { status: "MANUEL_ODEME_DOGRULANDI" }));
+  await assertFails(updateDoc(adminRef, { amount: 1 }));
+  await assertFails(deleteDoc(adminRef));
 });

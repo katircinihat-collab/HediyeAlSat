@@ -1,5 +1,7 @@
 const walletService =
     require("../services/walletService");
+const { firestore, FieldValue } = require("../config/firebase");
+const { finalizeManualWithdrawal, WithdrawalFinalizationError } = require("../services/withdrawalFinalizationService");
 
 
 /*
@@ -336,11 +338,13 @@ exports.onayla = async (
 
     try {
 
-        const sonuc =
-            await walletService
-                .paraCekmeOnayla(
-                    req.params.id
-                );
+        const sonuc = await finalizeManualWithdrawal({
+            firestore,
+            FieldValue,
+            withdrawalId: req.params.id,
+            admin: req.user,
+            body: req.body
+        });
 
 
         res.json({
@@ -356,12 +360,12 @@ exports.onayla = async (
 
         console.error(err);
 
-        res.status(400).json({
+        res.status(err.status || 400).json({
 
             success: false,
 
-            error:
-                err.message
+            code: err.code || "WITHDRAWAL_FINALIZATION_FAILED",
+            error: err instanceof WithdrawalFinalizationError ? err.message : "Para çekme finalizasyonu tamamlanamadı."
 
         });
 

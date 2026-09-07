@@ -60,6 +60,7 @@ router.put(
     "/approve/:id",
     authMiddleware,
     adminMiddleware,
+    financialRateLimit,
     walletController.onayla
 );
 
