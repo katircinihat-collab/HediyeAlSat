@@ -23,8 +23,6 @@ function Cart() {
   const [kupon, setKupon] = useState("");
   const [urunler, setUrunler] = useState([]);
 
-  const KARGO_LIMIT = 750;
-  const KARGO_UCRETI = 149;
   useEffect(() => {
 
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
@@ -145,10 +143,8 @@ function Cart() {
     0
   );
 
-  const kargo =
-    toplam >= KARGO_LIMIT
-      ? 0
-      : KARGO_UCRETI;
+  // Kargo maliyeti alıcıya yansıtılmaz; fiziksel gönderimi satıcı karşılar.
+  const kargo = 0;
 
   const genelToplam = toplam + kargo;
   return (
@@ -189,7 +185,6 @@ function Cart() {
 
               <CartSummary
                 toplam={toplam}
-                kargo={kargo}
                 genelToplam={genelToplam}
                 kupon={kupon}
                 setKupon={setKupon}

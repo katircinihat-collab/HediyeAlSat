@@ -167,33 +167,8 @@ function Checkout() {
 
   const fizikselUrunVar = fizikselUrunler.length > 0;
 
-  const saticiToplamlari = fizikselUrunler.reduce((toplamlar, urun) => {
-    const satici =
-      urun.satici ||
-      urun.sahip ||
-      urun.magazaId ||
-      "bilinmeyen-satici";
-
-    const urunToplami = Math.round(
-      Number(urun.fiyat || 0) *
-      Number(urun.adet || 0) *
-      100
-    );
-
-    toplamlar[satici] =
-      (toplamlar[satici] || 0) + urunToplami;
-
-    return toplamlar;
-  }, {});
-
-  const kargoUcreti = Number((
-    Object.values(saticiToplamlari).reduce(
-      (toplam, saticiToplami) =>
-        toplam +
-        (saticiToplami >= 50000 ? 0 : 7990),
-      0
-    ) / 100
-  ).toFixed(2));
+  // Nihai finansal karar backend'indir; arayüzde de alıcıya kargo yansıtılmaz.
+  const kargoUcreti = 0;
 
   const normalGenelToplam =
     araToplam +
@@ -1049,10 +1024,9 @@ function Checkout() {
                   </span>
 
                   <b>
-                    {kargoUcreti === 0
-                      ? "Ücretsiz"
-                      : `${kargoUcreti.toFixed(2)} TL`
-                    }
+                    {fizikselUrunVar
+                      ? "Satıcı Karşılıyor (0 TL)"
+                      : "Ücretsiz (0 TL)"}
                   </b>
 
                 </div>
@@ -1083,7 +1057,7 @@ function Checkout() {
 
                   <p>
                     {fizikselUrunVar
-                      ? "🚚 Satıcı bazlı kargo avantajı"
+                      ? "🚚 Kargoyu satıcı karşılıyor"
                       : "🎨 Dijital ürünlerde kargo yok"}
                   </p>
 

@@ -2,8 +2,6 @@ function CartSummary({
 
 toplam,
 
-kargo,
-
 genelToplam,
 
 kupon,
@@ -64,43 +62,7 @@ Siparişinizi kontrol edin
 
 {
 
-kargo===0
-
-?
-
-"Ücretsiz"
-
-:
-
-"₺"+kargo.toLocaleString("tr-TR")
-
-}
-
-</b>
-
-</div>
-
-<div className="summary-line">
-
-<span>
-
-💸 Tasarruf
-
-</span>
-
-<b className="green">
-
-{
-
-kargo===0
-
-?
-
-"149 TL"
-
-:
-
-"0 TL"
+"Satıcı Karşılıyor"
 
 }
 
@@ -173,19 +135,7 @@ Uygula
 
 🚚
 
-{
-
-kargo===0
-
-?
-
-" Ücretsiz Kargo"
-
-:
-
-" Kargo Ücreti 149 TL"
-
-}
+ Kargoyu Satıcı Karşılıyor
 
 </div>
 

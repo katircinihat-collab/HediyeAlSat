@@ -95,11 +95,11 @@ async function resultForPrice(price) {
     ));
 }
 
-test("499,99 TL ürün toplamında 79,90 TL kargoyu alıcı öder", async () => {
+test("499,99 TL fiziksel üründe kargoyu satıcı karşılar", async () => {
     const result = await resultForPrice(499.99);
-    assert.equal(result.shipping, 79.90);
-    assert.equal(result.shippingDetails[0].shippingPayer, "alici");
-    assert.equal(result.payableTotal, 579.89);
+    assert.equal(result.shipping, 0);
+    assert.equal(result.shippingDetails[0].shippingPayer, "satici");
+    assert.equal(result.payableTotal, 499.99);
 });
 
 test("500 TL ürün toplamında kargoyu satıcı karşılar", async () => {
@@ -124,7 +124,7 @@ test("client sahte kargo gönderse bile backend kendi kargo kuralını uygular",
     assert.equal(result.payableTotal, 1000);
 });
 
-test("iki satıcının 300 ve 250 TL grupları için toplam 159,80 TL kargo hesaplanır", async () => {
+test("iki farklı satıcının fiziksel ürünlerinde alıcıya kargo eklenmez", async () => {
     const result = await validateNormalPayment(multiSellerDependencies({
         "order-a": { ...validOrder, id: "order-a", ilanId: "listing-a", satici: "a@example.com", fiyat: 300, adet: 1 },
         "order-b": { ...validOrder, id: "order-b", ilanId: "listing-b", satici: "b@example.com", fiyat: 250, adet: 1 }
@@ -134,13 +134,13 @@ test("iki satıcının 300 ve 250 TL grupları için toplam 159,80 TL kargo hesa
     }));
 
     assert.equal(result.productTotal, 550);
-    assert.equal(result.shipping, 159.80);
-    assert.equal(result.payableTotal, 709.80);
+    assert.equal(result.shipping, 0);
+    assert.equal(result.payableTotal, 550);
     assert.equal(result.shippingDetails.length, 2);
-    assert.deepEqual(result.shippingDetails.map((detail) => detail.shippingPayer), ["alici", "alici"]);
+    assert.deepEqual(result.shippingDetails.map((detail) => detail.shippingPayer), ["satici", "satici"]);
 });
 
-test("600 TL ve 200 TL satıcı gruplarında yalnız düşük tutarlı gruba kargo eklenir", async () => {
+test("satıcı grubu tutarından bağımsız olarak alıcıya kargo eklenmez", async () => {
     const result = await validateNormalPayment(multiSellerDependencies({
         "order-a": { ...validOrder, id: "order-a", ilanId: "listing-a", satici: "a@example.com", fiyat: 600, adet: 1 },
         "order-b": { ...validOrder, id: "order-b", ilanId: "listing-b", satici: "b@example.com", fiyat: 200, adet: 1 }
@@ -150,9 +150,9 @@ test("600 TL ve 200 TL satıcı gruplarında yalnız düşük tutarlı gruba kar
     }));
 
     assert.equal(result.productTotal, 800);
-    assert.equal(result.shipping, 79.90);
-    assert.equal(result.payableTotal, 879.90);
-    assert.deepEqual(result.shippingDetails.map((detail) => detail.shippingPayer), ["satici", "alici"]);
+    assert.equal(result.shipping, 0);
+    assert.equal(result.payableTotal, 800);
+    assert.deepEqual(result.shippingDetails.map((detail) => detail.shippingPayer), ["satici", "satici"]);
 });
 
 test("aynı satıcının 300 ve 250 TL ürünleri tek grupta ücretsiz kargoya ulaşır", async () => {
@@ -189,13 +189,11 @@ test("client sahte toplam ve kargo gönderse de iki satıcılı tutarlar backend
         basketItems: [{ id: "fake", price: "1.00" }]
     });
 
-    assert.equal(result.shipping, 159.80);
-    assert.equal(result.payableTotal, 709.80);
+    assert.equal(result.shipping, 0);
+    assert.equal(result.payableTotal, 550);
     assert.deepEqual(buildIyzicoBasket(result).map(({ id, price }) => ({ id, price })), [
         { id: "listing-a", price: "300.00" },
-        { id: "listing-b", price: "250.00" },
-        { id: "KARGO-1", price: "79.90" },
-        { id: "KARGO-2", price: "79.90" }
+        { id: "listing-b", price: "250.00" }
     ]);
 });
 
@@ -208,15 +206,15 @@ test("client düşük fiyatı ve sahte basketItems gönderse de güvenilir sepet
     ]);
 });
 
-test("platform komisyonu kargo hariç yalnız ürün toplamından yüzde 8 hesaplanır", async () => {
+test("platform komisyonu yalnız ürün toplamından yüzde 8 hesaplanır", async () => {
     const result = await resultForPrice(400);
     const calculatedCommission = commission.hesaplaKomisyon(result.productTotal);
-    assert.equal(result.shipping, 79.90);
-    assert.equal(result.payableTotal, 479.90);
+    assert.equal(result.shipping, 0);
+    assert.equal(result.payableTotal, 400);
     assert.equal(calculatedCommission, 32);
 });
 
-test("çok satıcılı kargo bedelleri yüzde 8 komisyon matrahına girmez", async () => {
+test("çok satıcılı sepette komisyon yalnız ürün bedelinden hesaplanır", async () => {
     const result = await validateNormalPayment(multiSellerDependencies({
         "order-a": { ...validOrder, id: "order-a", ilanId: "listing-a", satici: "a@example.com", fiyat: 300, adet: 1 },
         "order-b": { ...validOrder, id: "order-b", ilanId: "listing-b", satici: "b@example.com", fiyat: 250, adet: 1 }
@@ -225,7 +223,39 @@ test("çok satıcılı kargo bedelleri yüzde 8 komisyon matrahına girmez", asy
         "listing-b": { ...validListing, id: "listing-b", sahipUid: "seller-b", sahip: "b@example.com", fiyat: 250 }
     }));
 
-    assert.equal(result.shipping, 159.80);
+    assert.equal(result.shipping, 0);
     assert.equal(commission.hesaplaKomisyon(result.productTotal), 44);
-    assert.notEqual(commission.hesaplaKomisyon(result.payableTotal), 44);
+    assert.equal(result.payableTotal, result.productTotal);
+});
+
+test("fiziksel ve dijital karışık sepette toplam yalnız ürün bedelleridir", async () => {
+    const result = await validateNormalPayment(multiSellerDependencies({
+        "order-physical": { ...validOrder, id: "order-physical", ilanId: "listing-physical", fiyat: 50, adet: 1 },
+        "order-digital": { ...validOrder, id: "order-digital", ilanId: "listing-digital", fiyat: 125, adet: 2 }
+    }, {
+        "listing-physical": { ...validListing, id: "listing-physical", fiyat: 50 },
+        "listing-digital": { ...validListing, id: "listing-digital", fiyat: 125, urunTipi: "dijital", fizikselKargo: false }
+    }));
+
+    assert.equal(result.productTotal, 300);
+    assert.equal(result.shipping, 0);
+    assert.equal(result.payableTotal, 300);
+    assert.equal(result.shippingDetails.length, 1);
+    assert.deepEqual(result.verifiedItems.map((item) => item.shippingPayer), ["satici", "yok"]);
+});
+
+test("yalnız dijital sepette kargo detayı ve kargo ücreti oluşmaz", async () => {
+    const result = await validateNormalPayment(dependencies(
+        { ...validOrder, fiyat: 75, adet: 2 },
+        { ...validListing, fiyat: 75, urunTipi: "dijital", fizikselKargo: false }
+    ));
+
+    assert.equal(result.productTotal, 150);
+    assert.equal(result.shipping, 0);
+    assert.equal(result.payableTotal, 150);
+    assert.deepEqual(result.shippingDetails, []);
+    assert.equal(result.verifiedItems[0].shippingPayer, "yok");
+    assert.deepEqual(buildIyzicoBasket(result).map(({ id, price }) => ({ id, price })), [
+        { id: "listing-1", price: "150.00" }
+    ]);
 });

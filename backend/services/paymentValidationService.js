@@ -237,14 +237,13 @@ async function validateNormalPayment({
 
     /*
     ==================================================
-    SATICI BAZLI FİZİKSEL ÜRÜN KARGO HESABI
+    SATICI BAZLI FİZİKSEL ÜRÜN KARGO BİLGİSİ
     ==================================================
 
     Dijital ürünler bu hesaba dahil edilmez.
 
-    Fiziksel ürünlerde:
-    - Aynı satıcıdaki fiziksel ürün toplamı 500 TL ve üzeriyse kargo 0 TL
-    - 500 TL altındaysa 79,90 TL
+    Fiziksel ürünlerin kargo maliyeti her tutarda satıcıya aittir.
+    Alıcı ödeme toplamına kargo eklenmez.
     */
 
     const sellerGroups =
@@ -288,10 +287,7 @@ async function validateNormalPayment({
     const shippingDetails =
         [...sellerGroups.values()]
             .map((group) => {
-                const sellerShippingKurus =
-                    group.productTotalKurus >= 50000
-                        ? 0
-                        : 7990;
+                const sellerShippingKurus = 0;
 
                 return {
                     sellerKey:
@@ -313,10 +309,7 @@ async function validateNormalPayment({
                             sellerShippingKurus
                         ),
 
-                    shippingPayer:
-                        sellerShippingKurus === 0
-                            ? "satici"
-                            : "alici"
+                    shippingPayer: "satici"
                 };
             });
 
