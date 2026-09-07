@@ -13,6 +13,7 @@ import { adminApi } from "../config/adminApi";
 import { formatListingCategory } from "../data/categories";
 import AdminStores from "../components/admin/AdminStores";
 import AdminOrderClaims from "../components/admin/AdminOrderClaims";
+import AdminFinancialReconciliations from "../components/admin/AdminFinancialReconciliations";
 
 import "../styles/pages/admin.css";
 function fiyatFormat(fiyat) {
@@ -603,6 +604,8 @@ onStatusChanged={magazaDurumunuGuncelle}
 />
 
 <AdminOrderClaims />
+
+<AdminFinancialReconciliations />
 
 <div className="admin-section">
 

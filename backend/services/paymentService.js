@@ -899,6 +899,20 @@ async function securePaymentCallback(token) {
                 reason: "PAYMENT_NOT_SUCCESS"
             }).catch(() => undefined);
         }
+        if (payment && error.paymentStatus === "MANUAL_REVIEW") {
+            const { recordFinancialReconciliation } = require("./financialReconciliationService");
+            await recordFinancialReconciliation({ firestore, event: {
+                type: error.code?.startsWith("STOCK_") ? "stock_allocation" : "payment_callback",
+                reasonCode: error.code || "PAYMENT_CALLBACK_MANUAL_REVIEW",
+                reason: error.message,
+                paymentId: result.paymentId || payment.paymentId || null,
+                buyer: payment.kullanici || null,
+                grossAmount: payment.expectedPaidPrice ?? payment.toplamTutar,
+                providerStatus: result.paymentStatus || null,
+                sourceCollection: "odemeler",
+                sourceId: payment.id
+            } }).catch(() => undefined);
+        }
         console.error("Callback doğrulama/finalize hatası:", {
             conversationId: conversationId || null,
             code: error.code || "CALLBACK_FAILED"

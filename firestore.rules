@@ -266,6 +266,14 @@ service cloud.firestore {
       allow read, create, update, delete: if false;
     }
 
+    match /financialReconciliations/{reconciliationId} {
+      allow read, create, update, delete: if false;
+    }
+
+    match /financialReconciliationAudits/{auditId} {
+      allow read, create, update, delete: if false;
+    }
+
     match /magazalar/{storeId} {
       allow read: if true;
 

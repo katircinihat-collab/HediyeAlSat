@@ -1,4 +1,5 @@
 const { toKurus } = require("./paymentCallbackService");
+const { recordFinancialReconciliation } = require("./financialReconciliationService");
 
 const REFUND_STATUSES = Object.freeze({ PENDING: "PENDING", SUCCESS: "PROVIDER_SUCCESS", FAILED: "PROVIDER_FAILED", RECONCILIATION: "RECONCILIATION_REQUIRED" });
 
@@ -6,6 +7,30 @@ class RefundError extends Error {
     constructor(message, status = 400, code = "REFUND_FAILED") { super(message); this.status = status; this.code = code; }
 }
 function clean(value, max = 1000) { const text = String(value || "").trim(); return text.slice(0, max); }
+async function recordRefundReconciliation(firestore, lock, reasonCode, reason, providerStatus) {
+    if (!lock) return;
+    let orderSnapshot; let movementSnapshot;
+    try {
+        [orderSnapshot, movementSnapshot] = await Promise.all([
+            firestore.collection("siparisler").doc(lock.orderId).get(),
+            firestore.collection("bakiyeHareketleri").doc(`${lock.paymentId}_${lock.orderId}`).get()
+        ]);
+    } catch { /* Operasyon kaydı finansal refund sonucunu değiştiremez. */ }
+    const order = orderSnapshot?.exists ? orderSnapshot.data() : {};
+    const movement = movementSnapshot?.exists ? movementSnapshot.data() : {};
+    await recordFinancialReconciliation({ firestore, event: {
+        type: "refund", reasonCode, reason,
+        orderId: lock.orderId, claimId: lock.claimId, paymentId: lock.paymentId,
+        paymentTransactionId: lock.paymentTransactionId,
+        seller: movement.satici || order.satici || null,
+        buyer: movement.alici || order.alici || null,
+        grossAmount: lock.refundAmount,
+        commissionAmount: movement.komisyon,
+        sellerNetAmount: movement.netTutar,
+        providerStatus,
+        sourceCollection: "refundFinalizations", sourceId: lock.claimId
+    } }).catch(() => undefined);
+}
 function isDigital(listing) { return listing?.urunTipi === "dijital" || listing?.fizikselKargo === false; }
 function trustedRefundAmount(order) {
     const paid = toKurus(order.iyzicoItemPaidPrice); const item = toKurus(order.iyzicoItemPrice);
@@ -110,6 +135,7 @@ async function executeRefund({ firestore, claimId, admin, refundProvider, now = 
     try { response = await refundProvider(request); }
     catch (error) {
         await finalizeRefund({ firestore, claimId, status: REFUND_STATUSES.RECONCILIATION, provider: { errorCode: error.code || "PROVIDER_NETWORK_ERROR", errorMessage: "Provider sonucu doğrulanamadı." }, now });
+        await recordRefundReconciliation(firestore, prepared.lock, error.code || "PROVIDER_NETWORK_ERROR", "Provider iade sonucu doğrulanamadı.", "unknown");
         throw new RefundError("İade sonucu doğrulanamadı; manuel mutabakat gerekli.", 502, "REFUND_RECONCILIATION_REQUIRED");
     }
     let verified;
@@ -118,10 +144,12 @@ async function executeRefund({ firestore, claimId, admin, refundProvider, now = 
     } catch (error) {
         const explicitFailure = error.code === "PROVIDER_FAILED";
         await finalizeRefund({ firestore, claimId, status: explicitFailure ? REFUND_STATUSES.FAILED : REFUND_STATUSES.RECONCILIATION, provider: { errorCode: response?.errorCode || error.code, errorMessage: explicitFailure ? clean(response?.errorMessage, 500) || "Provider iadeyi reddetti." : "Provider cevabı güvenli biçimde doğrulanamadı." }, now });
+        if (!explicitFailure) await recordRefundReconciliation(firestore, prepared.lock, error.code, "Provider iade cevabı güvenli biçimde doğrulanamadı.", "unknown");
         throw error;
     }
     const finalized = await finalizeRefund({ firestore, claimId, status: REFUND_STATUSES.SUCCESS, provider: verified, now });
     if (finalized.status === REFUND_STATUSES.RECONCILIATION) {
+        await recordRefundReconciliation(firestore, prepared.lock, "REFUND_ACCOUNTING_RECONCILIATION_REQUIRED", "Provider iadesi başarılı ancak satıcı cüzdan muhasebesi otomatik kapatılamadı.", "success");
         throw new RefundError("Provider iadesi başarılı, ancak cüzdan muhasebesi manuel mutabakat gerektiriyor.", 409, "REFUND_ACCOUNTING_RECONCILIATION_REQUIRED");
     }
     return { success: true, idempotent: false, status: REFUND_STATUSES.SUCCESS };

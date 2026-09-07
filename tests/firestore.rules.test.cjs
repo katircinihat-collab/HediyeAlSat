@@ -688,3 +688,21 @@ test("55 - buyer ve seller sipariş refund alanlarını doğrudan değiştiremez
   await assertFails(updateDoc(doc(dbFor(ownerAuth), "siparisler", "owner-order"), { refundProviderStatus: "success" }));
   await assertFails(updateDoc(doc(dbFor(otherAuth), "siparisler", "owner-order"), { refundClaimId: "owner-claim" }));
 });
+
+test("56 - normal kullanıcı ve admin client financialReconciliations erişimi yapamaz", async () => {
+  const ownerRef = doc(dbFor(ownerAuth), "financialReconciliations", "review-1");
+  const adminRef = doc(dbFor(adminAuth), "financialReconciliations", "review-1");
+  await assertFails(getDoc(ownerRef));
+  await assertFails(getDoc(adminRef));
+  await assertFails(setDoc(ownerRef, { status: "incelemede" }));
+  await assertFails(updateDoc(adminRef, { status: "manuel_cozuldu" }));
+  await assertFails(deleteDoc(adminRef));
+});
+
+test("57 - financial reconciliation audit kayıtlarına client erişimi kapalıdır", async () => {
+  const ref = doc(dbFor(adminAuth), "financialReconciliationAudits", "audit-1");
+  await assertFails(getDoc(ref));
+  await assertFails(setDoc(ref, { reconciliationId: "review-1" }));
+  await assertFails(updateDoc(ref, { newNote: "değiştir" }));
+  await assertFails(deleteDoc(ref));
+});

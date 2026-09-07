@@ -591,6 +591,21 @@ async function blokajiDolanlariAktar() {
 
         catch (error) {
 
+            const { recordFinancialReconciliation } = require("./financialReconciliationService");
+            await recordFinancialReconciliation({ firestore, event: {
+                type: "wallet_release",
+                reasonCode: "WALLET_RELEASE_MANUAL_REVIEW",
+                reason: error.message,
+                orderId: hareket.siparisId || null,
+                paymentId: hareket.paymentId || null,
+                seller: hareket.satici || null,
+                grossAmount: hareket.toplamTutar,
+                commissionAmount: hareket.komisyon,
+                sellerNetAmount: hareket.netTutar,
+                sourceCollection: "bakiyeHareketleri",
+                sourceId: hareket.id
+            } }).catch(() => undefined);
+
             sonuc.hatali++;
 
 

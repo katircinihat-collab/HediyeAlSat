@@ -5,6 +5,7 @@ const { financialRateLimit } = require("../middleware/rateLimit");
 const adminListingController = require("../controllers/adminListingController");
 const orderStatusController = require("../controllers/orderStatusController");
 const orderClaimController = require("../controllers/orderClaimController");
+const financialReconciliationController = require("../controllers/financialReconciliationController");
 
 const router = express.Router();
 
@@ -23,5 +24,8 @@ router.patch("/order-claims/:claimId/status", orderClaimController.updateAdminSt
 router.post("/order-claims/:claimId/confirm-return-received", orderClaimController.confirmReturnReceived);
 router.patch("/order-claims/:claimId/return-shipment", orderClaimController.correctReturnShipment);
 router.post("/order-claims/:claimId/refund", financialRateLimit, orderClaimController.refund);
+router.get("/financial-reconciliations", financialReconciliationController.list);
+router.get("/financial-reconciliations/:id", financialReconciliationController.get);
+router.patch("/financial-reconciliations/:id", financialRateLimit, financialReconciliationController.update);
 
 module.exports = router;
