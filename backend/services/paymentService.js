@@ -21,7 +21,7 @@ const KOMISYON_ORANI = 0.08;
 ==================================================
 */
 
-async function createPayment(data, authenticatedUser) {
+async function createPayment(data, authenticatedUser, requestContext = {}) {
 
     if (!authenticatedUser || !authenticatedUser.uid || !authenticatedUser.email) {
         throw new PaymentValidationError("Ödeme başlatmak için giriş yapmalısınız.", 401, "AUTH_REQUIRED");
@@ -61,6 +61,7 @@ async function createPayment(data, authenticatedUser) {
     let trustedShipping = 0;
     let trustedShippingDetails = [];
     let trustedPaymentItems = [];
+    let trustedBuyer = null;
 
     if (sponsorOdeme) {
         if (!sponsorBasvuruId) {
@@ -113,8 +114,10 @@ async function createPayment(data, authenticatedUser) {
             orderId: item.siparisId,
             listingId: item.listingId,
             quantity: item.quantity,
-            expectedItemPrice: item.total
+            expectedItemPrice: item.total,
+            itemType: item.itemType
         }));
+        trustedBuyer = verified.verifiedItems[0]?.buyer || null;
 
         await Promise.all(verified.verifiedItems.map((item) => orderModel.updateOrder(
             item.siparisId,
@@ -204,6 +207,17 @@ async function createPayment(data, authenticatedUser) {
     ==============================================
     */
 
+    const productionMode = process.env.NODE_ENV === "production";
+    const identityNumber = process.env.IYZIPAY_BUYER_IDENTITY_NUMBER || (productionMode ? "" : "11111111111");
+    if (!identityNumber) {
+        throw new PaymentValidationError("Ödeme kimlik yapılandırması eksik.", 503, "BUYER_IDENTITY_CONFIG_MISSING");
+    }
+    const trustedAddress = trustedBuyer?.address || (productionMode ? "" : "Adapazarı");
+    const trustedCity = trustedBuyer?.city || (productionMode ? "" : "Sakarya");
+    if (!sponsorOdeme && (!trustedAddress || !trustedCity) && trustedPaymentItems.some((item) => item.itemType === "PHYSICAL")) {
+        throw new PaymentValidationError("Fiziksel sipariş için teslimat bilgileri eksik.", 409, "DELIVERY_ADDRESS_MISSING");
+    }
+
     const request = {
 
         locale: "tr",
@@ -229,7 +243,7 @@ async function createPayment(data, authenticatedUser) {
         buyer: {
 
             id:
-                email || conversationId,
+                authenticatedUser.uid,
 
             name:
                 buyerName || "Müşteri",
@@ -241,16 +255,16 @@ async function createPayment(data, authenticatedUser) {
                 email,
 
             identityNumber:
-                "11111111111",
+                identityNumber,
 
             registrationAddress:
-                "Sakarya",
+                trustedAddress || "Dijital Teslimat",
 
             ip:
-                "85.34.78.112",
+                requestContext.ip || "127.0.0.1",
 
             city:
-                "Sakarya",
+                trustedCity || "Dijital",
 
             country:
                 "Turkey"
@@ -266,13 +280,13 @@ async function createPayment(data, authenticatedUser) {
                 (buyerSurname || "-"),
 
             city:
-                "Sakarya",
+                trustedCity || "Dijital",
 
             country:
                 "Turkey",
 
             address:
-                "Adapazarı"
+                trustedAddress || "Dijital Teslimat"
 
         },
 
@@ -285,13 +299,13 @@ async function createPayment(data, authenticatedUser) {
                 (buyerSurname || "-"),
 
             city:
-                "Sakarya",
+                trustedCity || "Dijital",
 
             country:
                 "Turkey",
 
             address:
-                "Adapazarı"
+                trustedAddress || "Dijital Teslimat"
 
         },
 

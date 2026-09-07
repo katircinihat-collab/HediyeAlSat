@@ -65,11 +65,38 @@ async function finalizeRefund({ firestore, claimId, status, provider = {}, now =
         if (lock.status === REFUND_STATUSES.SUCCESS) return { idempotent: true, status: lock.status };
         if (lock.status !== REFUND_STATUSES.PENDING) throw new RefundError("Refund sonucu daha önce kaydedilmiş.", 409, "REFUND_ALREADY_FINALIZED");
         const timestamp = now(); const safeProvider = { providerErrorCode: clean(provider.errorCode, 100), providerErrorMessage: clean(provider.errorMessage, 500), hostReference: clean(provider.hostReference, 200), providerRefundId: clean(provider.providerRefundId, 200) };
-        tx.update(lockRef, { status, ...safeProvider, updatedAt: timestamp });
         if (status === REFUND_STATUSES.SUCCESS) {
+            const orderRef = firestore.collection("siparisler").doc(lock.orderId);
+            const movementRef = firestore.collection("bakiyeHareketleri").doc(`${lock.paymentId}_${lock.orderId}`);
+            const [orderSnap, movementSnap] = await Promise.all([tx.get(orderRef), tx.get(movementRef)]);
+            const order = orderSnap.exists ? orderSnap.data() : null;
+            const movement = movementSnap.exists ? movementSnap.data() : null;
+            const seller = movement?.satici || order?.satici;
+            const walletRef = seller ? firestore.collection("wallets").doc(seller) : null;
+            const walletSnap = walletRef ? await tx.get(walletRef) : null;
+            const netKurus = toKurus(movement?.netTutar);
+            const pendingKurus = toKurus(walletSnap?.exists ? walletSnap.data().pending : NaN);
+            const alreadyReleased = movement?.durum === "Aktarıldı"
+                || order?.walletAktarildi === true || order?.hakEdisOdendi === true || order?.payoutCompleted === true;
+            const accountingSafe = order && movement && walletSnap?.exists && movement.durum === "Bekliyor"
+                && Number.isInteger(netKurus) && netKurus > 0
+                && Number.isInteger(pendingKurus) && pendingKurus >= netKurus
+                && !alreadyReleased;
+
+            if (!accountingSafe) {
+                tx.update(lockRef, { status: REFUND_STATUSES.RECONCILIATION, providerRefundSucceeded: true, ...safeProvider, providerErrorCode: alreadyReleased ? "PAYOUT_ALREADY_RELEASED" : "REFUND_ACCOUNTING_MISMATCH", updatedAt: timestamp });
+                tx.update(firestore.collection("orderClaims").doc(lock.claimId), { refundProviderStatus: "success", refundAccountingStatus: "manual_review", refundProvider: "iyzico", refundAmount: lock.refundAmount, refundCurrency: lock.currency, refundPaymentTransactionId: lock.paymentTransactionId, refundPaymentId: lock.paymentId, refundConversationId: lock.conversationId, refundProcessedAt: timestamp, refundReference: safeProvider.hostReference || safeProvider.providerRefundId || null, refundUpdatedAt: timestamp, payoutBlock: true });
+                if (order) tx.update(orderRef, { refundProviderStatus: "success", refundAccountingStatus: "manual_review", refundProviderProcessedAt: timestamp, refundClaimId: lock.claimId, hakEdisBlokeli: true, hakEdisDurumu: "İncelemede", guncellenmeTarihi: timestamp });
+                return { idempotent: false, status: REFUND_STATUSES.RECONCILIATION, providerSucceeded: true, accountingCompleted: false };
+            }
+
+            tx.update(lockRef, { status, providerRefundSucceeded: true, accountingCompleted: true, ...safeProvider, updatedAt: timestamp });
+            tx.update(walletRef, { pending: Number(((pendingKurus - netKurus) / 100).toFixed(2)), guncellenmeTarihi: timestamp });
+            tx.update(movementRef, { durum: "İade Edildi", refundClaimId: lock.claimId, refundAmount: lock.refundAmount, refundTarihi: timestamp, guncellenmeTarihi: timestamp });
             tx.update(firestore.collection("orderClaims").doc(lock.claimId), { refundProviderStatus: "success", refundProvider: "iyzico", refundAmount: lock.refundAmount, refundCurrency: lock.currency, refundPaymentTransactionId: lock.paymentTransactionId, refundPaymentId: lock.paymentId, refundConversationId: lock.conversationId, refundProcessedAt: timestamp, refundReference: safeProvider.hostReference || safeProvider.providerRefundId || null, refundUpdatedAt: timestamp, payoutBlock: true });
-            tx.update(firestore.collection("siparisler").doc(lock.orderId), { refundProviderStatus: "success", refundProviderProcessedAt: timestamp, refundClaimId: lock.claimId, hakEdisBlokeli: true, hakEdisDurumu: "İncelemede", guncellenmeTarihi: timestamp });
+            tx.update(orderRef, { refundProviderStatus: "success", refundAccountingStatus: "completed", refundCompleted: true, refundCompletedAt: timestamp, refundProviderProcessedAt: timestamp, refundClaimId: lock.claimId, hakEdisBlokeli: true, hakEdisDurumu: "İade Edildi", guncellenmeTarihi: timestamp });
         } else {
+            tx.update(lockRef, { status, ...safeProvider, updatedAt: timestamp });
             tx.update(firestore.collection("orderClaims").doc(lock.claimId), { refundProviderStatus: status === REFUND_STATUSES.FAILED ? "failed" : "unknown", refundProviderErrorCode: safeProvider.providerErrorCode || null, refundProviderErrorMessage: safeProvider.providerErrorMessage || null, refundUpdatedAt: timestamp, payoutBlock: true });
         }
         return { idempotent: false, status };
@@ -85,15 +112,19 @@ async function executeRefund({ firestore, claimId, admin, refundProvider, now = 
         await finalizeRefund({ firestore, claimId, status: REFUND_STATUSES.RECONCILIATION, provider: { errorCode: error.code || "PROVIDER_NETWORK_ERROR", errorMessage: "Provider sonucu doğrulanamadı." }, now });
         throw new RefundError("İade sonucu doğrulanamadı; manuel mutabakat gerekli.", 502, "REFUND_RECONCILIATION_REQUIRED");
     }
+    let verified;
     try {
-        const verified = validateProviderSuccess(response, prepared.lock);
-        await finalizeRefund({ firestore, claimId, status: REFUND_STATUSES.SUCCESS, provider: verified, now });
-        return { success: true, idempotent: false, status: REFUND_STATUSES.SUCCESS };
+        verified = validateProviderSuccess(response, prepared.lock);
     } catch (error) {
         const explicitFailure = error.code === "PROVIDER_FAILED";
         await finalizeRefund({ firestore, claimId, status: explicitFailure ? REFUND_STATUSES.FAILED : REFUND_STATUSES.RECONCILIATION, provider: { errorCode: response?.errorCode || error.code, errorMessage: explicitFailure ? clean(response?.errorMessage, 500) || "Provider iadeyi reddetti." : "Provider cevabı güvenli biçimde doğrulanamadı." }, now });
         throw error;
     }
+    const finalized = await finalizeRefund({ firestore, claimId, status: REFUND_STATUSES.SUCCESS, provider: verified, now });
+    if (finalized.status === REFUND_STATUSES.RECONCILIATION) {
+        throw new RefundError("Provider iadesi başarılı, ancak cüzdan muhasebesi manuel mutabakat gerektiriyor.", 409, "REFUND_ACCOUNTING_RECONCILIATION_REQUIRED");
+    }
+    return { success: true, idempotent: false, status: REFUND_STATUSES.SUCCESS };
 }
 function createIyzicoRefundProvider(iyzipay) {
     if (!iyzipay?.refund?.create) throw new RefundError("Iyzico refund servisi yapılandırılmadı.", 503, "REFUND_PROVIDER_UNAVAILABLE");

@@ -20,134 +20,441 @@ function fromKurus(value) {
     return Number((value / 100).toFixed(2));
 }
 
-async function validateNormalPayment({ siparisIds, user, getOrder, getListing }) {
+async function validateNormalPayment({
+    siparisIds,
+    user,
+    getOrder,
+    getListing
+}) {
     if (!Array.isArray(siparisIds) || siparisIds.length === 0) {
-        throw new PaymentValidationError("Ödeme için geçerli sipariş bulunamadı.");
+        throw new PaymentValidationError(
+            "Ödeme için geçerli sipariş bulunamadı."
+        );
     }
 
     const uniqueIds = [...new Set(siparisIds)];
-    if (uniqueIds.length !== siparisIds.length || uniqueIds.some((id) => typeof id !== "string" || !id.trim())) {
-        throw new PaymentValidationError("Geçersiz sipariş bilgisi.");
+
+    if (
+        uniqueIds.length !== siparisIds.length ||
+        uniqueIds.some(
+            (id) =>
+                typeof id !== "string" ||
+                !id.trim()
+        )
+    ) {
+        throw new PaymentValidationError(
+            "Geçersiz sipariş bilgisi."
+        );
     }
 
     const verifiedItems = [];
 
     for (const siparisId of uniqueIds) {
-        const order = await getOrder(siparisId);
-        if (!order) throw new PaymentValidationError("Sipariş bulunamadı.", 404, "ORDER_NOT_FOUND");
+        const order =
+            await getOrder(siparisId);
 
-        const buyerMatches = order.aliciUid
-            ? order.aliciUid === user.uid
-            : Boolean(user.email && order.alici === user.email);
+        if (!order) {
+            throw new PaymentValidationError(
+                "Sipariş bulunamadı.",
+                404,
+                "ORDER_NOT_FOUND"
+            );
+        }
+
+        const buyerMatches =
+            order.aliciUid
+                ? order.aliciUid === user.uid
+                : Boolean(
+                    user.email &&
+                    order.alici === user.email
+                );
+
         if (!buyerMatches) {
-            throw new PaymentValidationError("Bu sipariş kullanıcı hesabınıza ait değil.", 403, "ORDER_FORBIDDEN");
+            throw new PaymentValidationError(
+                "Bu sipariş kullanıcı hesabınıza ait değil.",
+                403,
+                "ORDER_FORBIDDEN"
+            );
         }
+
         if (order.odemeDurumu === true) {
-            throw new PaymentValidationError("Bu siparişin ödemesi daha önce tamamlanmış.", 409, "ORDER_ALREADY_PAID");
+            throw new PaymentValidationError(
+                "Bu siparişin ödemesi daha önce tamamlanmış.",
+                409,
+                "ORDER_ALREADY_PAID"
+            );
         }
 
-        const listingId = order.ilanId || order.urunId;
-        const listing = listingId ? await getListing(listingId) : null;
-        if (!listing) throw new PaymentValidationError("Siparişe ait ilan bulunamadı.", 404, "LISTING_NOT_FOUND");
-        if (listing.onay !== true || listing.aktif === false) {
-            throw new PaymentValidationError("İlan aktif değil.", 409, "LISTING_INACTIVE");
+        const listingId =
+            order.ilanId ||
+            order.urunId;
+
+        const listing =
+            listingId
+                ? await getListing(listingId)
+                : null;
+
+        if (!listing) {
+            throw new PaymentValidationError(
+                "Siparişe ait ilan bulunamadı.",
+                404,
+                "LISTING_NOT_FOUND"
+            );
         }
 
-        const ownListing = (listing.sahipUid && listing.sahipUid === user.uid)
-            || (user.email && listing.sahip === user.email);
+        if (
+            listing.onay !== true ||
+            listing.aktif === false
+        ) {
+            throw new PaymentValidationError(
+                "İlan aktif değil.",
+                409,
+                "LISTING_INACTIVE"
+            );
+        }
+
+        const ownListing =
+            (
+                listing.sahipUid &&
+                listing.sahipUid === user.uid
+            ) ||
+            (
+                user.email &&
+                listing.sahip === user.email
+            );
+
         if (ownListing) {
-            throw new PaymentValidationError("Kendi ürününüz için ödeme başlatamazsınız.", 403, "OWN_LISTING");
+            throw new PaymentValidationError(
+                "Kendi ürününüz için ödeme başlatamazsınız.",
+                403,
+                "OWN_LISTING"
+            );
         }
 
-        const quantity = Number(order.adet);
-        if (!Number.isInteger(quantity) || quantity <= 0) {
-            throw new PaymentValidationError("Geçersiz ürün adedi.", 400, "INVALID_QUANTITY");
+        const quantity =
+            Number(order.adet);
+
+        if (
+            !Number.isInteger(quantity) ||
+            quantity <= 0
+        ) {
+            throw new PaymentValidationError(
+                "Geçersiz ürün adedi.",
+                400,
+                "INVALID_QUANTITY"
+            );
         }
 
-        const listingPrice = numericPrice(listing.fiyat);
-        const orderPrice = numericPrice(order.fiyat);
-        if (!Number.isFinite(listingPrice) || listingPrice <= 0 || orderPrice !== listingPrice) {
-            throw new PaymentValidationError("Sipariş fiyatı güncel ilan fiyatıyla uyuşmuyor.", 409, "PRICE_MISMATCH");
+        const listingPrice =
+            numericPrice(listing.fiyat);
+
+        const orderPrice =
+            numericPrice(order.fiyat);
+
+        if (
+            !Number.isFinite(listingPrice) ||
+            listingPrice <= 0 ||
+            orderPrice !== listingPrice
+        ) {
+            throw new PaymentValidationError(
+                "Sipariş fiyatı güncel ilan fiyatıyla uyuşmuyor.",
+                409,
+                "PRICE_MISMATCH"
+            );
         }
 
-        if (listing.urunTipi !== "dijital") {
-            const stock = Number(listing.stok ?? listing.adet);
-            if (!Number.isInteger(stock) || stock < quantity) {
-                throw new PaymentValidationError("Ürün için yeterli stok bulunmuyor.", 409, "INSUFFICIENT_STOCK");
+        const isDigital =
+            listing.urunTipi === "dijital" ||
+            listing.fizikselKargo === false;
+
+        if (!isDigital) {
+            const stock =
+                Number(
+                    listing.stok ??
+                    listing.adet
+                );
+
+            if (
+                !Number.isInteger(stock) ||
+                stock < quantity
+            ) {
+                throw new PaymentValidationError(
+                    "Ürün için yeterli stok bulunmuyor.",
+                    409,
+                    "INSUFFICIENT_STOCK"
+                );
             }
         }
 
         verifiedItems.push({
             siparisId,
             listingId,
-            sellerKey: listing.sahipUid || listing.sahip || order.satici,
-            sellerEmail: listing.sahip || order.satici || "",
-            name: listing.baslik || order.ilanBaslik || "Ürün",
-            unitPrice: listingPrice,
+
+            sellerKey:
+                listing.sahipUid ||
+                listing.sahip ||
+                order.satici,
+
+            sellerEmail:
+                listing.sahip ||
+                order.satici ||
+                "",
+
+            name:
+                listing.baslik ||
+                order.ilanBaslik ||
+                "Ürün",
+
+            unitPrice:
+                listingPrice,
+
             quantity,
-            total: Number((listingPrice * quantity).toFixed(2)),
-            itemType: listing.urunTipi === "dijital" ? "VIRTUAL" : "PHYSICAL"
+
+            total:
+                Number(
+                    (
+                        listingPrice *
+                        quantity
+                    ).toFixed(2)
+                ),
+
+            isDigital,
+
+            itemType:
+                isDigital
+                    ? "VIRTUAL"
+                    : "PHYSICAL",
+
+            buyer: {
+                fullName: order.adSoyad || "",
+                phone: order.telefon || "",
+                address: order.adres || "",
+                city: order.il || order.sehir || "",
+                district: order.ilce || ""
+            }
         });
     }
 
-    const sellerGroups = new Map();
-    for (const item of verifiedItems) {
-        const current = sellerGroups.get(item.sellerKey) || {
-            sellerKey: item.sellerKey,
-            sellerEmail: item.sellerEmail,
-            productTotalKurus: 0,
-            orderIds: []
-        };
-        current.productTotalKurus += toKurus(item.total);
-        current.orderIds.push(item.siparisId);
-        sellerGroups.set(item.sellerKey, current);
-    }
+    /*
+    ==================================================
+    SATICI BAZLI FİZİKSEL ÜRÜN KARGO HESABI
+    ==================================================
 
-    const shippingDetails = [...sellerGroups.values()].map((group) => {
-        const sellerShippingKurus = group.productTotalKurus >= 50000 ? 0 : 7990;
-        return {
-            sellerKey: group.sellerKey,
-            sellerEmail: group.sellerEmail,
-            orderIds: group.orderIds,
-            sellerProductTotal: fromKurus(group.productTotalKurus),
-            sellerShipping: fromKurus(sellerShippingKurus),
-            shippingPayer: sellerShippingKurus === 0 ? "satici" : "alici"
-        };
-    });
+    Dijital ürünler bu hesaba dahil edilmez.
 
-    const productTotalKurus = verifiedItems.reduce((sum, item) => sum + toKurus(item.total), 0);
-    const shippingKurus = shippingDetails.reduce((sum, detail) => sum + toKurus(detail.sellerShipping), 0);
-    const productTotal = fromKurus(productTotalKurus);
-    const shipping = fromKurus(shippingKurus);
-    const payableTotal = fromKurus(productTotalKurus + shippingKurus);
+    Fiziksel ürünlerde:
+    - Aynı satıcıdaki fiziksel ürün toplamı 500 TL ve üzeriyse kargo 0 TL
+    - 500 TL altındaysa 79,90 TL
+    */
+
+    const sellerGroups =
+        new Map();
 
     for (const item of verifiedItems) {
-        item.shippingPayer = shippingDetails.find((detail) => detail.sellerKey === item.sellerKey).shippingPayer;
+        if (item.isDigital) {
+            continue;
+        }
+
+        const current =
+            sellerGroups.get(
+                item.sellerKey
+            ) || {
+                sellerKey:
+                    item.sellerKey,
+
+                sellerEmail:
+                    item.sellerEmail,
+
+                productTotalKurus:
+                    0,
+
+                orderIds:
+                    []
+            };
+
+        current.productTotalKurus +=
+            toKurus(item.total);
+
+        current.orderIds.push(
+            item.siparisId
+        );
+
+        sellerGroups.set(
+            item.sellerKey,
+            current
+        );
     }
 
-    return { verifiedItems, shippingDetails, productTotal, shipping, payableTotal };
+    const shippingDetails =
+        [...sellerGroups.values()]
+            .map((group) => {
+                const sellerShippingKurus =
+                    group.productTotalKurus >= 50000
+                        ? 0
+                        : 7990;
+
+                return {
+                    sellerKey:
+                        group.sellerKey,
+
+                    sellerEmail:
+                        group.sellerEmail,
+
+                    orderIds:
+                        group.orderIds,
+
+                    sellerProductTotal:
+                        fromKurus(
+                            group.productTotalKurus
+                        ),
+
+                    sellerShipping:
+                        fromKurus(
+                            sellerShippingKurus
+                        ),
+
+                    shippingPayer:
+                        sellerShippingKurus === 0
+                            ? "satici"
+                            : "alici"
+                };
+            });
+
+    /*
+    ==================================================
+    TOPLAM
+    ==================================================
+    */
+
+    const productTotalKurus =
+        verifiedItems.reduce(
+            (sum, item) =>
+                sum +
+                toKurus(item.total),
+            0
+        );
+
+    const shippingKurus =
+        shippingDetails.reduce(
+            (sum, detail) =>
+                sum +
+                toKurus(
+                    detail.sellerShipping
+                ),
+            0
+        );
+
+    const productTotal =
+        fromKurus(
+            productTotalKurus
+        );
+
+    const shipping =
+        fromKurus(
+            shippingKurus
+        );
+
+    const payableTotal =
+        fromKurus(
+            productTotalKurus +
+            shippingKurus
+        );
+
+    /*
+    ==================================================
+    HER ÜRÜNE KARGO ÖDEYEN TARAFI EKLE
+    ==================================================
+    */
+
+    for (const item of verifiedItems) {
+        if (item.isDigital) {
+            item.shippingPayer =
+                "yok";
+
+            continue;
+        }
+
+        const shippingDetail =
+            shippingDetails.find(
+                (detail) =>
+                    detail.sellerKey ===
+                    item.sellerKey
+            );
+
+        item.shippingPayer =
+            shippingDetail
+                ? shippingDetail.shippingPayer
+                : "yok";
+    }
+
+    return {
+        verifiedItems,
+        shippingDetails,
+        productTotal,
+        shipping,
+        payableTotal
+    };
 }
 
-function buildIyzicoBasket(verifiedPayment) {
-    const items = verifiedPayment.verifiedItems.map((item) => ({
-        id: item.listingId,
-        name: item.name,
-        category1: "Genel",
-        itemType: item.itemType,
-        price: item.total.toFixed(2)
-    }));
+function buildIyzicoBasket(
+    verifiedPayment
+) {
+    const items =
+        verifiedPayment.verifiedItems
+            .map((item) => ({
+                id:
+                    item.listingId,
 
-    verifiedPayment.shippingDetails.forEach((detail, index) => {
-        if (detail.sellerShipping <= 0) return;
-        items.push({
-            id: `KARGO-${index + 1}`,
-            name: "Kargo Ücreti",
-            category1: "Kargo",
-            itemType: "VIRTUAL",
-            price: detail.sellerShipping.toFixed(2)
-        });
-    });
+                name:
+                    item.name,
+
+                category1:
+                    item.isDigital
+                        ? "Dijital Tasarım"
+                        : "Genel",
+
+                itemType:
+                    item.itemType,
+
+                price:
+                    item.total.toFixed(2)
+            }));
+
+    verifiedPayment
+        .shippingDetails
+        .forEach(
+            (detail, index) => {
+                if (
+                    detail.sellerShipping <= 0
+                ) {
+                    return;
+                }
+
+                items.push({
+                    id:
+                        `KARGO-${index + 1}`,
+
+                    name:
+                        "Kargo Ücreti",
+
+                    category1:
+                        "Kargo",
+
+                    itemType:
+                        "VIRTUAL",
+
+                    price:
+                        detail.sellerShipping
+                            .toFixed(2)
+                });
+            }
+        );
+
     return items;
 }
 
-module.exports = { PaymentValidationError, validateNormalPayment, buildIyzicoBasket };
+module.exports = {
+    PaymentValidationError,
+    validateNormalPayment,
+    buildIyzicoBasket
+};

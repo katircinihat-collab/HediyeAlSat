@@ -17,7 +17,8 @@ exports.startPayment = async (req, res) => {
         const result =
             await paymentService.createPayment(
                 req.body,
-                req.user
+                req.user,
+                { ip: req.ip }
             );
 
 

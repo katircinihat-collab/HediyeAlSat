@@ -10,6 +10,7 @@ const authMiddleware =
 
 const adminMiddleware =
     require("../middleware/adminMiddleware");
+const { financialRateLimit } = require("../middleware/rateLimit");
 
 
 // =====================================================
@@ -20,6 +21,7 @@ const adminMiddleware =
 router.post(
     "/",
     authMiddleware,
+    financialRateLimit,
     walletController.paraCek
 );
 

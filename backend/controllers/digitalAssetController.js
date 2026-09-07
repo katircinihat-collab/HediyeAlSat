@@ -166,3 +166,71 @@ exports.upload = async (req, res, next) => {
 exports.status = (_req, res) => {
     res.json({ success: true, configured: Boolean(cloudinaryConfig()) });
 };
+
+function ownsPaidOrder(order, user) {
+    return order?.odemeDurumu === true && Boolean(
+        (user.uid && order.aliciUid === user.uid)
+        || (user.email && (order.alici === user.email || order.kullanici === user.email))
+    );
+}
+
+function privateDownloadUrl(config, asset, now = Date.now()) {
+    const timestamp = Math.floor(now / 1000);
+    const expiresAt = timestamp + 5 * 60;
+    const signed = {
+        attachment: true,
+        expires_at: expiresAt,
+        format: asset.format,
+        public_id: asset.providerAssetId,
+        timestamp,
+        type: "authenticated"
+    };
+    const params = new URLSearchParams({
+        ...Object.fromEntries(Object.entries(signed).map(([key, value]) => [key, String(value)])),
+        api_key: config.apiKey,
+        signature: signParams(signed, config.apiSecret)
+    });
+    return {
+        url: `https://api.cloudinary.com/v1_1/${config.cloudName}/${asset.resourceType || "image"}/download?${params.toString()}`,
+        expiresAt: new Date(expiresAt * 1000).toISOString()
+    };
+}
+
+exports.download = async (req, res, next) => {
+    try {
+        const config = cloudinaryConfig();
+        if (!config) return res.status(503).json({ success: false, message: "Korumalı dosya servisi henüz yapılandırılmamış." });
+        const orderId = String(req.params.orderId || "").trim();
+        if (!/^[A-Za-z0-9_-]{6,128}$/.test(orderId)) return res.status(400).json({ success: false, message: "Geçersiz sipariş kimliği." });
+
+        const orderSnap = await firestore.collection("siparisler").doc(orderId).get();
+        if (!orderSnap.exists) return res.status(404).json({ success: false, message: "Sipariş bulunamadı." });
+        const order = orderSnap.data();
+        if (!ownsPaidOrder(order, req.user)) return res.status(403).json({ success: false, message: "Bu dosyaya erişim yetkiniz yok." });
+
+        const listingId = order.ilanId || order.urunId;
+        const listingSnap = listingId ? await firestore.collection("ilanlar").doc(listingId).get() : null;
+        if (!listingSnap?.exists) return res.status(404).json({ success: false, message: "Dijital ilan bulunamadı." });
+        const listing = listingSnap.data();
+        if (listing.urunTipi !== "dijital" || listing.fizikselKargo !== false) {
+            return res.status(409).json({ success: false, message: "Bu sipariş dijital dosya teslimatına uygun değil." });
+        }
+
+        const assetSnap = await firestore.collection("digitalAssets")
+            .where("listingId", "==", listingId)
+            .where("status", "==", "ready")
+            .limit(1)
+            .get();
+        if (assetSnap.empty) return res.status(404).json({ success: false, message: "Dijital dosya henüz teslimata hazır değil." });
+        const asset = assetSnap.docs[0].data();
+        if (asset.listingId !== listingId || asset.deliveryType !== "authenticated" || !asset.providerAssetId || !asset.format) {
+            return res.status(409).json({ success: false, message: "Dijital dosya kaydı doğrulanamadı." });
+        }
+
+        return res.json({ success: true, download: privateDownloadUrl(config, asset) });
+    } catch (error) {
+        next(error);
+    }
+};
+
+exports._test = { ownsPaidOrder, privateDownloadUrl };

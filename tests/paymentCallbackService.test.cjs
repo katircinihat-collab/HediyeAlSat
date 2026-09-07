@@ -189,3 +189,26 @@ test("sponsor callback ikinci kez idempotent kalır", async () => {
     const again = await finalizePayment({ firestore: db, FieldValue: { serverTimestamp: timestamp }, conversationId: "conv-1", paymentId: "pay-1" });
     assert.equal(again.alreadyFinalized, true);
 });
+
+test("callback transaction güncel stok yetersizse finalize etmez", async () => {
+    const seed = normalSeed();
+    seed["siparisler/order-1"] = { ...seed["siparisler/order-1"], ilanId: "listing-1", adet: 2 };
+    seed["ilanlar/listing-1"] = { stok: 1, urunTipi: "fiziksel" };
+    const db = memoryFirestore(seed);
+    await assert.rejects(
+        finalizePayment({ firestore: db, FieldValue: { serverTimestamp: timestamp }, conversationId: "conv-1", paymentId: "pay-1" }),
+        (error) => error.code === "STOCK_ALLOCATION_FAILED"
+    );
+    assert.equal(db.data.get("odemeler/conv-1").paymentStatus, "WAITING");
+    assert.equal(db.data.get("ilanlar/listing-1").stok, 1);
+});
+
+test("callback modern ilanId stokunu bir kez atomik düşürür", async () => {
+    const seed = normalSeed();
+    seed["siparisler/order-1"] = { ...seed["siparisler/order-1"], ilanId: "listing-1", adet: 2 };
+    seed["ilanlar/listing-1"] = { stok: 3, urunTipi: "fiziksel" };
+    const db = memoryFirestore(seed);
+    await finalizePayment({ firestore: db, FieldValue: { serverTimestamp: timestamp }, conversationId: "conv-1", paymentId: "pay-1" });
+    await finalizePayment({ firestore: db, FieldValue: { serverTimestamp: timestamp }, conversationId: "conv-1", paymentId: "pay-1" });
+    assert.equal(db.data.get("ilanlar/listing-1").stok, 1);
+});

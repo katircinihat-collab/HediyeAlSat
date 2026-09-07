@@ -132,8 +132,8 @@ async function finalizePayment({ firestore, FieldValue, conversationId, paymentI
             const walletRefs = new Map(walletEmails.map((email) => [email, firestore.collection("wallets").doc(email)]));
             const walletSnapshots = await Promise.all(walletEmails.map((email) => transaction.get(walletRefs.get(email))));
             const walletData = new Map(walletEmails.map((email, index) => [email, walletSnapshots[index].exists ? walletSnapshots[index].data() : {}]));
-            const stockOrders = orders.filter((order) => order.odemeDurumu !== true && order.urunId);
-            const listingIds = [...new Set(stockOrders.map((order) => order.urunId))];
+            const stockOrders = orders.filter((order) => order.odemeDurumu !== true && (order.ilanId || order.urunId));
+            const listingIds = [...new Set(stockOrders.map((order) => order.ilanId || order.urunId))];
             const listingRefs = new Map(listingIds.map((id) => [id, firestore.collection("ilanlar").doc(id)]));
             const listingSnapshots = await Promise.all(listingIds.map((id) => transaction.get(listingRefs.get(id))));
             const listingData = new Map(listingIds.map((id, index) => [id, listingSnapshots[index]]));
@@ -176,9 +176,17 @@ async function finalizePayment({ firestore, FieldValue, conversationId, paymentI
                 const snapshot = listingData.get(listingId);
                 if (!snapshot.exists || snapshot.data().urunTipi === "dijital") return;
                 const decrement = stockOrders
-                    .filter((order) => order.urunId === listingId)
+                    .filter((order) => (order.ilanId || order.urunId) === listingId)
                     .reduce((sum, order) => sum + Number(order.adet || 1), 0);
-                const nextStock = Math.max(0, Number(snapshot.data().stok || 0) - decrement);
+                const currentStock = Number(snapshot.data().stok ?? snapshot.data().adet);
+                if (!Number.isInteger(currentStock) || currentStock < decrement) {
+                    throw new PaymentCallbackError(
+                        "Ödeme alındı ancak stok güvenli biçimde ayrılamadı; manuel inceleme gerekli.",
+                        "STOCK_ALLOCATION_FAILED",
+                        "MANUAL_REVIEW"
+                    );
+                }
+                const nextStock = currentStock - decrement;
                 transaction.update(listingRefs.get(listingId), {
                     stok: nextStock,
                     ...(nextStock <= 0 ? { aktif: false } : {})

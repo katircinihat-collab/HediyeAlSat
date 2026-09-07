@@ -6,6 +6,7 @@ import SponsorStorePage from "./pages/SponsorStorePage";
 import AdminWithdraw from "./pages/AdminWithdraw";
 
 import MyOrders from "./pages/MyOrders";
+import OrderDetail from "./pages/OrderDetail";
 import Seller from "./pages/Seller";
 import Cart from "./pages/Cart";
 import SellerOrders from "./pages/SellerOrders";
@@ -348,6 +349,11 @@ function App() {
         <Route
           path="/siparislerim"
           element={<MyOrders />}
+        />
+
+        <Route
+          path="/siparis/:id"
+          element={<OrderDetail />}
         />
 
         <Route

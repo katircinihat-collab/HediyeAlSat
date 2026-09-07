@@ -2,6 +2,8 @@ const {
     firestore,
     FieldValue
 } = require("../config/firebase");
+const { getPayoutEligibility } = require("./deliveryConfirmationService");
+const { toKurus } = require("./paymentCallbackService");
 
 
 /*
@@ -87,17 +89,22 @@ BİR HAREKETİ BALANCE'A AKTAR
 */
 
 async function hareketiBalanceAktar(
-    hareketId
+    hareketId,
+    dependencies = {}
 ) {
 
+    const activeFirestore = dependencies.firestore || firestore;
+    const activeFieldValue = dependencies.FieldValue || FieldValue;
+    const currentTime = dependencies.now ? dependencies.now() : new Date();
+
     const hareketRef =
-        firestore
+        activeFirestore
             .collection("bakiyeHareketleri")
             .doc(hareketId);
 
 
     const sonuc =
-        await firestore.runTransaction(
+        await activeFirestore.runTransaction(
 
             async (transaction) => {
 
@@ -129,6 +136,17 @@ async function hareketiBalanceAktar(
 
                 const hareket =
                     hareketSnapshot.data();
+
+                if (!hareket.siparisId) {
+                    throw new Error("Hareketin sipariş bağlantısı bulunamadı; manuel inceleme gerekli.");
+                }
+
+                const orderRef = activeFirestore.collection("siparisler").doc(hareket.siparisId);
+                const orderSnapshot = await transaction.get(orderRef);
+                if (!orderSnapshot.exists) {
+                    throw new Error("Hakedişe ait sipariş bulunamadı; manuel inceleme gerekli.");
+                }
+                const order = orderSnapshot.data();
 
 
                 /*
@@ -187,10 +205,7 @@ async function hareketiBalanceAktar(
                 ======================================
                 */
 
-                const blockageDate =
-                    parseBlockageDate(
-                        hareket.blockageResolvedDate
-                    );
+                const blockageDate = parseBlockageDate(order.hakEdisBlokeBitis);
 
 
                 /*
@@ -223,7 +238,7 @@ async function hareketiBalanceAktar(
 
                 if (
                     blockageDate.getTime() >
-                    Date.now()
+                    currentTime.getTime()
                 ) {
 
                     return {
@@ -242,6 +257,22 @@ async function hareketiBalanceAktar(
 
                     };
 
+                }
+
+                const eligibility = getPayoutEligibility(order, currentTime);
+                if (!eligibility.eligible) {
+                    return {
+                        success: false,
+                        neden: eligibility.reason === "ACTIVE_CLAIM"
+                            ? "Siparişte aktif iade/itiraz bulunduğu için hakediş bekletiliyor."
+                            : "Sipariş hakediş aktarımına uygun değil.",
+                        reason: eligibility.reason || "ORDER_NOT_ELIGIBLE",
+                        hareketId
+                    };
+                }
+
+                if (order.refundProviderStatus === "success" || order.refundAccountingStatus === "completed") {
+                    return { success: false, neden: "İade edilmiş siparişin hakedişi aktarılamaz.", reason: "ORDER_REFUNDED", hareketId };
                 }
 
 
@@ -271,7 +302,7 @@ async function hareketiBalanceAktar(
                 */
 
                 const walletRef =
-                    firestore
+                    activeFirestore
                         .collection("wallets")
                         .doc(satici);
 
@@ -295,22 +326,14 @@ async function hareketiBalanceAktar(
                     walletSnapshot.data();
 
 
-                const pending =
-                    Number(
-                        wallet.pending || 0
-                    );
-
-
-                const balance =
-                    Number(
-                        wallet.balance || 0
-                    );
-
-
-                const netTutar =
-                    Number(
-                        hareket.netTutar || 0
-                    );
+                const pendingKurus = toKurus(wallet.pending || 0);
+                const balanceKurus = toKurus(wallet.balance || 0);
+                const netTutarKurus = toKurus(hareket.netTutar || 0);
+                if (!Number.isInteger(netTutarKurus) || netTutarKurus <= 0
+                    || !Number.isInteger(pendingKurus) || pendingKurus < netTutarKurus) {
+                    throw new Error("Bekleyen bakiye hakediş tutarını karşılamıyor; manuel inceleme gerekli.");
+                }
+                const netTutar = Number((netTutarKurus / 100).toFixed(2));
 
 
                 /*
@@ -319,15 +342,7 @@ async function hareketiBalanceAktar(
                 ======================================
                 */
 
-                const yeniPending =
-                    Number(
-
-                        Math.max(
-                            0,
-                            pending - netTutar
-                        ).toFixed(2)
-
-                    );
+                const yeniPending = Number(((pendingKurus - netTutarKurus) / 100).toFixed(2));
 
 
                 /*
@@ -336,15 +351,7 @@ async function hareketiBalanceAktar(
                 ======================================
                 */
 
-                const yeniBalance =
-                    Number(
-
-                        (
-                            balance +
-                            netTutar
-                        ).toFixed(2)
-
-                    );
+                const yeniBalance = Number(((balanceKurus + netTutarKurus) / 100).toFixed(2));
 
 
                 /*
@@ -366,11 +373,20 @@ async function hareketiBalanceAktar(
                             yeniBalance,
 
                         guncellenmeTarihi:
-                            FieldValue.serverTimestamp()
+                            activeFieldValue.serverTimestamp()
 
                     }
 
                 );
+
+                transaction.update(orderRef, {
+                    walletAktarildi: true,
+                    hakEdisOdendi: true,
+                    payoutCompleted: true,
+                    hakEdisDurumu: "Ödendi",
+                    hakEdisOdemeTarihi: activeFieldValue.serverTimestamp(),
+                    guncellenmeTarihi: activeFieldValue.serverTimestamp()
+                });
 
 
                 /*
@@ -389,10 +405,10 @@ async function hareketiBalanceAktar(
                             "Aktarıldı",
 
                         aktarilmaTarihi:
-                            FieldValue.serverTimestamp(),
+                            activeFieldValue.serverTimestamp(),
 
                         guncellenmeTarihi:
-                            FieldValue.serverTimestamp()
+                            activeFieldValue.serverTimestamp()
 
                     }
 

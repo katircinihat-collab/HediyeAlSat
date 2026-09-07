@@ -9,6 +9,8 @@ import {
   query,
   where,
   getDocs,
+  getDoc,
+  doc,
   addDoc
 } from "firebase/firestore";
 
@@ -56,8 +58,6 @@ function Checkout() {
 
   const [not, setNot] = useState("");
 
-  const [kupon, setKupon] = useState("");
-
   // ==================================================
   // NORMAL SEPETİ GETİR
   // ==================================================
@@ -92,12 +92,42 @@ function Checkout() {
 
       const snap = await getDocs(q);
 
-      setUrunler(
-        snap.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data()
-        }))
+      const sepetUrunleri = snap.docs.map((sepetDoc) => ({
+        id: sepetDoc.id,
+        ...sepetDoc.data()
+      }));
+
+      const zenginlestirilmisUrunler = await Promise.all(
+        sepetUrunleri.map(async (urun) => {
+          if (!urun.ilanId) return urun;
+
+          try {
+            const ilanSnap = await getDoc(
+              doc(db, "ilanlar", urun.ilanId)
+            );
+
+            if (!ilanSnap.exists()) return urun;
+
+            const ilan = ilanSnap.data();
+
+            return {
+              ...urun,
+              urunTipi: ilan.urunTipi || urun.urunTipi || "",
+              fizikselKargo:
+                typeof ilan.fizikselKargo === "boolean"
+                  ? ilan.fizikselKargo
+                  : urun.fizikselKargo,
+              kategori: ilan.kategori || urun.kategori || "",
+              sahipUid: ilan.sahipUid || urun.sahipUid || ""
+            };
+          } catch (error) {
+            console.error("İlan bilgisi alınamadı:", error);
+            return urun;
+          }
+        })
       );
+
+      setUrunler(zenginlestirilmisUrunler);
 
     } catch (error) {
 
@@ -124,28 +154,49 @@ function Checkout() {
     0
   );
 
-  const indirim =
-    kupon.trim().toUpperCase() === "HEDIYE10"
-      ? araToplam * 0.10
-      : 0;
+  function dijitalUrunMu(urun) {
+    return (
+      urun?.urunTipi === "dijital" ||
+      urun?.fizikselKargo === false
+    );
+  }
 
-  const saticiToplamlari = urunler.reduce((toplamlar, urun) => {
-    const satici = urun.satici || urun.sahip || urun.magazaId || "bilinmeyen-satici";
-    const urunToplami = Math.round(Number(urun.fiyat || 0) * Number(urun.adet || 0) * 100);
-    toplamlar[satici] = (toplamlar[satici] || 0) + urunToplami;
+  const fizikselUrunler = urunler.filter(
+    (urun) => !dijitalUrunMu(urun)
+  );
+
+  const fizikselUrunVar = fizikselUrunler.length > 0;
+
+  const saticiToplamlari = fizikselUrunler.reduce((toplamlar, urun) => {
+    const satici =
+      urun.satici ||
+      urun.sahip ||
+      urun.magazaId ||
+      "bilinmeyen-satici";
+
+    const urunToplami = Math.round(
+      Number(urun.fiyat || 0) *
+      Number(urun.adet || 0) *
+      100
+    );
+
+    toplamlar[satici] =
+      (toplamlar[satici] || 0) + urunToplami;
+
     return toplamlar;
   }, {});
 
   const kargoUcreti = Number((
     Object.values(saticiToplamlari).reduce(
-      (toplam, saticiToplami) => toplam + (saticiToplami >= 50000 ? 0 : 7990),
+      (toplam, saticiToplami) =>
+        toplam +
+        (saticiToplami >= 50000 ? 0 : 7990),
       0
     ) / 100
   ).toFixed(2));
 
   const normalGenelToplam =
-    araToplam -
-    indirim +
+    araToplam +
     kargoUcreti;
 
   // ==================================================
@@ -376,7 +427,7 @@ function Checkout() {
       return;
     }
 
-    if (!il.trim()) {
+    if (fizikselUrunVar && !il.trim()) {
 
       alert(
         "Lütfen ilinizi giriniz."
@@ -385,7 +436,7 @@ function Checkout() {
       return;
     }
 
-    if (!ilce.trim()) {
+    if (fizikselUrunVar && !ilce.trim()) {
 
       alert(
         "Lütfen ilçenizi giriniz."
@@ -394,7 +445,7 @@ function Checkout() {
       return;
     }
 
-    if (!adres.trim()) {
+    if (fizikselUrunVar && !adres.trim()) {
 
       alert(
         "Lütfen teslimat adresinizi giriniz."
@@ -470,7 +521,18 @@ function Checkout() {
 
               ilce,
 
-              kargo,
+              kargo:
+                dijitalUrunMu(urun)
+                  ? "Dijital Teslimat"
+                  : kargo,
+
+              urunTipi:
+                dijitalUrunMu(urun)
+                  ? "dijital"
+                  : "fiziksel",
+
+              fizikselKargo:
+                !dijitalUrunMu(urun),
 
               siparisNotu:
                 not,
@@ -544,7 +606,9 @@ function Checkout() {
                       "Genel",
 
                     itemType:
-                      "PHYSICAL",
+                      dijitalUrunMu(u)
+                        ? "VIRTUAL"
+                        : "PHYSICAL",
 
                     price:
                       (
@@ -897,28 +961,47 @@ function Checkout() {
 
               </div>
 
-              <div className="checkout-box">
+              {fizikselUrunVar ? (
 
-                <h2>
-                  🚚 Kargo Firması
-                </h2>
+                <div className="checkout-box">
 
-                <select
-                  value={kargo}
-                  onChange={(e) =>
-                    setKargo(e.target.value)
-                  }
-                >
+                  <h2>
+                    🚚 Kargo Firması
+                  </h2>
 
-                  <option>MNG</option>
-                  <option>Aras</option>
-                  <option>Yurtiçi</option>
-                  <option>Sürat</option>
-                  <option>PTT</option>
+                  <select
+                    value={kargo}
+                    onChange={(e) =>
+                      setKargo(e.target.value)
+                    }
+                  >
 
-                </select>
+                    <option>MNG</option>
+                    <option>Aras</option>
+                    <option>Yurtiçi</option>
+                    <option>Sürat</option>
+                    <option>PTT</option>
 
-              </div>
+                  </select>
+
+                </div>
+
+              ) : (
+
+                <div className="checkout-box">
+
+                  <h2>
+                    🎨 Dijital Teslimat
+                  </h2>
+
+                  <p>
+                    Bu siparişte fiziksel kargo yoktur.
+                    Dijital ürünler için kargo ücreti alınmaz.
+                  </p>
+
+                </div>
+
+              )}
 
               <div className="checkout-box">
 
@@ -974,34 +1057,6 @@ function Checkout() {
 
                 </div>
 
-                <div className="summary-row">
-
-                  <span>
-                    İndirim
-                  </span>
-
-                  <b
-                    style={{
-                      color: "green"
-                    }}
-                  >
-                    -{indirim.toFixed(2)} TL
-                  </b>
-
-                </div>
-
-                <div className="coupon-box">
-
-                  <input
-                    placeholder="🎁 İndirim Kodu"
-                    value={kupon}
-                    onChange={(e) =>
-                      setKupon(e.target.value)
-                    }
-                  />
-
-                </div>
-
                 <hr />
 
                 <div className="summary-row total">
@@ -1027,7 +1082,9 @@ function Checkout() {
                   </p>
 
                   <p>
-                    🚚 Ücretsiz Kargo
+                    {fizikselUrunVar
+                      ? "🚚 Satıcı bazlı kargo avantajı"
+                      : "🎨 Dijital ürünlerde kargo yok"}
                   </p>
 
                   <p>

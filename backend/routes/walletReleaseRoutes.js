@@ -10,6 +10,7 @@ const authMiddleware =
 
 const adminMiddleware =
     require("../middleware/adminMiddleware");
+const { financialRateLimit } = require("../middleware/rateLimit");
 
 
 // =====================================================
@@ -21,6 +22,7 @@ router.post(
     "/run",
     authMiddleware,
     adminMiddleware,
+    financialRateLimit,
     async (req, res) => {
 
     try {
@@ -163,6 +165,7 @@ router.post(
     "/admin/release",
     authMiddleware,
     adminMiddleware,
+    financialRateLimit,
     async (req, res) => {
 
         try {
@@ -227,6 +230,7 @@ router.post(
     "/admin/release-all",
     authMiddleware,
     adminMiddleware,
+    financialRateLimit,
     async (req, res) => {
 
         try {

@@ -33,9 +33,9 @@ async function authMiddleware(req, res, next) {
 
         next();
 
-    } catch (err) {
+    } catch {
 
-        console.log(err);
+        console.warn("Token doğrulama başarısız.");
 
         return res.status(401).json({
 

@@ -12,6 +12,7 @@ import {
 import { Link } from "react-router-dom";
 import { confirmOrderDelivery } from "../services/orderDeliveryApi";
 import OrderClaimForm from "../components/OrderClaimForm";
+import { getDigitalDownload } from "../services/digitalDownloadApi";
 
 import "../styles/pages/myorders.css";
 
@@ -19,6 +20,19 @@ function MyOrders() {
 
   const [siparisler, setSiparisler] = useState([]);
   const [dogrulanan, setDogrulanan] = useState(null);
+  const [indirilen, setIndirilen] = useState(null);
+
+  async function dijitalDosyaIndir(siparis) {
+    try {
+      setIndirilen(siparis.id);
+      const download = await getDigitalDownload(siparis.id);
+      window.location.assign(download.url);
+    } catch (error) {
+      alert(error.message);
+    } finally {
+      setIndirilen(null);
+    }
+  }
 
   async function teslimAldim(siparis) {
     if (!window.confirm("Ürünü teslim aldığınızı onaylıyor musunuz?")) return;
@@ -209,6 +223,12 @@ function MyOrders() {
   </div>
 
   <div className="order-bottom">
+
+    {siparis.urunTipi === "dijital" && siparis.odemeDurumu === true && (
+      <button type="button" className="buy-btn" disabled={indirilen === siparis.id} onClick={() => dijitalDosyaIndir(siparis)}>
+        {indirilen === siparis.id ? "Hazırlanıyor..." : "Dosyayı İndir"}
+      </button>
+    )}
 
     {(siparis.durum === "Kargoda" || siparis.durum === "Kargoya Verildi") && (
       <button type="button" className="buy-btn" disabled={dogrulanan === siparis.id} onClick={() => teslimAldim(siparis)}>

@@ -76,8 +76,21 @@ async function confirmDelivery({ firestore, orderId, actor, now = () => new Date
         const ref = firestore.collection("siparisler").doc(orderId);
         const snapshot = await transaction.get(ref);
         if (!snapshot.exists) throw new DeliveryConfirmationError("Sipariş bulunamadı.", 404, "ORDER_NOT_FOUND");
-        const result = buildDeliveryConfirmation(snapshot.data(), actor, now());
-        if (result.update) transaction.update(ref, result.update);
+        const order = snapshot.data();
+        const result = buildDeliveryConfirmation(order, actor, now());
+        if (result.update) {
+            const movementRef = order.paymentId
+                ? firestore.collection("bakiyeHareketleri").doc(`${order.paymentId}_${orderId}`)
+                : null;
+            const movementSnapshot = movementRef ? await transaction.get(movementRef) : null;
+            transaction.update(ref, result.update);
+            if (movementSnapshot?.exists) {
+                transaction.update(movementRef, {
+                    blockageResolvedDate: result.update.hakEdisBlokeBitis,
+                    guncellenmeTarihi: result.update.guncellenmeTarihi
+                });
+            }
+        }
         return { idempotent: result.idempotent, orderId, ...(result.update || {}) };
     });
 }

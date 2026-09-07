@@ -3,13 +3,29 @@ const cors = require("cors");
 require("dotenv").config();
 
 const app = express();
+app.set("trust proxy", 1);
 
 
 // =====================================================
 // MIDDLEWARE
 // =====================================================
 
-app.use(cors());
+const allowedOrigins = new Set(
+    [process.env.FRONTEND_URL, ...(process.env.CORS_ORIGINS || "").split(",")]
+        .map((value) => String(value || "").trim().replace(/\/$/, ""))
+        .filter(Boolean)
+);
+
+app.use(cors({
+    origin(origin, callback) {
+        if (!origin || allowedOrigins.has(origin.replace(/\/$/, "")) || (process.env.NODE_ENV !== "production" && /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin))) {
+            return callback(null, true);
+        }
+        return callback(new Error("CORS origin reddedildi."));
+    },
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"]
+}));
 
 app.use(express.json());
 
@@ -55,6 +71,8 @@ const orderStatusRoutes =
     require("./routes/orderStatusRoutes");
 const orderClaimRoutes =
     require("./routes/orderClaimRoutes");
+const { startWalletReleaseJob } =
+    require("./jobs/walletReleaseJob");
 
 
 // =====================================================
@@ -202,9 +220,7 @@ app.use((err, req, res, _next) => {
 
         success: false,
 
-        error:
-            err.message ||
-            "Sunucu hatası."
+        error: "Sunucu hatası."
 
     });
 
@@ -258,6 +274,8 @@ app.listen(
         console.log(
             "================================="
         );
+
+        startWalletReleaseJob();
 
     }
 );

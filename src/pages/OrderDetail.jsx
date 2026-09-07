@@ -13,6 +13,7 @@ getDoc
 import { auth, db } from "../firebase";
 import { confirmOrderDelivery } from "../services/orderDeliveryApi";
 import OrderClaimForm from "../components/OrderClaimForm";
+import { getDigitalDownload } from "../services/digitalDownloadApi";
 
 import "../styles/pages/order-detail.css";
 
@@ -24,6 +25,19 @@ const [siparis,setSiparis]=useState(null);
 
 const [loading,setLoading]=useState(true);
 const [dogrulaniyor,setDogrulaniyor]=useState(false);
+const [indiriliyor,setIndiriliyor]=useState(false);
+
+async function dijitalDosyaIndir(){
+try{
+setIndiriliyor(true);
+const download=await getDigitalDownload(siparis.id);
+window.location.assign(download.url);
+}catch(error){
+alert(error.message);
+}finally{
+setIndiriliyor(false);
+}
+}
 
 async function teslimAldim(){
 if(!auth.currentUser||!window.confirm("Ürünü teslim aldığınızı onaylıyor musunuz?"))return;
@@ -646,6 +660,11 @@ className="whatsapp-btn"
 
 </div>
 <div className="order-actions">
+{siparis.urunTipi==="dijital"&&siparis.odemeDurumu===true&&(
+<button type="button" className="buy-btn" disabled={indiriliyor} onClick={dijitalDosyaIndir}>
+{indiriliyor?"Hazırlanıyor...":"Dosyayı İndir"}
+</button>
+)}
 <OrderClaimForm order={siparis} onSubmitted={(result)=>setSiparis((onceki)=>({...onceki,hakEdisBlokeli:true,aktifTalepId:result.claimId}))} onCancelled={()=>setSiparis((onceki)=>({...onceki,hakEdisBlokeli:false,aktifTalepId:null}))}/>
 
 {(siparis.durum==="Kargoda"||siparis.durum==="Kargoya Verildi")&&(
