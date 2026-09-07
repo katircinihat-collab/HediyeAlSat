@@ -729,8 +729,6 @@ function AddListing() {
 
     catch (err) {
 
-      console.log(err);
-
       if (a4Tasarlaniyor && yeniDijitalIlanRef) {
         try {
           await deleteDoc(yeniDijitalIlanRef);
@@ -738,7 +736,7 @@ function AddListing() {
           console.error("Yarım dijital ilan temizlenemedi:", cleanupError);
         }
 
-        alert("Dosya yüklenemedi, ilan yayınlanmadı. Lütfen tekrar deneyin.");
+        alert(err.message || "Dosya yüklenemedi, ilan yayınlanmadı. Lütfen tekrar deneyin.");
         return;
       }
 

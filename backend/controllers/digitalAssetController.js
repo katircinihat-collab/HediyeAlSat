@@ -16,6 +16,30 @@ function detectFile(buffer) {
     return null;
 }
 
+function validateUploadBuffer(body) {
+    if (!Buffer.isBuffer(body) || body.length === 0) {
+        const error = new Error("Dosya boş olamaz.");
+        error.status = 400;
+        error.code = "DIGITAL_ASSET_EMPTY";
+        throw error;
+    }
+    if (body.length > MAX_FILE_SIZE) {
+        const error = new Error("Dosya en fazla 15 MB olabilir.");
+        error.status = 413;
+        error.code = "DIGITAL_ASSET_TOO_LARGE";
+        throw error;
+    }
+
+    const detected = detectFile(body);
+    if (!detected) {
+        const error = new Error("Yalnız PDF, JPG, JPEG ve PNG dosyaları desteklenir.");
+        error.status = 415;
+        error.code = "DIGITAL_ASSET_UNSUPPORTED_TYPE";
+        throw error;
+    }
+    return detected;
+}
+
 function cloudinaryConfig() {
     const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
     const apiKey = process.env.CLOUDINARY_API_KEY;
@@ -26,6 +50,59 @@ function cloudinaryConfig() {
 function signParams(params, apiSecret) {
     const value = Object.keys(params).sort().map((key) => `${key}=${params[key]}`).join("&");
     return crypto.createHash("sha1").update(`${value}${apiSecret}`).digest("hex");
+}
+
+async function uploadAuthenticatedAsset(config, { buffer, detected, publicId }, fetchImpl = fetch) {
+    const form = new FormData();
+    form.append("file", new Blob([buffer], { type: detected.mimeType }), `original.${detected.format}`);
+    form.append("public_id", publicId);
+    form.append("type", "authenticated");
+
+    const authorization = Buffer.from(`${config.apiKey}:${config.apiSecret}`).toString("base64");
+    const response = await fetchImpl(
+        `https://api.cloudinary.com/v1_1/${config.cloudName}/${detected.resourceType}/upload`,
+        {
+            method: "POST",
+            headers: { Authorization: `Basic ${authorization}` },
+            body: form
+        }
+    );
+
+    let result = null;
+    try {
+        result = await response.json();
+    } catch {
+        // Provider cevabı kullanıcıya veya loglara ham olarak taşınmaz.
+    }
+
+    if (!response.ok || !result?.public_id) {
+        const error = new Error("Korumalı dosya yükleme servisi dosyayı kabul etmedi.");
+        error.status = 502;
+        error.code = "DIGITAL_ASSET_PROVIDER_UPLOAD_FAILED";
+        error.providerStatus = response.status;
+        throw error;
+    }
+
+    return result;
+}
+
+function digitalAssetRecord({ listingId, listing, user, result, detected, fallbackSize }) {
+    return {
+        listingId,
+        sellerUid: user.uid,
+        storeId: listing.magazaId || null,
+        provider: "cloudinary",
+        providerAssetId: result.public_id,
+        providerVersion: result.version || null,
+        resourceType: result.resource_type || detected.resourceType,
+        deliveryType: "authenticated",
+        format: detected.format,
+        mimeType: detected.mimeType,
+        size: result.bytes || fallbackSize,
+        status: "ready",
+        rightsVersion: listing.hakOnayiSurumu,
+        createdAt: FieldValue.serverTimestamp()
+    };
 }
 
 async function destroyAuthenticatedAsset(config, publicId, resourceType) {
@@ -78,17 +155,7 @@ exports.upload = async (req, res, next) => {
         if (!/^[A-Za-z0-9_-]{6,128}$/.test(listingId)) {
             return res.status(400).json({ success: false, message: "Geçersiz ilan kimliği." });
         }
-        if (!Buffer.isBuffer(req.body) || req.body.length === 0) {
-            return res.status(400).json({ success: false, message: "Dosya boş olamaz." });
-        }
-        if (req.body.length > MAX_FILE_SIZE) {
-            return res.status(413).json({ success: false, message: "Dosya en fazla 15 MB olabilir." });
-        }
-
-        const detected = detectFile(req.body);
-        if (!detected) {
-            return res.status(415).json({ success: false, message: "Yalnız PDF, JPG, JPEG ve PNG dosyaları desteklenir." });
-        }
+        const detected = validateUploadBuffer(req.body);
 
         const listingRef = firestore.collection("ilanlar").doc(listingId);
         const listingSnap = await listingRef.get();
@@ -103,43 +170,23 @@ exports.upload = async (req, res, next) => {
         }
 
         const assetRef = firestore.collection("digitalAssets").doc();
-        const timestamp = Math.floor(Date.now() / 1000);
         const publicId = `digital-originals/${req.user.uid}/${assetRef.id}`;
-        const signed = { public_id: publicId, timestamp, type: "authenticated" };
-        const form = new FormData();
-        form.append("file", new Blob([req.body], { type: detected.mimeType }), `original.${detected.format}`);
-        form.append("api_key", config.apiKey);
-        form.append("timestamp", String(timestamp));
-        form.append("public_id", publicId);
-        form.append("type", "authenticated");
-        form.append("signature", signParams(signed, config.apiSecret));
-
-        const response = await fetch(`https://api.cloudinary.com/v1_1/${config.cloudName}/${detected.resourceType}/upload`, { method: "POST", body: form });
-        const result = await response.json();
-        if (!response.ok || !result.public_id) {
-            const error = new Error(result?.error?.message || "Korumalı dosya yüklenemedi.");
-            error.status = 502;
-            throw error;
-        }
+        const result = await uploadAuthenticatedAsset(config, {
+            buffer: req.body,
+            detected,
+            publicId
+        });
 
         const uploadedResourceType = result.resource_type || detected.resourceType;
         const batch = firestore.batch();
-        batch.set(assetRef, {
+        batch.set(assetRef, digitalAssetRecord({
             listingId,
-            sellerUid: req.user.uid,
-            storeId: listing.magazaId || null,
-            provider: "cloudinary",
-            providerAssetId: result.public_id,
-            providerVersion: result.version || null,
-            resourceType: uploadedResourceType,
-            deliveryType: "authenticated",
-            format: detected.format,
-            mimeType: detected.mimeType,
-            size: result.bytes || req.body.length,
-            status: "ready",
-            rightsVersion: listing.hakOnayiSurumu,
-            createdAt: FieldValue.serverTimestamp()
-        });
+            listing,
+            user: req.user,
+            result,
+            detected,
+            fallbackSize: req.body.length
+        }));
         batch.update(listingRef, {
             dijitalDosyaDurumu: "hazir",
             dijitalDosyaGuncellemeTarihi: FieldValue.serverTimestamp()
@@ -158,7 +205,19 @@ exports.upload = async (req, res, next) => {
 
         return res.status(201).json({ success: true, asset: { id: assetRef.id, format: detected.format, size: result.bytes || req.body.length, status: "ready" } });
     } catch (error) {
-        if (error.status) return res.status(error.status).json({ success: false, message: error.message });
+        if (error.status) {
+            if (error.code === "DIGITAL_ASSET_PROVIDER_UPLOAD_FAILED") {
+                console.error("Dijital asset provider yükleme hatası:", {
+                    code: error.code,
+                    providerStatus: error.providerStatus || null
+                });
+            }
+            return res.status(error.status).json({
+                success: false,
+                code: error.code || "DIGITAL_ASSET_UPLOAD_FAILED",
+                message: error.message
+            });
+        }
         next(error);
     }
 };
@@ -233,4 +292,12 @@ exports.download = async (req, res, next) => {
     }
 };
 
-exports._test = { ownsPaidOrder, privateDownloadUrl };
+exports._test = {
+    ownsPaidOrder,
+    privateDownloadUrl,
+    detectFile,
+    validateUploadBuffer,
+    uploadAuthenticatedAsset,
+    digitalAssetRecord,
+    MAX_FILE_SIZE
+};

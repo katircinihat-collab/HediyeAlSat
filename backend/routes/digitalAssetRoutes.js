@@ -15,4 +15,15 @@ router.post(
     digitalAssetController.upload
 );
 
+router.use((error, _req, res, next) => {
+    if (error?.type === "entity.too.large") {
+        return res.status(413).json({
+            success: false,
+            code: "DIGITAL_ASSET_TOO_LARGE",
+            message: "Dosya en fazla 15 MB olabilir."
+        });
+    }
+    next(error);
+});
+
 module.exports = router;
