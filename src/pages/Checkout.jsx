@@ -117,6 +117,10 @@ function Checkout() {
                 typeof ilan.fizikselKargo === "boolean"
                   ? ilan.fizikselKargo
                   : urun.fizikselKargo,
+              dijitalTeslimat:
+                typeof ilan.dijitalTeslimat === "boolean"
+                  ? ilan.dijitalTeslimat
+                  : urun.dijitalTeslimat,
               kategori: ilan.kategori || urun.kategori || "",
               sahipUid: ilan.sahipUid || urun.sahipUid || ""
             };
@@ -157,7 +161,9 @@ function Checkout() {
   function dijitalUrunMu(urun) {
     return (
       urun?.urunTipi === "dijital" ||
-      urun?.fizikselKargo === false
+      urun?.fizikselKargo === false ||
+      urun?.dijitalTeslimat === true ||
+      urun?.kategori === "A4 Tasarım"
     );
   }
 
@@ -890,7 +896,9 @@ function Checkout() {
               <div className="checkout-box">
 
                 <h2>
-                  📦 Teslimat Bilgileri
+                  {fizikselUrunVar
+                    ? "📦 Teslimat Bilgileri"
+                    : "👤 Alıcı Bilgileri"}
                 </h2>
 
                 <input
@@ -909,30 +917,34 @@ function Checkout() {
                   }
                 />
 
-                <input
-                  placeholder="İl"
-                  value={il}
-                  onChange={(e) =>
-                    setIl(e.target.value)
-                  }
-                />
+                {fizikselUrunVar && (
+                  <>
+                    <input
+                      placeholder="İl"
+                      value={il}
+                      onChange={(e) =>
+                        setIl(e.target.value)
+                      }
+                    />
 
-                <input
-                  placeholder="İlçe"
-                  value={ilce}
-                  onChange={(e) =>
-                    setIlce(e.target.value)
-                  }
-                />
+                    <input
+                      placeholder="İlçe"
+                      value={ilce}
+                      onChange={(e) =>
+                        setIlce(e.target.value)
+                      }
+                    />
 
-                <textarea
-                  placeholder="Teslimat Adresi"
-                  rows="4"
-                  value={adres}
-                  onChange={(e) =>
-                    setAdres(e.target.value)
-                  }
-                />
+                    <textarea
+                      placeholder="Teslimat Adresi"
+                      rows="4"
+                      value={adres}
+                      onChange={(e) =>
+                        setAdres(e.target.value)
+                      }
+                    />
+                  </>
+                )}
 
               </div>
 
