@@ -32,7 +32,9 @@ function CartItem({
 
   const dijitalUrun =
     urun.urunTipi === "dijital" ||
-    urun.fizikselKargo === false;
+    urun.fizikselKargo === false ||
+    urun.dijitalTeslimat === true ||
+    urun.kategori === "A4 Tasarım";
 
   const stokSinirinda =
     !dijitalUrun &&
@@ -112,17 +114,19 @@ function CartItem({
           </b>
 
         </p>
-        <p className="delivery-text">
+        {!dijitalUrun && (
+          <p className="delivery-text">
 
-          🚚 Tahmini Teslim
+            🚚 Tahmini Teslim
 
-          <b>
+            <b>
 
-            1-3 İş Günü
+              1-3 İş Günü
 
-          </b>
+            </b>
 
-        </p>
+          </p>
+        )}
 
         {/* ADET */}
 
@@ -168,57 +172,73 @@ function CartItem({
 
         {/* EK BİLGİ */}
 
-        <div className="cart-extra">
+        {dijitalUrun ? (
+          <div className="cart-extra cart-digital-info" aria-label="Dijital teslimat bilgileri">
+            <div className="cart-digital-info__primary">
+              <span aria-hidden="true">💻</span>
+              <span>
+                <strong>Dijital Teslimat</strong>
+                <small>Fiziksel kargo yok</small>
+              </span>
+            </div>
+            <div className="cart-digital-info__download">
+              <span aria-hidden="true">🔒</span>
+              <span>Ödeme sonrası güvenli indirme</span>
+            </div>
+          </div>
+        ) : (
+          <div className="cart-extra">
 
-          <div className="cart-info-row">
+            <div className="cart-info-row">
 
-            <span>
+              <span>
 
-              🚚 Kargo
+                🚚 Kargo
 
-            </span>
+              </span>
 
-            <b>
+              <b>
 
-              Ücretsiz
+                Ücretsiz
 
-            </b>
+              </b>
+
+            </div>
+
+            <div className="cart-info-row">
+
+              <span>
+
+                📦 Ürün Durumu
+
+              </span>
+
+              <b>
+
+                Yeni
+
+              </b>
+
+            </div>
+
+            <div className="cart-info-row">
+
+              <span>
+
+                🛡 Garanti
+
+              </span>
+
+              <b>
+
+                Var
+
+              </b>
+
+            </div>
 
           </div>
-
-          <div className="cart-info-row">
-
-            <span>
-
-              📦 Ürün Durumu
-
-            </span>
-
-            <b>
-
-              Yeni
-
-            </b>
-
-          </div>
-
-          <div className="cart-info-row">
-
-            <span>
-
-              🛡 Garanti
-
-            </span>
-
-            <b>
-
-              Var
-
-            </b>
-
-          </div>
-
-        </div>
+        )}
         {/* SAĞ TARAF */}
 
       </div>
@@ -291,17 +311,12 @@ function CartItem({
 
           </div>
 
-          <div>
-
-            🚚 Hızlı Teslimat
-
-          </div>
-
-          <div>
-
-            ↩️ 14 Gün İade
-
-          </div>
+          {!dijitalUrun && (
+            <>
+              <div>🚚 Hızlı Teslimat</div>
+              <div>↩️ 14 Gün İade</div>
+            </>
+          )}
 
         </div>
         

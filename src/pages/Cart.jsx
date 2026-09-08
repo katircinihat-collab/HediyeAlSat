@@ -51,7 +51,10 @@ function Cart() {
             ilan = ilanSnap.exists() ? ilanSnap.data() : null;
           }
 
-          const dijital = ilan?.urunTipi === "dijital" || ilan?.fizikselKargo === false;
+          const dijital =
+            ilan?.urunTipi === "dijital" ||
+            ilan?.fizikselKargo === false ||
+            ilan?.dijitalTeslimat === true;
           const stok = dijital ? null : Number(ilan?.stok ?? ilan?.adet);
           const mevcutAdet = Math.max(1, Number.parseInt(sepetVerisi.adet, 10) || 1);
           const guvenliAdet = Number.isInteger(stok) && stok > 0
@@ -70,6 +73,10 @@ function Cart() {
             fizikselKargo: typeof ilan?.fizikselKargo === "boolean"
               ? ilan.fizikselKargo
               : sepetVerisi.fizikselKargo,
+            dijitalTeslimat: typeof ilan?.dijitalTeslimat === "boolean"
+              ? ilan.dijitalTeslimat
+              : sepetVerisi.dijitalTeslimat,
+            kategori: ilan?.kategori || sepetVerisi.kategori || "",
             stok
           };
         }));
@@ -90,7 +97,11 @@ function Cart() {
   async function adetArttir(urun) {
 
     const adet = Number(urun.adet) || 1;
-    const dijital = urun.urunTipi === "dijital" || urun.fizikselKargo === false;
+    const dijital =
+      urun.urunTipi === "dijital" ||
+      urun.fizikselKargo === false ||
+      urun.dijitalTeslimat === true ||
+      urun.kategori === "A4 Tasarım";
 
     if (!dijital && Number.isInteger(urun.stok) && adet >= urun.stok) {
       alert("Bu ürün için mevcut stok sınırına ulaştınız.");
