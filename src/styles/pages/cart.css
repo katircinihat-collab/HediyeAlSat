@@ -525,6 +525,49 @@ color:#666;
 
 }
 
+.checkout-payment-brands{
+
+display:flex;
+align-items:center;
+justify-content:center;
+width:100%;
+margin:14px auto 0;
+padding:10px 8px;
+box-sizing:border-box;
+border-top:1px solid #edf0f2;
+
+}
+
+.checkout-payment-brands img{
+
+display:block;
+width:min(100%, 300px);
+height:28px;
+object-fit:contain;
+
+}
+
+.iyzico-box{
+
+display:flex;
+align-items:center;
+justify-content:center;
+gap:7px;
+margin-top:7px;
+color:#5f666d;
+font-size:13px;
+line-height:1.35;
+text-align:center;
+
+}
+
+.iyzico-box span{
+
+color:#22a06b;
+font-size:10px;
+
+}
+
 /* ===========================
    MOBILE
 =========================== */
@@ -576,6 +619,23 @@ justify-content:center;
 .summary-total{
 
 font-size:20px;
+
+}
+
+}
+
+@media(max-width:420px){
+
+.checkout-payment-brands img{
+
+width:100%;
+height:24px;
+
+}
+
+.iyzico-box{
+
+font-size:12px;
 
 }
 

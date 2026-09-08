@@ -186,49 +186,15 @@ onClick={()=>navigate("/odeme")}
 
 </div>
 
-<div className="secure-item">
-
-↩️ 14 Gün Kolay İade
-
 </div>
 
-<div className="secure-item">
-
-📦 Hızlı Teslimat
-
-</div>
-
-</div>
-
-<div className="payment-logos">
+<div className="checkout-payment-brands">
 
 <img
 
-src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg"
+src="/images/payment-logos.png"
 
-alt="Visa"
-
-height="26"
-
-/>
-
-<img
-
-src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg"
-
-alt="Mastercard"
-
-height="34"
-
-/>
-
-<img
-
-src="https://upload.wikimedia.org/wikipedia/commons/3/39/PayPal_logo.svg"
-
-alt="Paypal"
-
-height="22"
+alt="iyzico ile Öde, Mastercard, Visa, American Express ve Troy"
 
 />
 
@@ -236,7 +202,8 @@ height="22"
 
 <div className="iyzico-box">
 
-🟢 iyzico Güvencesi ile Güvenli Ödeme
+<span aria-hidden="true">●</span>
+iyzico Güvencesi ile Güvenli Ödeme
 
 </div>
 </div>
