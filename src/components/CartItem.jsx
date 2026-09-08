@@ -30,6 +30,15 @@ function CartItem({
 
     fiyat * urun.adet;
 
+  const dijitalUrun =
+    urun.urunTipi === "dijital" ||
+    urun.fizikselKargo === false;
+
+  const stokSinirinda =
+    !dijitalUrun &&
+    Number.isInteger(urun.stok) &&
+    urun.adet >= urun.stok;
+
   return (
 
     <div className="cart-card">
@@ -84,7 +93,11 @@ function CartItem({
 
         <p className="stock-text">
 
-          🟢 Stokta
+          {dijitalUrun
+            ? "🟢 Dijital ürün"
+            : Number.isInteger(urun.stok)
+              ? `🟢 ${urun.stok} adet stokta`
+              : "🟢 Stokta"}
 
         </p>
 
@@ -117,17 +130,9 @@ function CartItem({
 
           <button
 
-            onClick={()=>
-
-              adetAzalt(
-
-                urun.id,
-
-                urun.adet
-
-              )
-
-            }
+            type="button"
+            aria-label={`${urun.baslik} adedini azalt`}
+            onClick={() => adetAzalt(urun)}
 
           >
 
@@ -143,17 +148,11 @@ function CartItem({
 
           <button
 
-            onClick={()=>
-
-              adetArttir(
-
-                urun.id,
-
-                urun.adet
-
-              )
-
-            }
+            type="button"
+            aria-label={`${urun.baslik} adedini artır`}
+            disabled={stokSinirinda}
+            title={stokSinirinda ? "Stok sınırına ulaşıldı" : "Adedi artır"}
+            onClick={() => adetArttir(urun)}
 
           >
 
@@ -162,6 +161,10 @@ function CartItem({
           </button>
 
         </div>
+
+        {stokSinirinda && (
+          <small className="cart-qty-warning">Stok sınırına ulaştınız.</small>
+        )}
 
         {/* EK BİLGİ */}
 

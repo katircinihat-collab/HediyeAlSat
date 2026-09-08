@@ -9,6 +9,7 @@ import {
   where,
   onSnapshot,
   doc,
+  getDoc,
   updateDoc,
   deleteDoc,
   addDoc
@@ -39,11 +40,38 @@ function Cart() {
         where("kullanici", "==", user.email)
       );
 
-      const unsub = onSnapshot(q, (snap) => {
+      const unsub = onSnapshot(q, async (snap) => {
 
-        const liste = snap.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
+        const liste = await Promise.all(snap.docs.map(async (sepetDoc) => {
+          const sepetVerisi = sepetDoc.data();
+          let ilan = null;
+
+          if (sepetVerisi.ilanId) {
+            const ilanSnap = await getDoc(doc(db, "ilanlar", sepetVerisi.ilanId));
+            ilan = ilanSnap.exists() ? ilanSnap.data() : null;
+          }
+
+          const dijital = ilan?.urunTipi === "dijital" || ilan?.fizikselKargo === false;
+          const stok = dijital ? null : Number(ilan?.stok ?? ilan?.adet);
+          const mevcutAdet = Math.max(1, Number.parseInt(sepetVerisi.adet, 10) || 1);
+          const guvenliAdet = Number.isInteger(stok) && stok > 0
+            ? Math.min(mevcutAdet, stok)
+            : mevcutAdet;
+
+          if (guvenliAdet !== mevcutAdet) {
+            await updateDoc(doc(db, "sepet", sepetDoc.id), { adet: guvenliAdet });
+          }
+
+          return {
+            id: sepetDoc.id,
+            ...sepetVerisi,
+            adet: guvenliAdet,
+            urunTipi: ilan?.urunTipi || sepetVerisi.urunTipi || "",
+            fizikselKargo: typeof ilan?.fizikselKargo === "boolean"
+              ? ilan.fizikselKargo
+              : sepetVerisi.fizikselKargo,
+            stok
+          };
         }));
 
         console.log("Sepette bulunan:", liste);
@@ -59,10 +87,18 @@ function Cart() {
     return () => unsubscribe();
 
   }, []);
-  async function adetArttir(id, adet) {
+  async function adetArttir(urun) {
+
+    const adet = Number(urun.adet) || 1;
+    const dijital = urun.urunTipi === "dijital" || urun.fizikselKargo === false;
+
+    if (!dijital && Number.isInteger(urun.stok) && adet >= urun.stok) {
+      alert("Bu ürün için mevcut stok sınırına ulaştınız.");
+      return;
+    }
 
     await updateDoc(
-      doc(db, "sepet", id),
+      doc(db, "sepet", urun.id),
       {
         adet: adet + 1
       }
@@ -70,12 +106,18 @@ function Cart() {
 
   }
 
-  async function adetAzalt(id, adet) {
+  async function adetAzalt(urun) {
+
+    const adet = Number(urun.adet) || 1;
 
     if (adet <= 1) {
 
+      if (!window.confirm("Bu ürünü sepetten kaldırmak istiyor musunuz?")) {
+        return;
+      }
+
       await deleteDoc(
-        doc(db, "sepet", id)
+        doc(db, "sepet", urun.id)
       );
 
       return;
@@ -83,7 +125,7 @@ function Cart() {
     }
 
     await updateDoc(
-      doc(db, "sepet", id),
+      doc(db, "sepet", urun.id),
       {
         adet: adet - 1
       }
@@ -139,7 +181,7 @@ function Cart() {
   }
 
   const toplam = urunler.reduce(
-    (t, u) => t + (u.fiyat * u.adet),
+    (t, u) => t + (Number(u.fiyat || 0) * Number(u.adet || 1)),
     0
   );
 
