@@ -12,6 +12,7 @@ import StoreAbout from "../components/StoreAbout";
 import StoreRating from "../components/StoreRating";
 import StoreComments from "../components/StoreComments";
 import StoreProducts from "../components/StoreProducts";
+import { currentUserPublicName } from "../utils/publicUserName";
 import "../styles/pages/store-detail.css";
 
 function StoreDetail() {
@@ -191,13 +192,23 @@ function StoreDetail() {
     }
 
     const tarih = new Date();
+    const kullaniciAdi = await currentUserPublicName(db, auth.currentUser);
     const yeniYorum = await addDoc(collection(db, "magazaYorumlari"), {
       magazaId: id,
       kullanici: auth.currentUser.email,
+      kullaniciUid: auth.currentUser.uid,
+      kullaniciAdi,
       yorum: yorum.trim(),
       tarih
     });
-    setYorumlar((onceki) => [{ id: yeniYorum.id, kullanici: auth.currentUser.email, yorum: yorum.trim(), tarih }, ...onceki].slice(0, 20));
+    setYorumlar((onceki) => [{
+      id: yeniYorum.id,
+      kullanici: auth.currentUser.email,
+      kullaniciUid: auth.currentUser.uid,
+      kullaniciAdi,
+      yorum: yorum.trim(),
+      tarih
+    }, ...onceki].slice(0, 20));
     setYorum("");
   }
 

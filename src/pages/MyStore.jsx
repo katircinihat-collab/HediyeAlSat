@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { auth, db } from "../firebase";
 import {
   collection,
@@ -122,6 +123,16 @@ function MyStore() {
   const degisiklikVar = ilkMagazaVerisi !== null &&
     JSON.stringify(duzenlenebilirMagazaVerisi(magaza)) !== JSON.stringify(ilkMagazaVerisi);
 
+  const tamamlananAlanSayisi = [
+    magaza.magazaAdi,
+    magaza.logo,
+    magaza.kapak,
+    magaza.telefon,
+    magaza.sehir,
+    magaza.aciklama
+  ].filter((value) => String(value || "").trim()).length;
+  const profilTamamlanma = Math.round((tamamlananAlanSayisi / 6) * 100);
+
   function gorselBaglantisiDegistir(alan) {
     const etiket = alan === "logo" ? "Logo" : "Kapak";
     const yeniBaglanti = window.prompt(
@@ -162,7 +173,31 @@ function MyStore() {
         </div>
       )}
 
-      <section className="my-store-card">
+      <nav className="my-store-management" aria-label="Mağaza yönetim kısayolları">
+        <a className="my-store-management-link active" href="#magaza-bilgileri">
+          <span>✏️</span><strong>Mağazayı Düzenle</strong><small>Vitrin bilgileri</small>
+        </a>
+        <Link className="my-store-management-link" to="/ilan-ver">
+          <span>➕</span><strong>Yeni Ürün Ekle</strong><small>Yeni ilan yayınla</small>
+        </Link>
+        <Link className="my-store-management-link" to="/satici-siparisleri">
+          <span>📦</span><strong>Siparişler</strong><small>Siparişleri yönet</small>
+        </Link>
+        <Link className="my-store-management-link" to="/seller">
+          <span>💳</span><strong>Cüzdan / Finans</strong><small>Hakedişleri görüntüle</small>
+        </Link>
+        <Link className="my-store-management-link" to="/seller">
+          <span>📊</span><strong>İstatistikler</strong><small>Satıcı performansı</small>
+        </Link>
+      </nav>
+
+      <section className="my-store-overview" aria-label="Mağaza özeti">
+        <div><span>Mağaza durumu</span><strong>{magaza.aktif ? "Yayında" : "Kapalı"}</strong></div>
+        <div><span>Profil tamamlanma</span><strong>%{profilTamamlanma}</strong></div>
+        <div><span>Mağaza konumu</span><strong>{magaza.sehir || "Belirtilmedi"}</strong></div>
+      </section>
+
+      <section className="my-store-card" id="magaza-bilgileri">
         <div className="my-store-cover">
           {magaza.kapak && !kapakHatasi ? (
             <img src={magaza.kapak} alt={`${magaza.magazaAdi || "Mağaza"} kapak görseli`} onError={() => setKapakHatasi(true)} />

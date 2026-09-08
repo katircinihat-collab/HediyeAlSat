@@ -28,6 +28,7 @@ import {
 } from "firebase/firestore";
 
 import { auth, db } from "../firebase";
+import { currentUserPublicName, publicUserName } from "../utils/publicUserName";
 import { formatListingCategory } from "../data/categories";
 import useFavorite from "../hooks/useFavorite";
 
@@ -364,6 +365,8 @@ function DetailPage() {
 
       setYorumGonderiliyor(true);
 
+      const kullaniciAdi = await currentUserPublicName(db, auth.currentUser);
+
 
       /* =========================
          YORUMU FIREBASE'E KAYDET
@@ -384,9 +387,10 @@ function DetailPage() {
           kullanici:
             auth.currentUser.email,
 
-          kullaniciAdi:
-            auth.currentUser.displayName ||
-            "HediyeAlSat Kullanıcısı",
+          kullaniciUid:
+            auth.currentUser.uid,
+
+          kullaniciAdi,
 
           puan:
             Number(puan),
@@ -1349,13 +1353,7 @@ function DetailPage() {
                   yorumlar.map(
                     (item) => {
 
-                      const kullaniciAdi =
-                        item.kullaniciAdi ||
-                        (
-                          item.kullanici
-                            ? item.kullanici.split("@")[0]
-                            : "HediyeAlSat Kullanıcısı"
-                        );
+                      const kullaniciAdi = publicUserName(item);
 
 
                       const tarih =

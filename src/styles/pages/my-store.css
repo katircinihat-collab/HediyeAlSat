@@ -18,6 +18,19 @@
 .my-store-status.active { background: #dcfce7; color: #166534; }
 .my-store-status.closed { background: #fee2e2; color: #991b1b; }
 
+.my-store-management { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; margin-bottom: 14px; }
+.my-store-management-link { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 2px 9px; min-width: 0; padding: 14px; border: 1px solid #e7e9ee; border-radius: 15px; background: #fff; color: #253047; text-decoration: none; box-shadow: 0 7px 20px rgba(15, 23, 42, .05); transition: border-color .2s ease, transform .2s ease, box-shadow .2s ease; }
+.my-store-management-link > span { grid-row: 1 / 3; font-size: 23px; }
+.my-store-management-link strong { overflow: hidden; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+.my-store-management-link small { overflow: hidden; color: #7a8495; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.my-store-management-link:hover { border-color: #f1a09a; box-shadow: 0 10px 24px rgba(176, 0, 32, .09); transform: translateY(-2px); }
+.my-store-management-link.active { border-color: #f3b0aa; background: linear-gradient(135deg, #fff7f6, #fff); color: #a9232d; }
+
+.my-store-overview { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 18px; }
+.my-store-overview > div { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 17px; border: 1px solid #eceef2; border-radius: 14px; background: #f8f9fb; }
+.my-store-overview span { color: #667085; font-size: 13px; }
+.my-store-overview strong { color: #20283a; font-size: 14px; text-align: right; }
+
 .my-store-card { overflow: hidden; border: 1px solid #e6e8ec; border-radius: 20px; background: #fff; box-shadow: 0 14px 38px rgba(15, 23, 42, .08); }
 .my-store-cover { position: relative; height: 250px; background: linear-gradient(135deg, #fff1f3, #f7f8fb); }
 .my-store-cover > img { width: 100%; height: 100%; object-fit: cover; }
@@ -47,6 +60,9 @@
 @media (max-width: 640px) {
   .my-store-page { width: min(100% - 20px, 1040px); margin-top: 18px; }
   .my-store-heading { align-items: flex-start; flex-direction: column; gap: 12px; }
+  .my-store-management { display: flex; overflow-x: auto; padding: 2px 1px 9px; scroll-snap-type: x proximity; }
+  .my-store-management-link { flex: 0 0 170px; scroll-snap-align: start; }
+  .my-store-overview { grid-template-columns: 1fr; }
   .my-store-cover { height: 180px; }
   .my-store-logo { left: 20px; bottom: -38px; width: 80px; height: 80px; }
   .my-store-image-actions { flex-direction: column; padding: 52px 18px 0; }
@@ -54,4 +70,8 @@
   .my-store-form { grid-template-columns: 1fr; gap: 15px; padding: 22px 18px; }
   .my-store-field-wide { grid-column: auto; }
   .my-store-actions .buy-btn { width: 100%; }
+}
+
+@media (min-width: 641px) and (max-width: 900px) {
+  .my-store-management { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }

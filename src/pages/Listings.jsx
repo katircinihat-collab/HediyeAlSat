@@ -13,6 +13,7 @@ import categories, {
   isLegacySecondHandListing,
   matchesMainCategory
 } from "../data/categories";
+import { listingMatchesSearch } from "../utils/search";
 
 import "../styles/pages/product.css";
 
@@ -74,7 +75,7 @@ function Listings() {
 
   const filtrelenmisIlanlar = ilanlar.filter((ilan) => {
 
-    if (isA4Listing(ilan)) {
+    if (isA4Listing(ilan) && !arama) {
       return false;
     }
 
@@ -83,21 +84,7 @@ function Listings() {
     }
 
     if (arama) {
-      const aranabilirMetin = [
-        ilan.baslik,
-        ilan.urunAdi,
-        ilan.ilanAdi,
-        ilan.ad,
-        ilan.aciklama,
-        ilan.kategori,
-        ilan.altKategori,
-        getListingSubcategory(ilan)
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLocaleLowerCase("tr-TR");
-
-      if (!aranabilirMetin.includes(arama.toLocaleLowerCase("tr-TR"))) {
+      if (!listingMatchesSearch(ilan, arama, getListingSubcategory(ilan))) {
         return false;
       }
     }

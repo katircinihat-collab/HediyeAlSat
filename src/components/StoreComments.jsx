@@ -1,4 +1,5 @@
 import "../styles/components/store-comments.css";
+import { formatPublicCommentDate, publicUserName } from "../utils/publicUserName";
 
 function StoreComments({
 
@@ -58,33 +59,13 @@ function StoreComments({
 
                   <h4>
 
-                    {y.kullanici}
+                    {publicUserName(y)}
 
                   </h4>
 
-                  {
-
-                    y.tarih &&
-
-                    <span>
-
-                      {
-
-                        y.tarih.toDate
-
-                        ?
-
-                        y.tarih.toDate().toLocaleDateString("tr-TR")
-
-                        :
-
-                        ""
-
-                      }
-
-                    </span>
-
-                  }
+                  {formatPublicCommentDate(y.tarih) && (
+                    <span>{formatPublicCommentDate(y.tarih)}</span>
+                  )}
 
                 </div>
 
