@@ -1,9 +1,10 @@
 import "../styles/components/store-hero.css";
 
-function StoreHero({ magaza, takipEdiyor, takipEt, takipBirak, ortalamaPuan, oySayisi, ilanSayisi, kategoriler }) {
+function StoreHero({ magaza, takipEdiyor, takipEt, takipBirak, ortalamaPuan, oySayisi, ilanSayisi, kategoriler, saticiSeviyesi }) {
   const magazaAdi = magaza.magazaAdi || magaza.adi || "Mağaza";
   const kapak = magaza.kapak || magaza.banner || "";
   const logo = magaza.logo || "";
+  const satisEsigi = [500, 100, 50, 10].find((threshold) => Number(saticiSeviyesi?.completedSales || 0) >= threshold);
 
   return (
     <section className="store-showcase-hero">
@@ -31,6 +32,8 @@ function StoreHero({ magaza, takipEdiyor, takipEt, takipBirak, ortalamaPuan, oyS
             {magaza.sehir && <span>📍 {magaza.sehir}</span>}
             <span>📦 {ilanSayisi} aktif ürün</span>
             {oySayisi > 0 && <span>⭐ {ortalamaPuan} ({oySayisi} oy)</span>}
+            {saticiSeviyesi?.verifiedSeller && <span>✓ Doğrulanmış Satıcı</span>}
+            {satisEsigi && <span>🏆 {satisEsigi}+ Başarılı Satış</span>}
           </div>
 
           {kategoriler.length > 0 && (

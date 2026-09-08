@@ -12,7 +12,7 @@ import StoreAbout from "../components/StoreAbout";
 import StoreRating from "../components/StoreRating";
 import StoreComments from "../components/StoreComments";
 import StoreProducts from "../components/StoreProducts";
-import { currentUserPublicName } from "../utils/publicUserName";
+import { getPublicLevel, hydrateCommentLevels } from "../services/userLevelApi";
 import "../styles/pages/store-detail.css";
 
 function StoreDetail() {
@@ -29,6 +29,7 @@ function StoreDetail() {
   const [yukleniyor, setYukleniyor] = useState(true);
   const [hata, setHata] = useState("");
   const [urunSekmesi, setUrunSekmesi] = useState("urunler");
+  const [saticiSeviyesi, setSaticiSeviyesi] = useState(null);
 
   const dijitalTasarımlar = useMemo(
     () => ilanlar.filter(isDigitalA4Listing),
@@ -70,6 +71,7 @@ function StoreDetail() {
 
         const magazaData = { id: magazaSnap.id, ...magazaSnap.data() };
         setMagaza(magazaData);
+        setSaticiSeviyesi(await getPublicLevel(magazaData.sahipUid));
 
         if (magazaData.aktif === false) {
           setIlanlar([]);
@@ -105,12 +107,11 @@ function StoreDetail() {
           Boolean(auth.currentUser && puanlar.some((kayit) => kayit.kullanici === auth.currentUser.email))
         );
 
-        setYorumlar(
-          yorumSnap.docs
+        const yorumListesi = yorumSnap.docs
             .map((belge) => ({ id: belge.id, ...belge.data() }))
             .sort((a, b) => (b.tarih?.seconds || 0) - (a.tarih?.seconds || 0))
-            .slice(0, 20)
-        );
+            .slice(0, 20);
+        setYorumlar(await hydrateCommentLevels(yorumListesi));
 
         if (auth.currentUser) {
           const takipSnap = await getDocs(query(
@@ -192,12 +193,10 @@ function StoreDetail() {
     }
 
     const tarih = new Date();
-    const kullaniciAdi = await currentUserPublicName(db, auth.currentUser);
     const yeniYorum = await addDoc(collection(db, "magazaYorumlari"), {
       magazaId: id,
       kullanici: auth.currentUser.email,
       kullaniciUid: auth.currentUser.uid,
-      kullaniciAdi,
       yorum: yorum.trim(),
       tarih
     });
@@ -205,7 +204,6 @@ function StoreDetail() {
       id: yeniYorum.id,
       kullanici: auth.currentUser.email,
       kullaniciUid: auth.currentUser.uid,
-      kullaniciAdi,
       yorum: yorum.trim(),
       tarih
     }, ...onceki].slice(0, 20));
@@ -241,7 +239,7 @@ function StoreDetail() {
 
             <Link to="/magazalar" className="store-back-link">← Mağazalara Dön</Link>
             <div className="store-content">
-              <StoreHero magaza={magaza} takipEdiyor={takipEdiyor} takipEt={takipEt} takipBirak={takipBirak} ortalamaPuan={ortalamaPuan} oySayisi={oySayisi} ilanSayisi={aktifUrunSayisi} kategoriler={kategoriler} />
+              <StoreHero magaza={magaza} takipEdiyor={takipEdiyor} takipEt={takipEt} takipBirak={takipBirak} ortalamaPuan={ortalamaPuan} oySayisi={oySayisi} ilanSayisi={aktifUrunSayisi} kategoriler={kategoriler} saticiSeviyesi={saticiSeviyesi} />
               <StoreStats ilanSayisi={aktifUrunSayisi} ortalamaPuan={ortalamaPuan} oySayisi={oySayisi} />
               <section className="store-catalog" aria-label="Mağaza ürünleri">
                 <div className="store-catalog-tabs" role="tablist" aria-label="Ürün türü">

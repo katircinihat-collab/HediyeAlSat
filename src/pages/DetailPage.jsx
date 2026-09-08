@@ -28,7 +28,8 @@ import {
 } from "firebase/firestore";
 
 import { auth, db } from "../firebase";
-import { currentUserPublicName, publicUserName } from "../utils/publicUserName";
+import { hydrateCommentLevels, submitVerifiedProductReview } from "../services/userLevelApi";
+import UserLevelLabel from "../components/UserLevelLabel";
 import { formatListingCategory } from "../data/categories";
 import useFavorite from "../hooks/useFavorite";
 
@@ -203,10 +204,11 @@ function DetailPage() {
       );
 
 
-      setYorumlar(liste);
+      const seviyeliListe = await hydrateCommentLevels(liste);
+      setYorumlar(seviyeliListe);
 
 
-      return liste;
+      return seviyeliListe;
 
     } catch (error) {
 
@@ -365,45 +367,7 @@ function DetailPage() {
 
       setYorumGonderiliyor(true);
 
-      const kullaniciAdi = await currentUserPublicName(db, auth.currentUser);
-
-
-      /* =========================
-         YORUMU FIREBASE'E KAYDET
-      ========================= */
-
-      await addDoc(
-
-        collection(
-          db,
-          "yorumlar"
-        ),
-
-        {
-
-          ilanId:
-            id,
-
-          kullanici:
-            auth.currentUser.email,
-
-          kullaniciUid:
-            auth.currentUser.uid,
-
-          kullaniciAdi,
-
-          puan:
-            Number(puan),
-
-          yorum:
-            yorum.trim(),
-
-          tarih:
-            new Date()
-
-        }
-
-      );
+      await submitVerifiedProductReview(auth.currentUser, id, Number(puan), yorum.trim());
 
 
       /* =========================
@@ -1353,9 +1317,6 @@ function DetailPage() {
                   yorumlar.map(
                     (item) => {
 
-                      const kullaniciAdi = publicUserName(item);
-
-
                       const tarih =
                         item.tarih?.toDate
 
@@ -1404,20 +1365,14 @@ function DetailPage() {
 
                             <div className="kullanici-avatar">
 
-                              {kullaniciAdi
-                                .charAt(0)
-                                .toUpperCase()}
+                              {item.levelInfo?.icon || "👤"}
 
                             </div>
 
 
                             <div>
 
-                              <strong>
-
-                                {kullaniciAdi}
-
-                              </strong>
+                              <UserLevelLabel info={item.levelInfo} verifiedBuyer={item.verifiedBuyer === true} />
 
 
                               <div className="yorum-yildizlari">

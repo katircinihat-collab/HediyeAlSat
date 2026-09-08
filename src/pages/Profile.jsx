@@ -7,6 +7,8 @@ import { apiUrl } from "../config/api";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import "../styles/pages/profile.css";
+import { getMyLevel } from "../services/userLevelApi";
+import levelDefinitions from "../../shared/userLevels.json";
 
 function telefonFormatla(value) {
   const digits = String(value || "").replace(/\D/g, "").slice(0, 11);
@@ -54,6 +56,7 @@ function Profile() {
   const [kimlikNumarasi, setKimlikNumarasi] = useState("");
   const [maskeliKimlik, setMaskeliKimlik] = useState("");
   const [kimlikKaydediliyor, setKimlikKaydediliyor] = useState(false);
+  const [seviye, setSeviye] = useState(null);
 
   const profilDegisti = useMemo(
     () => JSON.stringify(profilNormallestir(profil)) !== JSON.stringify(kayitliProfil),
@@ -79,6 +82,12 @@ function Profile() {
           }
         } catch {
           // Kimlik servisi geçici olarak erişilemezse normal profil yine yüklenir.
+        }
+
+        try {
+          setSeviye(await getMyLevel(user));
+        } catch {
+          setSeviye({ level: 1, points: 0 });
         }
 
         const snapshot = await getDoc(doc(db, "profiller", user.uid));
@@ -158,6 +167,7 @@ function Profile() {
 
       setProfil(kaydedilecekProfil);
       setKayitliProfil(kaydedilecekProfil);
+      try { setSeviye(await getMyLevel(user)); } catch { /* Seviye sonraki açılışta yenilenir. */ }
       setBasariMesaji("Bilgileriniz kaydedildi.");
     } catch (error) {
       console.error("Profil kaydedilemedi:", error);
@@ -219,6 +229,19 @@ function Profile() {
         {yukleniyor ? (
           <div className="profile-card profile-loading">Profil bilgileriniz yükleniyor...</div>
         ) : (
+          <>
+          {seviye && (() => {
+            const current = levelDefinitions[seviye.level - 1] || levelDefinitions[0];
+            const next = levelDefinitions[seviye.level] || null;
+            const range = next ? next.minPoints - current.minPoints : 1;
+            const progress = next ? Math.min(100, Math.max(0, ((seviye.points - current.minPoints) / range) * 100)) : 100;
+            return <section className="profile-level-card">
+              <div className="profile-level-current"><span>{current.icon}</span><div><small>Seviyem</small><h2>{current.title}</h2><p>Seviye {current.level} / 30 · {seviye.points} Puan</p></div></div>
+              <div className="profile-level-progress"><span style={{ width: `${progress}%` }} /></div>
+              <p>{next ? <>Sonraki seviye: 🔒 {next.icon} {next.title} · {Math.max(0, next.minPoints - seviye.points)} puan kaldı</> : "En yüksek seviyeye ulaştınız."}</p>
+              <details><summary>Tüm Seviyeler</summary><div className="profile-level-grid">{levelDefinitions.map((item) => <div key={item.level} className={item.level <= current.level ? "unlocked" : "locked"}><span>{item.level <= current.level ? item.icon : "🔒"}</span><strong>{item.level}. {item.title}</strong><small>{item.minPoints} puan</small></div>)}</div></details>
+            </section>;
+          })()}
           <form className="profile-card profile-form" onSubmit={kaydet}>
             <header className="profile-card-header">
               <h1>👤 Profil Bilgilerim</h1>
@@ -347,6 +370,7 @@ function Profile() {
               )}
             </div>
           </form>
+          </>
         )}
       </main>
       <Footer />

@@ -312,9 +312,9 @@ test("16 - mağaza sahibi kritik alanları değiştiremez", async () => {
   await assertFails(updateDoc(ref, { admin: true }));
 });
 
-test("17 - yorum puanı yalnız 1 ile 5 arasında olabilir", async () => {
+test("17 - ürün yorumu ve puanı yalnız doğrulanmış backend tarafından oluşturulur", async () => {
   const db = dbFor(ownerAuth);
-  await assertSucceeds(setDoc(doc(db, "yorumlar", "valid-review"), {
+  await assertFails(setDoc(doc(db, "yorumlar", "valid-review"), {
     ilanId: "published",
     kullanici: ownerAuth.email,
     puan: 5,
@@ -328,6 +328,18 @@ test("17 - yorum puanı yalnız 1 ile 5 arasında olabilir", async () => {
     yorum: "Geçersiz puan",
     tarih: new Date()
   }));
+});
+
+test("17b - client puan, seviye ve rozet kayıtlarına erişemez", async () => {
+  const db = dbFor(ownerAuth);
+  const summaryRef = doc(db, "userLevelSummaries", ownerAuth.uid);
+  const eventRef = doc(db, "userPointEvents", `profile_${ownerAuth.uid}`);
+  await assertFails(getDoc(summaryRef));
+  await assertFails(setDoc(summaryRef, { points: 15000, level: 30 }));
+  await assertFails(updateDoc(summaryRef, { points: 15000 }));
+  await assertFails(deleteDoc(summaryRef));
+  await assertFails(getDoc(eventRef));
+  await assertFails(setDoc(eventRef, { points: 15000, active: true }));
 });
 
 test("18 - kullanıcı başka kişinin kimliğiyle yorum oluşturamaz", async () => {

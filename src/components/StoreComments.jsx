@@ -1,5 +1,6 @@
 import "../styles/components/store-comments.css";
-import { formatPublicCommentDate, publicUserName } from "../utils/publicUserName";
+import { formatPublicCommentDate } from "../utils/publicUserName";
+import UserLevelLabel from "./UserLevelLabel";
 
 function StoreComments({
 
@@ -57,11 +58,7 @@ function StoreComments({
 
                 <div>
 
-                  <h4>
-
-                    {publicUserName(y)}
-
-                  </h4>
+                  <h4><UserLevelLabel info={y.levelInfo} /></h4>
 
                   {formatPublicCommentDate(y.tarih) && (
                     <span>{formatPublicCommentDate(y.tarih)}</span>

@@ -125,6 +125,14 @@ service cloud.firestore {
       allow read, create, update, delete: if false;
     }
 
+    match /userPointEvents/{eventId} {
+      allow read, create, update, delete: if false;
+    }
+
+    match /userLevelSummaries/{uid} {
+      allow read, create, update, delete: if false;
+    }
+
     match /profiller/{uid} {
       allow read: if isOwnerUid(uid) || isAdmin();
       allow create: if isOwnerUid(uid)
@@ -315,14 +323,7 @@ service cloud.firestore {
 
     match /yorumlar/{reviewId} {
       allow read: if true;
-      allow create: if emailOwnedCreate()
-        && request.resource.data.ilanId is string
-        && request.resource.data.puan is number
-        && request.resource.data.puan >= 1
-        && request.resource.data.puan <= 5
-        && request.resource.data.yorum is string
-        && request.resource.data.yorum.size() >= 3
-        && request.resource.data.yorum.size() <= 2000;
+      allow create: if false;
       allow update: if false;
       allow delete: if emailOwnedExisting() || isAdmin();
     }
@@ -341,6 +342,7 @@ service cloud.firestore {
     match /magazaYorumlari/{reviewId} {
       allow read: if true;
       allow create: if emailOwnedCreate()
+        && request.resource.data.kullaniciUid == request.auth.uid
         && request.resource.data.magazaId is string
         && request.resource.data.yorum is string
         && request.resource.data.yorum.size() >= 1

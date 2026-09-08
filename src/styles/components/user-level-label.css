@@ -1,0 +1,3 @@
+.user-level-label strong { color: #25242a; font-size: 14px; }
+.user-trust-badges { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 4px; }
+.user-trust-badges span { padding: 3px 7px; border-radius: 999px; background: #edf8f1; color: #167044; font-size: 10px; font-weight: 800; }
