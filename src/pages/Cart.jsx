@@ -23,6 +23,7 @@ function Cart() {
 
   const [kupon, setKupon] = useState("");
   const [urunler, setUrunler] = useState([]);
+  const [sepetYukleniyor, setSepetYukleniyor] = useState(true);
 
   useEffect(() => {
 
@@ -30,6 +31,7 @@ function Cart() {
 
       if (!user) {
         setUrunler([]);
+        setSepetYukleniyor(false);
         return;
       }
 
@@ -45,10 +47,16 @@ function Cart() {
         const liste = await Promise.all(snap.docs.map(async (sepetDoc) => {
           const sepetVerisi = sepetDoc.data();
           let ilan = null;
+          let ilanMevcut = false;
 
           if (sepetVerisi.ilanId) {
-            const ilanSnap = await getDoc(doc(db, "ilanlar", sepetVerisi.ilanId));
-            ilan = ilanSnap.exists() ? ilanSnap.data() : null;
+            try {
+              const ilanSnap = await getDoc(doc(db, "ilanlar", sepetVerisi.ilanId));
+              ilanMevcut = ilanSnap.exists();
+              ilan = ilanMevcut ? ilanSnap.data() : null;
+            } catch (error) {
+              console.error("Sepet ürünü ilan bilgisi alınamadı:", sepetVerisi.ilanId, error);
+            }
           }
 
           const dijital =
@@ -68,7 +76,12 @@ function Cart() {
           return {
             id: sepetDoc.id,
             ...sepetVerisi,
+            ilanId: sepetVerisi.ilanId,
             adet: guvenliAdet,
+            baslik: ilan?.baslik || sepetVerisi.baslik || "Ürün",
+            fiyat: ilan?.fiyat ?? sepetVerisi.fiyat,
+            resim: ilan?.resim || sepetVerisi.resim,
+            satici: ilan?.sahip || sepetVerisi.satici,
             urunTipi: ilan?.urunTipi || sepetVerisi.urunTipi || "",
             fizikselKargo: typeof ilan?.fizikselKargo === "boolean"
               ? ilan.fizikselKargo
@@ -77,14 +90,19 @@ function Cart() {
               ? ilan.dijitalTeslimat
               : sepetVerisi.dijitalTeslimat,
             kategori: ilan?.kategori || sepetVerisi.kategori || "",
-            stok
+            stok,
+            ilanMevcut
           };
         }));
 
         console.log("Sepette bulunan:", liste);
 
         setUrunler(liste);
+        setSepetYukleniyor(false);
 
+      }, (error) => {
+        console.error("Sepet dinlenemedi:", error);
+        setSepetYukleniyor(false);
       });
 
       return () => unsub();
@@ -207,7 +225,11 @@ function Cart() {
       <h1>🛒 Sepetim ({urunler.length})</h1>
 
       {
-        urunler.length === 0 ? (
+        sepetYukleniyor ? (
+
+          <h2>Sepetiniz yükleniyor...</h2>
+
+        ) : urunler.length === 0 ? (
 
           <h2>Sepetiniz boş.</h2>
 

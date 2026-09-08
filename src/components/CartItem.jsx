@@ -41,6 +41,8 @@ function CartItem({
     Number.isInteger(urun.stok) &&
     urun.adet >= urun.stok;
 
+  const ilanKullanilamiyor = urun.ilanMevcut === false;
+
   return (
 
     <div className="cart-card">
@@ -95,7 +97,9 @@ function CartItem({
 
         <p className="stock-text">
 
-          {dijitalUrun
+          {ilanKullanilamiyor
+            ? "🔴 İlan bilgisine şu anda ulaşılamıyor"
+            : dijitalUrun
             ? "🟢 Dijital ürün"
             : Number.isInteger(urun.stok)
               ? `🟢 ${urun.stok} adet stokta`
@@ -154,8 +158,8 @@ function CartItem({
 
             type="button"
             aria-label={`${urun.baslik} adedini artır`}
-            disabled={stokSinirinda}
-            title={stokSinirinda ? "Stok sınırına ulaşıldı" : "Adedi artır"}
+            disabled={stokSinirinda || ilanKullanilamiyor}
+            title={ilanKullanilamiyor ? "İlan bilgisi kullanılamıyor" : stokSinirinda ? "Stok sınırına ulaşıldı" : "Adedi artır"}
             onClick={() => adetArttir(urun)}
 
           >
