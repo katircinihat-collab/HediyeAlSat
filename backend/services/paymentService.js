@@ -13,6 +13,7 @@ const orderModel = require("../models/orderModel");
 const { PaymentValidationError, validateNormalPayment, buildIyzicoBasket } = require("./paymentValidationService");
 const { validateRetrievedPayment, mapPaymentItemTransactions, finalizePayment } = require("./paymentCallbackService");
 const { reserveStock, releaseReservation, releaseExpiredReservations } = require("./stockReservationService");
+const { resolveBuyerIdentity } = require("./buyerIdentityService");
 
 const KOMISYON_ORANI = 0.08;
 
@@ -55,6 +56,8 @@ async function createPayment(data, authenticatedUser, requestContext = {}) {
         Boolean(sponsorBasvuruId);
 
     const email = authenticatedUser.email;
+    // Ödeme body içindeki identityNumber hiçbir zaman güven kaynağı değildir.
+    const identityNumber = await resolveBuyerIdentity(authenticatedUser.uid);
     let trustedSiparisIds = siparisIds;
     let trustedPrice;
     let trustedBasketItems;
@@ -224,10 +227,6 @@ async function createPayment(data, authenticatedUser, requestContext = {}) {
     */
 
     const productionMode = process.env.NODE_ENV === "production";
-    const identityNumber = process.env.IYZIPAY_BUYER_IDENTITY_NUMBER || (productionMode ? "" : "11111111111");
-    if (!identityNumber) {
-        throw new PaymentValidationError("Ödeme kimlik yapılandırması eksik.", 503, "BUYER_IDENTITY_CONFIG_MISSING");
-    }
     const trustedAddress = trustedBuyer?.address || (productionMode ? "" : "Adapazarı");
     const trustedCity = trustedBuyer?.city || (productionMode ? "" : "Sakarya");
     if (!sponsorOdeme && (!trustedAddress || !trustedCity) && trustedPaymentItems.some((item) => item.itemType === "PHYSICAL")) {

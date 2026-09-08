@@ -73,6 +73,8 @@ const orderClaimRoutes =
     require("./routes/orderClaimRoutes");
 const maintenanceRoutes =
     require("./routes/maintenanceRoutes");
+const buyerIdentityRoutes =
+    require("./routes/buyerIdentityRoutes");
 const { startWalletReleaseJob } =
     require("./jobs/walletReleaseJob");
 
@@ -89,6 +91,11 @@ const { startWalletReleaseJob } =
 app.use(
     "/api/payment",
     paymentRoutes
+);
+
+app.use(
+    "/api/buyer-identity",
+    buyerIdentityRoutes
 );
 
 

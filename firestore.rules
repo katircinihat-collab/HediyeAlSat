@@ -120,6 +120,11 @@ service cloud.firestore {
       allow create, update, delete: if false;
     }
 
+    // Hassas alıcı kimliği yalnız authenticated backend Admin SDK üzerinden yönetilir.
+    match /buyerIdentities/{uid} {
+      allow read, create, update, delete: if false;
+    }
+
     match /profiller/{uid} {
       allow read: if isOwnerUid(uid) || isAdmin();
       allow create: if isOwnerUid(uid)

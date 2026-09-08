@@ -762,3 +762,13 @@ test("58 - withdrawal finalization audit kaydı client ve admin client erişimin
   await assertFails(updateDoc(adminRef, { amount: 1 }));
   await assertFails(deleteDoc(adminRef));
 });
+
+test("59 - buyer identity kayıtları client ve admin client erişimine tamamen kapalıdır", async () => {
+  const ownerRef = doc(dbFor(ownerAuth), "buyerIdentities", ownerAuth.uid);
+  const adminRef = doc(dbFor(adminAuth), "buyerIdentities", ownerAuth.uid);
+  await assertFails(getDoc(ownerRef));
+  await assertFails(getDoc(adminRef));
+  await assertFails(setDoc(ownerRef, { identityNumber: "10000000146" }));
+  await assertFails(updateDoc(adminRef, { last4: "0146" }));
+  await assertFails(deleteDoc(adminRef));
+});

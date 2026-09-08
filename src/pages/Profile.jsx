@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { auth, db } from "../firebase";
+import { apiUrl } from "../config/api";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import "../styles/pages/profile.css";
@@ -50,6 +51,9 @@ function Profile() {
   const [yukleniyor, setYukleniyor] = useState(true);
   const [kaydediliyor, setKaydediliyor] = useState(false);
   const [basariMesaji, setBasariMesaji] = useState("");
+  const [kimlikNumarasi, setKimlikNumarasi] = useState("");
+  const [maskeliKimlik, setMaskeliKimlik] = useState("");
+  const [kimlikKaydediliyor, setKimlikKaydediliyor] = useState(false);
 
   const profilDegisti = useMemo(
     () => JSON.stringify(profilNormallestir(profil)) !== JSON.stringify(kayitliProfil),
@@ -64,6 +68,19 @@ function Profile() {
       }
 
       try {
+        try {
+          const token = await user.getIdToken();
+          const kimlikCevabi = await fetch(apiUrl("/api/buyer-identity"), {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (kimlikCevabi.ok) {
+            const kimlikVerisi = await kimlikCevabi.json();
+            setMaskeliKimlik(kimlikVerisi.masked || "");
+          }
+        } catch {
+          // Kimlik servisi geçici olarak erişilemezse normal profil yine yüklenir.
+        }
+
         const snapshot = await getDoc(doc(db, "profiller", user.uid));
 
         if (snapshot.exists()) {
@@ -150,6 +167,38 @@ function Profile() {
     }
   }
 
+  async function kimlikKaydet() {
+    const user = auth.currentUser;
+    if (!user || kimlikKaydediliyor) return;
+    const normalized = kimlikNumarasi.replace(/\D/g, "");
+    if (!/^\d{11}$/.test(normalized)) {
+      alert("T.C. kimlik numarası 11 rakam olmalıdır.");
+      return;
+    }
+
+    setKimlikKaydediliyor(true);
+    try {
+      const token = await user.getIdToken();
+      const response = await fetch(apiUrl("/api/buyer-identity"), {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ identityNumber: normalized })
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.message || "Kimlik bilgisi kaydedilemedi.");
+      setMaskeliKimlik(result.masked || "");
+      setKimlikNumarasi("");
+      setBasariMesaji("Kimlik bilginiz güvenli biçimde kaydedildi.");
+    } catch (error) {
+      alert(error.message || "Kimlik bilgisi kaydedilemedi.");
+    } finally {
+      setKimlikKaydediliyor(false);
+    }
+  }
+
   return (
     <>
       <Navbar />
@@ -197,6 +246,35 @@ function Profile() {
                 autoComplete="name"
               />
             </label>
+
+            <section className="profile-form-section">
+              <h2>Ödeme Kimliği</h2>
+              <p>
+                iyzico ödeme işlemleri için gereklidir. Numaranız yalnız güvenli backend
+                kaydında şifreli tutulur ve burada tam olarak gösterilmez.
+              </p>
+              {maskeliKimlik && <small>Kayıtlı kimlik: {maskeliKimlik}</small>}
+              <label>
+                T.C. Kimlik Numarası
+                <input
+                  type="password"
+                  inputMode="numeric"
+                  autoComplete="off"
+                  maxLength={11}
+                  placeholder={maskeliKimlik || "11 haneli kimlik numarası"}
+                  value={kimlikNumarasi}
+                  onChange={(event) => setKimlikNumarasi(event.target.value.replace(/\D/g, "").slice(0, 11))}
+                />
+              </label>
+              <button
+                type="button"
+                className="profile-save-btn"
+                disabled={kimlikKaydediliyor || kimlikNumarasi.length !== 11}
+                onClick={kimlikKaydet}
+              >
+                {kimlikKaydediliyor ? "Kaydediliyor..." : "Kimlik Bilgisini Güvenli Kaydet"}
+              </button>
+            </section>
 
             <section id="telefon" className="profile-form-section">
               <h2>☎️ Telefon Numaram</h2>
