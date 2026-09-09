@@ -15,9 +15,20 @@ function sanitizeCargoText(value, fieldName, maxLength) {
     return clean;
 }
 
-function validateSellerTransition(order, requestedStatus) {
+function isDigitalOrder(order, listing) {
+    const source = listing || order;
+    return source?.urunTipi === "dijital"
+        || source?.fizikselKargo === false
+        || source?.dijitalTeslimat === true
+        || order?.teslimatTipi === "dijital";
+}
+
+function validateSellerTransition(order, requestedStatus, listing = null) {
     if (!order) throw new OrderStatusError("Sipariş bulunamadı.", 404, "ORDER_NOT_FOUND");
     if (order.odemeDurumu !== true) throw new OrderStatusError("Ödemesi alınmamış sipariş güncellenemez.", 409, "ORDER_NOT_PAID");
+    if (isDigitalOrder(order, listing)) {
+        throw new OrderStatusError("Dijital siparişler fiziksel hazırlama veya kargo durumlarına geçirilemez.", 409, "DIGITAL_SHIPPING_FORBIDDEN");
+    }
 
     const current = normalizeOrderStatus(order.durum);
     const requested = normalizeOrderStatus(requestedStatus);
@@ -34,8 +45,8 @@ function sellerOwnsOrder(order, user) {
     ));
 }
 
-function buildSellerStatusUpdate(order, body, FieldValue) {
-    const { requested } = validateSellerTransition(order, body.durum);
+function buildSellerStatusUpdate(order, body, FieldValue, listing = null) {
+    const { requested } = validateSellerTransition(order, body.durum, listing);
     const update = { durum: requested, guncellenmeTarihi: FieldValue.serverTimestamp() };
     if (requested === ORDER_STATUSES.KARGODA) {
         update.kargoFirma = sanitizeCargoText(body.kargoFirma, "Kargo firması", 80);
@@ -45,4 +56,4 @@ function buildSellerStatusUpdate(order, body, FieldValue) {
     return update;
 }
 
-module.exports = { OrderStatusError, sellerOwnsOrder, validateSellerTransition, buildSellerStatusUpdate };
+module.exports = { OrderStatusError, sellerOwnsOrder, isDigitalOrder, validateSellerTransition, buildSellerStatusUpdate };

@@ -30,3 +30,20 @@ test("legacy Teslim canonical Teslim Edildi olur ve değiştirilemez", () => {
     assert.throws(() => validateSellerTransition({ ...paid, durum: "Teslim" }, "Hazırlanıyor"), /izin verilmiyor/);
 });
 test("sipariş yoksa güncelleme reddedilir", () => assert.throws(() => validateSellerTransition(null, "Hazırlanıyor"), /bulunamadı/));
+test("authoritative dijital ilan fiziksel hazırlama durumunu reddeder", () => {
+    assert.throws(
+        () => validateSellerTransition(paid, "Hazırlanıyor", { urunTipi: "dijital", fizikselKargo: false }),
+        (error) => error.code === "DIGITAL_SHIPPING_FORBIDDEN"
+    );
+});
+test("dijital siparişe kargo ve takip bilgisi yazılamaz", () => {
+    assert.throws(
+        () => buildSellerStatusUpdate(
+            { ...paid, durum: "Hazırlanıyor" },
+            { durum: "Kargoda", kargoFirma: "Aras", kargoNo: "TR123" },
+            { serverTimestamp: timestamp },
+            { dijitalTeslimat: true }
+        ),
+        (error) => error.code === "DIGITAL_SHIPPING_FORBIDDEN"
+    );
+});

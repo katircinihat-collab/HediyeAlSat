@@ -237,3 +237,24 @@ test("rezervasyon kayıpsa callback manuel incelemeye düşer", async () => {
         (error) => error.code === "STOCK_RESERVATION_MISSING" && error.paymentStatus === "MANUAL_REVIEW"
     );
 });
+
+test("başarılı dijital callback otomatik teslim ve 48 saatlik hakediş süresi oluşturur", async () => {
+    const seed = normalSeed();
+    seed["siparisler/order-1"] = { ...seed["siparisler/order-1"], ilanId: "digital-1", kargoUcreti: 0 };
+    seed["ilanlar/digital-1"] = { urunTipi: "dijital", fizikselKargo: false, dijitalTeslimat: true, stok: 7 };
+    const db = memoryFirestore(seed);
+    const finalizedAt = new Date("2026-09-09T10:00:00Z");
+    await finalizePayment({ firestore: db, FieldValue: { serverTimestamp: timestamp }, conversationId: "conv-1", paymentId: "pay-1", now: () => finalizedAt });
+    const order = db.data.get("siparisler/order-1");
+    assert.equal(order.odemeDurumu, true);
+    assert.equal(order.durum, "Teslim Edildi");
+    assert.equal(order.teslimatTipi, "dijital");
+    assert.equal(order.teslimatDogrulandi, true);
+    assert.equal(order.hakEdisBlokeBitis.getTime(), finalizedAt.getTime() + (48 * 60 * 60 * 1000));
+    assert.equal(db.data.get("wallets/seller@example.com").pending, 92);
+    assert.equal(db.data.get("ilanlar/digital-1").stok, 7);
+    assert.equal(db.data.get("bakiyeHareketleri/pay-1_order-1").blockageResolvedDate.getTime(), order.hakEdisBlokeBitis.getTime());
+    const again = await finalizePayment({ firestore: db, FieldValue: { serverTimestamp: timestamp }, conversationId: "conv-1", paymentId: "pay-1", now: () => finalizedAt });
+    assert.equal(again.alreadyFinalized, true);
+    assert.equal(db.data.get("wallets/seller@example.com").pending, 92);
+});

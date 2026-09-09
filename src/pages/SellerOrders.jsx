@@ -241,7 +241,7 @@ Henüz sipariş bulunmuyor.
 
 (
 
-liste.map((s)=>(
+ liste.map((s)=>(
 
 <div
 
@@ -362,7 +362,8 @@ s.durum==="Kargoya Verildi"
 </div>
 
 <div className="seller-order-actions">
-{(s.durum==="Ödendi"||s.durum==="Bekliyor")&&(
+{(s.urunTipi==="dijital"||s.fizikselKargo===false||s.dijitalTeslimat===true||s.teslimatTipi==="dijital")&&<span>🎨 Dijital teslimat tamamlandı</span>}
+{!(s.urunTipi==="dijital"||s.fizikselKargo===false||s.dijitalTeslimat===true||s.teslimatTipi==="dijital")&&(s.durum==="Ödendi"||s.durum==="Bekliyor")&&(
 <button
 
 className="prepare-btn"
@@ -382,7 +383,7 @@ s.id,
 
 </button>
 )}
-{s.durum==="Hazırlanıyor"&&(<>
+{!(s.urunTipi==="dijital"||s.fizikselKargo===false||s.dijitalTeslimat===true||s.teslimatTipi==="dijital")&&s.durum==="Hazırlanıyor"&&(<>
 <input
 type="text"
 placeholder="Kargo firması"
@@ -414,7 +415,7 @@ s.id,
 
 </button>
  </>)}
-{(s.durum==="Kargoda"||s.durum==="Kargoya Verildi")&&<span>Teslimat Bekleniyor</span>}
+{!(s.urunTipi==="dijital"||s.fizikselKargo===false||s.dijitalTeslimat===true||s.teslimatTipi==="dijital")&&(s.durum==="Kargoda"||s.durum==="Kargoya Verildi")&&<span>Teslimat Bekleniyor</span>}
 {(s.durum==="Teslim"||s.durum==="Teslim Edildi")&&<span>Teslim Edildi</span>}
 {payoutDisplay(s)&&<span><b>{payoutDisplay(s).label}</b><br/>{payoutDisplay(s).detail}</span>}
 <SellerReturnStatus claimId={s.aktifTalepId}/>

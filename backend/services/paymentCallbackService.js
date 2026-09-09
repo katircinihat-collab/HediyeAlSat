@@ -1,3 +1,5 @@
+const { HOLD_DURATION_MS } = require("./deliveryConfirmationService");
+
 class PaymentCallbackError extends Error {
     constructor(message, code, status = "FAILED") {
         super(message);
@@ -29,6 +31,29 @@ function calculateOrderEarnings(order) {
         komisyon: fromKurus(commissionKurus),
         netTutar: fromKurus(productTotalKurus - commissionKurus),
         komisyonOrani: 0.08
+    };
+}
+
+function isDigitalListing(listing) {
+    return listing?.urunTipi === "dijital"
+        || listing?.fizikselKargo === false
+        || listing?.dijitalTeslimat === true;
+}
+
+function buildDigitalDeliveryUpdate(finalizedAt, FieldValue) {
+    return {
+        durum: "Teslim Edildi",
+        urunTipi: "dijital",
+        fizikselKargo: false,
+        dijitalTeslimat: true,
+        teslimatTipi: "dijital",
+        teslimatDogrulandi: true,
+        teslimatDogrulamaTipi: "dijital_otomatik",
+        teslimatDogrulamaTarihi: FieldValue.serverTimestamp(),
+        dijitalTeslimatTarihi: FieldValue.serverTimestamp(),
+        hakEdisBlokeBaslangic: FieldValue.serverTimestamp(),
+        hakEdisBlokeBitis: new Date(finalizedAt.getTime() + HOLD_DURATION_MS),
+        hakEdisDurumu: "Beklemede"
     };
 }
 
@@ -80,7 +105,8 @@ function mapPaymentItemTransactions(result, payment) {
     });
 }
 
-async function finalizePayment({ firestore, FieldValue, conversationId, paymentId, itemTransactions = null, currency = "TRY" }) {
+async function finalizePayment({ firestore, FieldValue, conversationId, paymentId, itemTransactions = null, currency = "TRY", now = () => new Date() }) {
+    const finalizedAt = now();
     return firestore.runTransaction(async (transaction) => {
         const paymentRef = firestore.collection("odemeler").doc(conversationId);
         const lockRef = firestore.collection("paymentFinalizations").doc(paymentId);
@@ -147,7 +173,7 @@ async function finalizePayment({ firestore, FieldValue, conversationId, paymentI
             const walletSnapshots = await Promise.all(walletEmails.map((email) => transaction.get(walletRefs.get(email))));
             const walletData = new Map(walletEmails.map((email, index) => [email, walletSnapshots[index].exists ? walletSnapshots[index].data() : {}]));
             const stockOrders = orders.filter((order) => order.odemeDurumu !== true && (order.ilanId || order.urunId));
-            const listingIds = [...new Set(stockOrders.map((order) => order.ilanId || order.urunId))];
+            const listingIds = [...new Set(orders.map((order) => order.ilanId || order.urunId).filter(Boolean))];
             const listingRefs = new Map(listingIds.map((id) => [id, firestore.collection("ilanlar").doc(id)]));
             const listingSnapshots = await Promise.all(listingIds.map((id) => transaction.get(listingRefs.get(id))));
             const listingData = new Map(listingIds.map((id, index) => [id, listingSnapshots[index]]));
@@ -155,13 +181,18 @@ async function finalizePayment({ firestore, FieldValue, conversationId, paymentI
 
             orders.forEach((order, index) => {
                 const itemTransaction = itemTransactions?.find((item) => item.orderId === order.id);
+                const listingId = order.ilanId || order.urunId;
+                const listing = listingId ? listingData.get(listingId)?.data?.() : null;
+                const digital = isDigitalListing(listing);
+                const digitalDelivery = digital ? buildDigitalDeliveryUpdate(finalizedAt, FieldValue) : null;
                 if (!movementSnapshots[index].exists) {
                     const hesap = calculateOrderEarnings(order);
                     walletAdds.set(order.satici, Number(((walletAdds.get(order.satici) || 0) + hesap.netTutar).toFixed(2)));
                     transaction.set(movementRefs[index], {
                         siparisId: order.id, satici: order.satici, alici: order.alici || "",
                         toplamTutar: hesap.toplamTutar, komisyon: hesap.komisyon, netTutar: hesap.netTutar,
-                        komisyonOrani: hesap.komisyonOrani, blockageResolvedDate: null,
+                        komisyonOrani: hesap.komisyonOrani,
+                        blockageResolvedDate: digitalDelivery?.hakEdisBlokeBitis || null,
                         tip: "Satış", durum: "Bekliyor", paymentId, conversationId,
                         tarih: FieldValue.serverTimestamp()
                     });
@@ -169,8 +200,14 @@ async function finalizePayment({ firestore, FieldValue, conversationId, paymentI
                 if (order.odemeDurumu !== true) {
                     transaction.update(order.ref, {
                         odemeDurumu: true, durum: "Ödendi", paymentId, conversationId,
+                        ...(digitalDelivery || {}),
                         ...(itemTransaction ? { paymentTransactionId: itemTransaction.paymentTransactionId, iyzicoItemPrice: itemTransaction.itemPrice, iyzicoItemPaidPrice: itemTransaction.itemPaidPrice, paymentCurrency: itemTransaction.currency || currency } : {}),
                         odemeTarihi: FieldValue.serverTimestamp(), guncellenmeTarihi: FieldValue.serverTimestamp()
+                    });
+                } else if (digitalDelivery && order.teslimatDogrulandi !== true) {
+                    transaction.update(order.ref, {
+                        ...digitalDelivery,
+                        guncellenmeTarihi: FieldValue.serverTimestamp()
                     });
                 }
             });
@@ -214,6 +251,7 @@ async function finalizePayment({ firestore, FieldValue, conversationId, paymentI
                 const decrement = stockOrders
                     .filter((order) => (order.ilanId || order.urunId) === listingId)
                     .reduce((sum, order) => sum + Number(order.adet || 1), 0);
+                if (decrement <= 0) return;
                 const currentStock = Number(snapshot.data().stok ?? snapshot.data().adet);
                 if (!Number.isInteger(currentStock) || currentStock < decrement) {
                     throw new PaymentCallbackError(
@@ -240,4 +278,4 @@ async function finalizePayment({ firestore, FieldValue, conversationId, paymentI
     });
 }
 
-module.exports = { PaymentCallbackError, validateRetrievedPayment, mapPaymentItemTransactions, finalizePayment, calculateOrderEarnings, toKurus };
+module.exports = { PaymentCallbackError, validateRetrievedPayment, mapPaymentItemTransactions, finalizePayment, calculateOrderEarnings, isDigitalListing, buildDigitalDeliveryUpdate, toKurus };

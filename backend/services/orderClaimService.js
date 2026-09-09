@@ -49,7 +49,20 @@ async function readReturnContext(tx, firestore, claimId) {
     assertAcceptedPhysicalReturn(claim, order, listingSnap.exists ? listingSnap.data() : null);
     return { claimRef, claim, orderRef, order, listingId };
 }
-function validateClaimRequest(order, user, body) {
+function parseDate(value) {
+    if (!value) return null;
+    if (value instanceof Date) return value;
+    if (typeof value.toDate === "function") return value.toDate();
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+function isDigitalOrder(order) {
+    return order?.urunTipi === "dijital"
+        || order?.fizikselKargo === false
+        || order?.dijitalTeslimat === true
+        || order?.teslimatTipi === "dijital";
+}
+function validateClaimRequest(order, user, body, now = new Date()) {
     if (!order) throw new OrderClaimError("Sipariş bulunamadı.", 404, "ORDER_NOT_FOUND");
     if (!ownsOrder(order, user)) throw new OrderClaimError("Bu sipariş için talep oluşturamazsınız.", 403, "ORDER_FORBIDDEN");
     if (order.odemeDurumu !== true) throw new OrderClaimError("Ödemesi alınmamış sipariş için talep oluşturulamaz.", 409, "ORDER_NOT_PAID");
@@ -57,6 +70,19 @@ function validateClaimRequest(order, user, body) {
     if (!tip) throw new OrderClaimError("Talep tipi geçersiz.");
     const status = normalizeOrderStatus(order.durum);
     if (status === ORDER_STATUSES.IPTAL || status === ORDER_STATUSES.IADE) throw new OrderClaimError("Bu sipariş için talep oluşturulamaz.", 409, "ORDER_CLOSED");
+    if (isDigitalOrder(order)) {
+        if (tip !== "itiraz") {
+            throw new OrderClaimError("Dijital ürünlerde fiziksel iade akışı kullanılamaz.", 409, "DIGITAL_RETURN_NOT_AVAILABLE");
+        }
+        const deadline = parseDate(order.hakEdisBlokeBitis);
+        if (status !== ORDER_STATUSES.TESLIM_EDILDI || order.teslimatDogrulandi !== true || !deadline) {
+            throw new OrderClaimError("Dijital teslimat koruma süresi doğrulanamadı.", 409, "DIGITAL_DELIVERY_NOT_FINALIZED");
+        }
+        if (now.getTime() > deadline.getTime()) {
+            throw new OrderClaimError("Dijital ürün için 48 saatlik sorun bildirme süresi dolmuş.", 409, "DIGITAL_CLAIM_WINDOW_EXPIRED");
+        }
+        return { tip, nedenKodu: cleanText(body.reasonCode, 80, true), aciklama: cleanText(body.description, 2000) };
+    }
     if (tip === "iade" && (status !== ORDER_STATUSES.TESLIM_EDILDI || order.teslimatDogrulandi !== true || order.urunTipi === "dijital")) {
         throw new OrderClaimError("İade talebi yalnız teslimatı doğrulanmış fiziksel siparişlerde açılabilir.", 409, "RETURN_NOT_AVAILABLE");
     }
@@ -77,9 +103,10 @@ async function createClaim({ firestore, orderId, user, body, now = () => new Dat
         const orderRef = firestore.collection("siparisler").doc(orderId);
         const [orderSnap, guardSnap] = await Promise.all([tx.get(orderRef), tx.get(guardRef)]);
         if (!orderSnap.exists) throw new OrderClaimError("Sipariş bulunamadı.", 404, "ORDER_NOT_FOUND");
-        const input = validateClaimRequest(orderSnap.data(), user, body || {});
+        const timestamp = now();
+        const input = validateClaimRequest(orderSnap.data(), user, body || {}, timestamp);
         if (guardSnap.exists) return { idempotent: true, claimId: guardSnap.data().claimId };
-        const order = orderSnap.data(); const timestamp = now();
+        const order = orderSnap.data();
         const claim = { orderId, buyerUid: user.uid, buyerEmail: user.email || null, sellerUid: order.saticiUid || null, sellerEmail: order.saticiEmail || order.satici || null, ...input, durum: CLAIM_STATUSES.OPEN, createdAt: timestamp, updatedAt: timestamp, resolvedAt: null, resolvedBy: null, resolutionNote: null, payoutBlock: true };
         tx.create(claimRef, claim);
         tx.create(guardRef, { orderId, claimId: claimRef.id, createdAt: timestamp });

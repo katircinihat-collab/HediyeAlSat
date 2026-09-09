@@ -12,7 +12,12 @@ exports.updateSellerStatus = async (req, res) => {
             if (!snapshot.exists) throw new OrderStatusError("Sipariş bulunamadı.", 404, "ORDER_NOT_FOUND");
             const order = snapshot.data();
             if (!sellerOwnsOrder(order, req.user)) throw new OrderStatusError("Bu siparişi güncelleme yetkiniz yok.", 403, "ORDER_FORBIDDEN");
-            const update = buildSellerStatusUpdate(order, req.body || {}, FieldValue);
+            const listingId = order.ilanId || order.urunId;
+            const listingSnapshot = listingId
+                ? await transaction.get(firestore.collection("ilanlar").doc(listingId))
+                : null;
+            const listing = listingSnapshot?.exists ? listingSnapshot.data() : null;
+            const update = buildSellerStatusUpdate(order, req.body || {}, FieldValue, listing);
             transaction.update(ref, update);
             return update;
         });

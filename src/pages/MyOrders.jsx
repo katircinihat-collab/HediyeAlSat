@@ -230,7 +230,11 @@ function MyOrders() {
       </button>
     )}
 
-    {(siparis.durum === "Kargoda" || siparis.durum === "Kargoya Verildi") && (
+    {siparis.urunTipi === "dijital" && siparis.odemeDurumu === true && (
+      <span className="order-claim-message">Dijital teslimat tamamlandı. Sorunları 48 saat içinde bildirebilirsiniz.</span>
+    )}
+
+    {siparis.urunTipi !== "dijital" && (siparis.durum === "Kargoda" || siparis.durum === "Kargoya Verildi") && (
       <button type="button" className="buy-btn" disabled={dogrulanan === siparis.id} onClick={() => teslimAldim(siparis)}>
         {dogrulanan === siparis.id ? "Doğrulanıyor..." : "Teslim Aldım"}
       </button>
