@@ -296,6 +296,27 @@ test("14 - kullanıcı başka kullanıcının profilini değiştiremez", async (
   ));
 });
 
+test("14b - yeni kullanıcı kendi UID anahtarlı users belgesini oluşturabilir", async () => {
+  const ref = doc(dbFor(ownerAuth), "users", ownerAuth.uid);
+  await assertSucceeds(setDoc(ref, {
+    email: ownerAuth.email,
+    createdAt: new Date()
+  }));
+  await assertSucceeds(getDoc(ref));
+});
+
+test("14c - users sahipliği UID ile sınırlıdır ve sahte UID alanı kabul edilmez", async () => {
+  await assertFails(setDoc(
+    doc(dbFor(ownerAuth), "users", otherAuth.uid),
+    { email: ownerAuth.email, createdAt: new Date() }
+  ));
+  await assertFails(getDoc(doc(dbFor(otherAuth), "users", ownerAuth.uid)));
+  await assertFails(setDoc(
+    doc(dbFor(ownerAuth), "users", ownerAuth.uid),
+    { uid: ownerAuth.uid, email: ownerAuth.email, createdAt: new Date() }
+  ));
+});
+
 test("15 - mağaza sahibi izin verilen profil alanını değiştirebilir", async () => {
   await assertSucceeds(updateDoc(
     doc(dbFor(ownerAuth), "magazalar", "store"),

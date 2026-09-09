@@ -1,314 +1,66 @@
 import { useState } from "react";
-import { auth, db } from "../firebase";
-import { doc, setDoc, serverTimestamp } from "firebase/firestore";
-import {
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  sendPasswordResetEmail,
-  setPersistence,
-  browserLocalPersistence,
-  browserSessionPersistence
-} from "firebase/auth";
+import { Link, useNavigate } from "react-router-dom";
+import { browserLocalPersistence, browserSessionPersistence, sendPasswordResetEmail, setPersistence, signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "../firebase";
+import { firebaseAuthErrorMessage } from "../utils/auth";
+import "../styles/pages/login.css";
 
-import {
-  Link,
-  useNavigate
-} from "react-router-dom";
-
-import "../App.css";
-
-function Login(){
-
+function Login() {
   const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [message, setMessage] = useState({ type: "", text: "" });
 
-  const [email,setEmail]=useState("");
-  const [sifre,setSifre]=useState("");
-  const [beniHatirla,setBeniHatirla]=useState(true);
-
-  const [sonKullanicilar,setSonKullanicilar]=useState(
-    JSON.parse(localStorage.getItem("sonKullanicilar")) || []
-  );
-
-
-
-  async function giris(){
-
-    if(!email || !sifre){
-
-      alert("Email ve şifre giriniz.");
-
+  async function handleLogin(event) {
+    event.preventDefault();
+    if (submitting) return;
+    if (!email.trim() || !password) {
+      setMessage({ type: "error", text: "E-posta ve şifrenizi girin." });
       return;
-
     }
-
-    try{
-
-      await setPersistence(
-
-        auth,
-
-        beniHatirla
-          ? browserLocalPersistence
-          : browserSessionPersistence
-
-      );
-
-      await signInWithEmailAndPassword(
-
-        auth,
-
-        email,
-
-        sifre
-
-      );
-
-      let liste =
-      JSON.parse(localStorage.getItem("sonKullanicilar")) || [];
-
-      liste = liste.filter(x=>x!==email);
-
-      liste.unshift(email);
-
-      liste = liste.slice(0,5);
-
-      localStorage.setItem(
-        "sonKullanicilar",
-        JSON.stringify(liste)
-      );
-
-      setSonKullanicilar(liste);
-
-      alert("✅ Giriş başarılı");
-
-      navigate("/");
-
+    setSubmitting(true);
+    setMessage({ type: "", text: "" });
+    try {
+      await setPersistence(auth, rememberMe ? browserLocalPersistence : browserSessionPersistence);
+      await signInWithEmailAndPassword(auth, email.trim(), password);
+      navigate("/", { replace: true });
+    } catch (error) {
+      setMessage({ type: "error", text: firebaseAuthErrorMessage(error) });
+    } finally {
+      setSubmitting(false);
     }
-
-    catch(error){
-
-      alert(error.message);
-
-    }
-
   }
 
-
-
-  async function kayit(){
-
-    if(!email || !sifre){
-
-      alert("Email ve şifre giriniz.");
-
+  async function resetPassword() {
+    if (!email.trim()) {
+      setMessage({ type: "error", text: "Şifre sıfırlamak için e-posta adresinizi girin." });
       return;
-
     }
-
-    try{
-
-      const userCredential = await createUserWithEmailAndPassword(
-  auth,
-  email,
-  sifre
-);
-
-await setDoc(doc(db, "users", userCredential.user.uid), {
-  uid: userCredential.user.uid,
-  email: userCredential.user.email,
-  createdAt: serverTimestamp()
-});
-
-      alert("🎉 Hesabınız oluşturuldu.");
-
-      navigate("/");
-
+    try {
+      await sendPasswordResetEmail(auth, email.trim());
+      setMessage({ type: "success", text: "Şifre sıfırlama bağlantısı e-posta adresinize gönderildi." });
+    } catch (error) {
+      setMessage({ type: "error", text: firebaseAuthErrorMessage(error) });
     }
-
-    catch(error){
-
-      alert(error.message);
-
-    }
-
   }
 
-
-
-  async function sifremiUnuttum(){
-
-    if(!email){
-
-      alert("Önce e-posta adresinizi yazınız.");
-
-      return;
-
-    }
-
-    try{
-
-      await sendPasswordResetEmail(
-
-        auth,
-
-        email
-
-      );
-
-      alert("📧 Şifre sıfırlama bağlantısı gönderildi.");
-
-    }
-
-    catch(error){
-
-      alert(error.message);
-
-    }
-
-  }
-
-
-
-  return(
-
-    <div className="page">
-
-      <div className="login-box">
-
-        <h1>🔐 Giriş Yap</h1>
-
-        {sonKullanicilar.length>0 && (
-
-          <div className="last-users">
-
-            <h3>Son Kullanıcılar</h3>
-
-            {
-
-            sonKullanicilar.map((mail,index)=>(
-
-              <div
-
-                key={index}
-
-                className="last-user"
-
-                onClick={()=>setEmail(mail)}
-
-              >
-
-                👤 {mail}
-
-              </div>
-
-            ))
-
-            }
-
-          </div>
-
-        )}
-
-        <input
-
-          type="email"
-
-          placeholder="Email"
-
-          value={email}
-
-          onChange={(e)=>setEmail(e.target.value)}
-
-        />
-
-
-
-        <input
-
-          type="password"
-
-          placeholder="Şifre"
-
-          value={sifre}
-
-          onChange={(e)=>setSifre(e.target.value)}
-
-        />
-
-
-
-        <label
-          style={{
-            display:"flex",
-            alignItems:"center",
-            gap:"8px",
-            marginTop:"15px",
-            marginBottom:"20px",
-            cursor:"pointer"
-          }}
-        >
-
-          <input
-
-            type="checkbox"
-
-            checked={beniHatirla}
-
-            onChange={(e)=>setBeniHatirla(e.target.checked)}
-
-          />
-
-          Beni Hatırla
-
-        </label>
-
-
-
-        <button
-          className="login-btn"
-          onClick={giris}
-        >
-
-          🔑 Giriş Yap
-
-        </button>
-
-
-
-        <button
-          className="register-btn"
-          onClick={kayit}
-        >
-
-          👤 Üye Ol
-
-        </button>
-
-
-
-        <button
-          className="forgot-btn"
-          onClick={sifremiUnuttum}
-        >
-
-          🔒 Şifremi Unuttum
-
-        </button>
-
-        <br/><br/>
-
-        <Link to="/">
-
-          🏠 Ana Sayfaya Dön
-
-        </Link>
-
-      </div>
-
-    </div>
-
-  );
-
+  return <main className="auth-page auth-login-page">
+    <section className="auth-card" aria-labelledby="login-title">
+      <Link className="auth-brand" to="/" aria-label="HediyeAlSat ana sayfa"><span aria-hidden="true">🎁</span><strong>Hediye<span>AlSat</span></strong></Link>
+      <header className="auth-heading"><h1 id="login-title">Tekrar hoş geldiniz</h1><p>Hesabınıza güvenle giriş yapın.</p></header>
+      <form className="auth-form" onSubmit={handleLogin} noValidate>
+        <label>E-posta<input type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="ornek@email.com" /></label>
+        <label>Şifre<span className="auth-password-field"><input type={showPassword ? "text" : "password"} autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Şifreniz" /><button type="button" onClick={() => setShowPassword((value) => !value)}>{showPassword ? "Gizle" : "Göster"}</button></span></label>
+        <div className="auth-options"><label className="auth-checkbox"><input type="checkbox" checked={rememberMe} onChange={(event) => setRememberMe(event.target.checked)} />Beni Hatırla</label><button className="auth-text-button" type="button" onClick={resetPassword}>Şifremi Unuttum</button></div>
+        {message.text && <p className={`auth-message ${message.type}`} role={message.type === "error" ? "alert" : "status"}>{message.text}</p>}
+        <button className="auth-submit" type="submit" disabled={submitting}>{submitting ? "Giriş yapılıyor..." : "Giriş Yap"}</button>
+      </form>
+      <p className="auth-switch">Henüz hesabınız yok mu? <Link to="/uye-ol">Üye Ol</Link></p>
+    </section>
+  </main>;
 }
 
 export default Login;

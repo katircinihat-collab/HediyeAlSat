@@ -30,6 +30,7 @@ import Kiralik from "./pages/Kiralik";
 import Admin from "./pages/Admin";
 import AdminDetail from "./pages/AdminDetail";
 import Login from "./pages/Login";
+import Register from "./pages/Register";
 
 import Listings from "./pages/Listings";
 
@@ -324,6 +325,11 @@ function App() {
         <Route
           path="/login"
           element={<Login />}
+        />
+
+        <Route
+          path="/uye-ol"
+          element={<Register />}
         />
 
         <Route
