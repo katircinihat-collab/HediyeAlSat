@@ -32,17 +32,17 @@ return(
 <div className="dashboard-grid">
 
 <div className="dashboard-card green">
-<span>💰 Bugünkü Kazanç</span>
+<span>💰 Bugünkü Brüt Satış</span>
 <h2>₺{bugunKazanc.toLocaleString("tr-TR")}</h2>
 </div>
 
 <div className="dashboard-card blue">
-<span>📅 Bu Ay</span>
+<span>📅 Bu Ay Brüt Satış</span>
 <h2>₺{aylikKazanc.toLocaleString("tr-TR")}</h2>
 </div>
 
 <div className="dashboard-card purple">
-<span>🏦 Toplam Kazanç</span>
+<span>🏦 Gerçekleşen Brüt Satış</span>
 <h2>₺{toplamKazanc.toLocaleString("tr-TR")}</h2>
 </div>
 

@@ -1,5 +1,6 @@
 const { firestore, FieldValue } =
     require("../config/firebase");
+const crypto = require("node:crypto");
 
 
 /*
@@ -52,7 +53,7 @@ WALLET OLUŞTUR
 ==================================================
 */
 
-async function createWallet(email) {
+async function createWallet(email, ownerUid = null) {
 
     const ref =
         walletRef(email);
@@ -75,6 +76,7 @@ async function createWallet(email) {
     await ref.set({
 
         email,
+        ...(ownerUid ? { ownerUid } : {}),
 
         balance: 0,
 
@@ -632,15 +634,19 @@ async function paraCekmeTalebiOlustur(
     tutar,
     iban,
     bankaAdi,
-    hesapSahibi
+    hesapSahibi,
+    options = {}
 ) {
 
     const miktar =
         Number(tutar);
 
+    const miktarKurus = Math.round(miktar * 100);
+
     if (
         !Number.isFinite(miktar) ||
-        miktar <= 0
+        miktar <= 0 ||
+        Math.abs(miktar * 100 - miktarKurus) > 0.000001
     ) {
 
         throw new Error(
@@ -676,13 +682,10 @@ async function paraCekmeTalebiOlustur(
                     walletSnapshot.data();
 
 
-                const balance =
-                    Number(
-                        wallet.balance || 0
-                    );
+                const balanceKurus = Math.round(Number(wallet.balance || 0) * 100);
 
 
-                if (miktar > balance) {
+                if (miktarKurus > balanceKurus) {
 
                     throw new Error(
                         "Kullanılabilir bakiye yetersiz."
@@ -700,30 +703,30 @@ async function paraCekmeTalebiOlustur(
                 }
 
 
-                const withdrawalReference =
-                    firestore
-                        .collection("paraCekmeTalepleri")
-                        .doc();
+                const ownerUid = options.ownerUid || null;
+                const rawKey = String(options.idempotencyKey || "").trim();
+                const safeKey = /^[A-Za-z0-9_-]{8,128}$/.test(rawKey) ? rawKey : "";
+                const withdrawalId = safeKey
+                    ? `wd_${crypto.createHash("sha256").update(`${ownerUid || email}:${safeKey}`).digest("hex")}`
+                    : null;
+                const withdrawalReference = safeKey
+                    ? firestore.collection("paraCekmeTalepleri").doc(withdrawalId)
+                    : firestore.collection("paraCekmeTalepleri").doc();
+
+                if (safeKey) {
+                    const existing = await transaction.get(withdrawalReference);
+                    if (existing.exists) {
+                        const existingData = existing.data();
+                        return { id: withdrawalReference.id, tutar: Number(existingData.tutar || 0), idempotent: true };
+                    }
+                }
 
 
-                const yeniBalance =
-                    Number(
-                        (
-                            balance -
-                            miktar
-                        ).toFixed(2)
-                    );
+                const yeniBalance = (balanceKurus - miktarKurus) / 100;
 
 
                 const yeniWithdrawalPending =
-                    Number(
-                        (
-                            Number(
-                                wallet.withdrawalPending || 0
-                            ) +
-                            miktar
-                        ).toFixed(2)
-                    );
+                    (Math.round(Number(wallet.withdrawalPending || 0) * 100) + miktarKurus) / 100;
 
 
                 /*
@@ -761,16 +764,21 @@ async function paraCekmeTalebiOlustur(
                     {
 
                         email,
+                        ...(ownerUid ? { ownerUid } : {}),
 
                         tutar: miktar,
 
                         iban,
+                        ibanSnapshot: iban,
 
                         bankaAdi:
                             bankaAdi || "",
 
                         hesapSahibi:
                             hesapSahibi || "",
+                        hesapSahibiSnapshot: hesapSahibi || "",
+                        bankaAdiSnapshot: bankaAdi || "",
+                        ...(safeKey ? { idempotencyKey: safeKey } : {}),
 
                         durum: "BEKLIYOR",
 

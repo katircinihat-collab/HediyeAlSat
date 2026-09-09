@@ -182,3 +182,14 @@ min-width:600px;
 }
 
 }
+
+.finance-disclaimer {
+margin:-5px 0 18px;
+padding:12px 15px;
+border:1px solid #fed7d7;
+border-radius:12px;
+background:#fff8f7;
+color:#6b4b48;
+font-size:14px;
+line-height:1.5;
+}

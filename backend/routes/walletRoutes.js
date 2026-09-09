@@ -33,6 +33,7 @@ router.get(
 router.post(
     "/save-iban",
     authMiddleware,
+    financialRateLimit,
     walletController.ibanKaydet
 );
 
@@ -45,6 +46,7 @@ router.post(
 router.post(
     "/withdraw",
     authMiddleware,
+    financialRateLimit,
     walletController.paraCek
 );
 

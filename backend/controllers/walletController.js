@@ -3,6 +3,7 @@ const walletService =
 const { firestore, FieldValue } = require("../config/firebase");
 const { finalizeManualWithdrawal, WithdrawalFinalizationError } = require("../services/withdrawalFinalizationService");
 const { rejectWithdrawal, WithdrawalRejectionError } = require("../services/withdrawalRejectionService");
+const { maskIban } = require("../utils/iban");
 
 
 /*
@@ -52,7 +53,8 @@ exports.getWallet = async (req, res) => {
 
         const wallet =
             await walletService.getWallet(
-                email
+                email,
+                req.user.uid
             );
 
 
@@ -60,7 +62,11 @@ exports.getWallet = async (req, res) => {
 
             success: true,
 
-            wallet
+            wallet: {
+                ...wallet,
+                ibanMasked: maskIban(wallet.iban),
+                minimumWithdrawalAmount: walletService.MINIMUM_WITHDRAWAL_AMOUNT
+            }
 
         });
 
@@ -116,7 +122,8 @@ exports.ibanKaydet = async (req, res) => {
 
                     hesapSahibi
 
-                }
+                },
+                req.user.uid
 
             );
 
@@ -125,7 +132,11 @@ exports.ibanKaydet = async (req, res) => {
 
             success: true,
 
-            wallet
+            wallet: {
+                ...wallet,
+                ibanMasked: maskIban(wallet.iban),
+                minimumWithdrawalAmount: walletService.MINIMUM_WITHDRAWAL_AMOUNT
+            }
 
         });
 
@@ -172,8 +183,11 @@ exports.paraCek = async (req, res) => {
 
                 email,
 
-                tutar ||
-                miktar
+                tutar || miktar,
+                {
+                    ownerUid: req.user.uid,
+                    idempotencyKey: req.get("Idempotency-Key") || req.body.idempotencyKey
+                }
 
             );
 
@@ -258,7 +272,12 @@ exports.taleplerim = async (
 
             success: true,
 
-            talepler
+            talepler: talepler.map((talep) => ({
+                ...talep,
+                ibanMasked: maskIban(talep.ibanSnapshot || talep.iban),
+                iban: undefined,
+                ibanSnapshot: undefined
+            }))
 
         });
 
@@ -303,7 +322,10 @@ exports.adminTalepler = async (
 
             success: true,
 
-            talepler
+            talepler: talepler.map((talep) => ({
+                ...talep,
+                ibanMasked: maskIban(talep.ibanSnapshot || talep.iban)
+            }))
 
         });
 

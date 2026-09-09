@@ -99,72 +99,6 @@ function AdminWithdraw() {
 
     /*
     ==================================================
-    BLOKAJ TARİHİNİ BUL
-    ==================================================
-    */
-
-    function blokajTarihiBul(talep) {
-        return (
-            talep.blockageResolvedDate ||
-            talep.blokajBitisTarihi ||
-            talep.serbestBirakmaTarihi ||
-            talep.releaseDate ||
-            null
-        );
-    }
-
-    /*
-    ==================================================
-    BLOKAJ DURUMU
-    ==================================================
-    */
-
-    function blokajDurumu(talep) {
-        const tarih =
-            tarihCevir(
-                blokajTarihiBul(talep)
-            );
-
-        if (!tarih) {
-            return {
-                durum: "Bilinmiyor",
-                renk: "#777",
-                mesaj:
-                    "Blokaj tarihi bulunamadı."
-            };
-        }
-
-        const simdi = new Date();
-
-        const fark =
-            tarih.getTime() -
-            simdi.getTime();
-
-        if (fark <= 0) {
-            return {
-                durum: "Serbest",
-                renk: "#16803c",
-                mesaj:
-                    "Blokaj süresi doldu. Ödeme yapılabilir."
-            };
-        }
-
-        const gun =
-            Math.ceil(
-                fark /
-                    (1000 * 60 * 60 * 24)
-            );
-
-        return {
-            durum: "Blokajda",
-            renk: "#d97706",
-            mesaj:
-                `${gun} gün sonra serbest.`
-        };
-    }
-
-    /*
-    ==================================================
     TALEPLERİ GETİR
     ==================================================
     */
@@ -645,11 +579,6 @@ function AdminWithdraw() {
                                     0
                                 );
 
-                            const blokaj =
-                                blokajDurumu(
-                                    talep
-                                );
-
                             const durum =
                                 talep.durum ||
                                 "Bekliyor";
@@ -804,7 +733,7 @@ function AdminWithdraw() {
                                                         "break-all"
                                                 }}
                                             >
-                                                {talep.iban ||
+                                                {talep.ibanMasked ||
                                                     "-"}
                                             </div>
                                         </div>
@@ -830,70 +759,7 @@ function AdminWithdraw() {
                                             </div>
                                         </div>
 
-                                        <div>
-                                            <small
-                                                style={{
-                                                    color:
-                                                        "#777"
-                                                }}
-                                            >
-                                                Blokaj
-                                            </small>
-
-                                            <div
-                                                style={{
-                                                    color:
-                                                        blokaj.renk,
-                                                    fontWeight:
-                                                        "700"
-                                                }}
-                                            >
-                                                {blokaj.durum}
-                                            </div>
-
-                                            <div
-                                                style={{
-                                                    fontSize:
-                                                        "13px",
-                                                    color:
-                                                        blokaj.renk,
-                                                    marginTop:
-                                                        "3px"
-                                                }}
-                                            >
-                                                {
-                                                    blokaj.mesaj
-                                                }
-                                            </div>
-                                        </div>
                                     </div>
-
-                                    {blokajTarihiBul(
-                                        talep
-                                    ) && (
-                                        <div
-                                            style={{
-                                                marginTop:
-                                                    "15px",
-                                                padding:
-                                                    "12px",
-                                                borderRadius:
-                                                    "8px",
-                                                background:
-                                                    "#f8fafc"
-                                            }}
-                                        >
-                                            <strong>
-                                                🔒 Blokaj
-                                                bitişi:
-                                            </strong>{" "}
-                                            {tarihFormatla(
-                                                blokajTarihiBul(
-                                                    talep
-                                                )
-                                            )}
-                                        </div>
-                                    )}
 
                                     <div
                                         style={{
@@ -968,10 +834,7 @@ function AdminWithdraw() {
                                                 )
                                             }
                                             disabled={
-                                                islemLoading ||
-                                                !bekliyor ||
-                                                blokaj.durum !==
-                                                    "Serbest"
+                                                islemLoading || !bekliyor
                                             }
                                             style={{
                                                 flex:
@@ -985,7 +848,7 @@ function AdminWithdraw() {
                                                 borderRadius:
                                                     "8px",
                                                 background:
-                                                    bekliyor && blokaj.durum === "Serbest"
+                                                    bekliyor
                                                         ? "#16803c"
                                                         : "#9ca3af",
                                                 color:
@@ -993,17 +856,15 @@ function AdminWithdraw() {
                                                 fontWeight:
                                                     "700",
                                                 cursor:
-                                                    bekliyor && blokaj.durum === "Serbest"
+                                                    bekliyor
                                                         ? "pointer"
                                                         : "not-allowed"
                                             }}
                                         >
                                             {islemLoading
                                                 ? "⏳ İşleniyor..."
-                                                : bekliyor && blokaj.durum === "Serbest"
-                                                ? "🏦 Manuel Transferi Doğrula"
                                                 : bekliyor
-                                                ? "🔒 Blokaj Devam Ediyor"
+                                                ? "🏦 Manuel Transferi Doğrula"
                                                 : "İşlem Tamamlandı"}
                                         </button>
 

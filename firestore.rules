@@ -423,6 +423,7 @@ service cloud.firestore {
 
     match /wallets/{walletId} {
       allow read: if isAdmin()
+        || (signedIn() && resource.data.ownerUid == request.auth.uid)
         || (hasEmail()
           && (walletId == request.auth.token.email
             || resource.data.email == request.auth.token.email));
@@ -438,6 +439,7 @@ service cloud.firestore {
 
     match /paraCekmeTalepleri/{requestId} {
       allow read: if isAdmin()
+        || (signedIn() && resource.data.ownerUid == request.auth.uid)
         || (hasEmail() && resource.data.email == request.auth.token.email);
       allow create, delete: if false;
       allow update: if false;

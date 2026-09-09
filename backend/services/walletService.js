@@ -3,6 +3,9 @@ const walletModel =
 
 const commission =
     require("../utils/commission");
+const { normalizeTurkishIban, isValidTurkishIban } = require("../utils/iban");
+
+const MINIMUM_WITHDRAWAL_AMOUNT = 50;
 
 
 /*
@@ -149,7 +152,7 @@ WALLET BİLGİSİ
 ==================================================
 */
 
-async function getWallet(email) {
+async function getWallet(email, ownerUid = null) {
 
     if (!email) {
 
@@ -175,7 +178,8 @@ async function getWallet(email) {
 
 
         await walletModel.createWallet(
-            email
+            email,
+            ownerUid
         );
 
 
@@ -184,6 +188,11 @@ async function getWallet(email) {
                 email
             );
 
+    }
+
+    if (ownerUid && wallet && wallet.ownerUid !== ownerUid) {
+        await walletModel.updateWallet(email, { ownerUid });
+        wallet.ownerUid = ownerUid;
     }
 
 
@@ -219,7 +228,8 @@ IBAN KAYDET
 
 async function ibanKaydet(
     email,
-    data
+    data,
+    ownerUid = null
 ) {
 
     if (!email) {
@@ -249,15 +259,11 @@ async function ibanKaydet(
     }
 
 
-    const iban =
-        String(data.iban)
-            .replace(/\s/g, "")
-            .toUpperCase();
+    const iban = normalizeTurkishIban(data.iban);
 
 
     if (
-        !iban.startsWith("TR") ||
-        iban.length !== 26
+        !isValidTurkishIban(iban)
     ) {
 
         throw new Error(
@@ -267,6 +273,16 @@ async function ibanKaydet(
     }
 
 
+    const hesapSahibi = String(data.hesapSahibi || "").trim();
+    const bankaAdi = String(data.bankaAdi || "").trim();
+    if (hesapSahibi.length < 3 || hesapSahibi.length > 120) {
+        throw new Error("Hesap sahibi adı geçersiz.");
+    }
+
+    if (bankaAdi.length < 2 || bankaAdi.length > 100) {
+        throw new Error("Banka adı geçersiz.");
+    }
+
     await walletModel.updateWallet(
 
         email,
@@ -275,11 +291,9 @@ async function ibanKaydet(
 
             iban,
 
-            bankaAdi:
-                data.bankaAdi || "",
-
-            hesapSahibi:
-                data.hesapSahibi || ""
+            bankaAdi,
+            hesapSahibi,
+            ...(ownerUid ? { ownerUid } : {})
 
         }
 
@@ -301,7 +315,8 @@ PARA ÇEKME TALEBİ
 
 async function paraCek(
     email,
-    tutar
+    tutar,
+    options = {}
 ) {
 
     console.log(
@@ -325,6 +340,8 @@ async function paraCek(
     const miktar =
         Number(tutar);
 
+    const miktarKurus = Math.round(miktar * 100);
+
 
     console.log(
         "Para çekme miktarı:",
@@ -334,7 +351,8 @@ async function paraCek(
 
     if (
         !Number.isFinite(miktar) ||
-        miktar <= 0
+        miktar <= 0 ||
+        Math.abs(miktar * 100 - miktarKurus) > 0.000001
     ) {
 
         throw new Error(
@@ -344,7 +362,7 @@ async function paraCek(
     }
 
 
-    if (miktar < 50) {
+    if (miktar < MINIMUM_WITHDRAWAL_AMOUNT) {
 
         throw new Error(
             "Minimum para çekme tutarı 50 TL'dir."
@@ -400,12 +418,6 @@ async function paraCek(
     }
 
 
-    console.log(
-        "Para çekilecek IBAN:",
-        wallet.iban
-    );
-
-
     const sonuc =
         await walletModel
             .paraCekmeTalebiOlustur(
@@ -418,7 +430,11 @@ async function paraCek(
 
                 wallet.bankaAdi || "",
 
-                wallet.hesapSahibi || ""
+                wallet.hesapSahibi || "",
+                {
+                    ownerUid: options.ownerUid || null,
+                    idempotencyKey: options.idempotencyKey || null
+                }
 
             );
 
@@ -559,6 +575,8 @@ module.exports = {
 
     paraCekmeReddet,
 
-    tumParaCekmeTalepleri
+    tumParaCekmeTalepleri,
+
+    MINIMUM_WITHDRAWAL_AMOUNT
 
 };

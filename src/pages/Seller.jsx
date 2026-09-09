@@ -302,10 +302,6 @@ getir={getir}
 
 siparisler={siparisler}
 
-toplamKazanc={toplamKazanc}
-
-toplamGoruntulenme={toplamGoruntulenme}
-
 />
 
 <SellerPerformance

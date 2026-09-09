@@ -1,8 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { auth } from "../../firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { apiUrl } from "../../config/api";
 import "../../styles/components/withdraw-request.css";
+
+function createIdempotencyKey() {
+    if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
+    return `withdraw_${new Date().getTime()}`;
+}
 
 function WithdrawRequest() {
 
@@ -11,6 +16,8 @@ function WithdrawRequest() {
     const [loading, setLoading] = useState(false);
     const [yukleniyor, setYukleniyor] = useState(true);
     const [mesaj, setMesaj] = useState("");
+    const [talepler, setTalepler] = useState([]);
+    const requestKeyRef = useRef(null);
 
     /*
     ==================================================
@@ -56,11 +63,6 @@ function WithdrawRequest() {
             const data =
                 await response.json();
 
-            console.log(
-                "👛 Wallet cevabı:",
-                data
-            );
-
             if (!response.ok) {
 
                 throw new Error(
@@ -72,11 +74,6 @@ function WithdrawRequest() {
 
             const walletData =
                 data.wallet || data;
-
-            console.log(
-                "👛 Kullanılan wallet:",
-                walletData
-            );
 
             setWallet({
 
@@ -103,6 +100,13 @@ function WithdrawRequest() {
                     )
 
             });
+
+            const taleplerResponse = await fetch(
+                apiUrl(`/api/withdraw/${encodeURIComponent(user.email)}`),
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            const taleplerData = await taleplerResponse.json();
+            if (taleplerResponse.ok) setTalepler(taleplerData.talepler || []);
 
         }
 
@@ -175,6 +179,8 @@ function WithdrawRequest() {
 
     async function paraCek() {
 
+        if (loading) return;
+
         const user =
             auth.currentUser;
 
@@ -207,10 +213,10 @@ function WithdrawRequest() {
         }
 
 
-        if (miktar < 50) {
+        if (miktar < Number(wallet?.minimumWithdrawalAmount || 50)) {
 
             setMesaj(
-                "❌ Minimum para çekme tutarı ₺50."
+                `❌ Minimum para çekme tutarı ₺${paraFormatla(wallet?.minimumWithdrawalAmount || 50)}.`
             );
 
             return;
@@ -259,13 +265,10 @@ function WithdrawRequest() {
                 await user.getIdToken();
 
 
-            console.log(
-                "💸 Para çekme gönderiliyor:",
-                {
-                    miktar,
-                    email: user.email
-                }
-            );
+            if (!requestKeyRef.current) {
+                requestKeyRef.current = createIdempotencyKey();
+            }
+            const idempotencyKey = requestKeyRef.current;
 
 
             const response =
@@ -280,7 +283,8 @@ function WithdrawRequest() {
                                 "application/json",
 
                             Authorization:
-                                `Bearer ${token}`
+                                `Bearer ${token}`,
+                            "Idempotency-Key": idempotencyKey
 
                         },
 
@@ -298,11 +302,6 @@ function WithdrawRequest() {
             const data =
                 await response.json();
 
-
-            console.log(
-                "💸 Para çekme cevabı:",
-                data
-            );
 
 
             if (!response.ok) {
@@ -322,6 +321,7 @@ function WithdrawRequest() {
 
 
             setTutar("");
+            requestKeyRef.current = null;
 
 
             await walletGetir();
@@ -383,6 +383,8 @@ function WithdrawRequest() {
         Number(
             wallet?.paid || 0
         );
+
+    const minimumWithdrawalAmount = Number(wallet?.minimumWithdrawalAmount || 50);
 
 
     /*
@@ -504,7 +506,7 @@ function WithdrawRequest() {
                 <div>
 
                     <span>
-                        Bekleyen
+                        Bekleyen Hakediş
                     </span>
 
                     <b>
@@ -517,7 +519,7 @@ function WithdrawRequest() {
                 <div>
 
                     <span>
-                        İşlemde
+                        Çekim Bekliyor
                     </span>
 
                     <b>
@@ -530,7 +532,7 @@ function WithdrawRequest() {
                 <div>
 
                     <span>
-                        Çekilen
+                        Toplam Ödenen
                     </span>
 
                     <b>
@@ -560,9 +562,9 @@ function WithdrawRequest() {
 
                     <input
                         type="number"
-                        min="50"
+                        min={minimumWithdrawalAmount}
                         step="0.01"
-                        placeholder="50.00"
+                        placeholder={minimumWithdrawalAmount.toFixed(2)}
                         value={tutar}
                         onChange={(e) =>
                             setTutar(
@@ -577,7 +579,7 @@ function WithdrawRequest() {
 
                 <p className="withdraw-info">
 
-                    Minimum çekim tutarı: ₺50
+                    Minimum çekim tutarı: ₺{paraFormatla(minimumWithdrawalAmount)}
 
                 </p>
 
@@ -587,7 +589,7 @@ function WithdrawRequest() {
                     onClick={paraCek}
                     disabled={
                         loading ||
-                        balance < 50 ||
+                        balance < minimumWithdrawalAmount ||
                         !wallet?.iban
                     }
                 >
@@ -624,13 +626,24 @@ function WithdrawRequest() {
 
                 <strong>
 
-                    {wallet?.iban
-                        ? wallet.iban
+                    {wallet?.ibanMasked
+                        ? wallet.ibanMasked
                         : "IBAN kayıtlı değil"
                     }
 
                 </strong>
 
+            </div>
+
+            <div className="withdraw-history">
+                <h3>Son Çekim Talepleri</h3>
+                {talepler.length === 0 ? <p>Henüz çekim talebi yok.</p> : talepler.slice(0, 5).map((talep) => (
+                    <div className="withdraw-history-row" key={talep.id}>
+                        <span>₺{paraFormatla(talep.tutar)}</span>
+                        <span>{talep.ibanMasked || "Banka hesabı"}</span>
+                        <strong>{talep.durum || "BEKLIYOR"}</strong>
+                    </div>
+                ))}
             </div>
 
 

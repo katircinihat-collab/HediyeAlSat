@@ -19,6 +19,7 @@ function SellerWallet() {
     balance: 0,
     pending: 0,
     paid: 0,
+    withdrawalPending: 0,
     iban: "",
     bankaAdi: "",
     hesapSahibi: ""
@@ -48,6 +49,7 @@ function SellerWallet() {
             balance: 0,
             pending: 0,
             paid: 0,
+            withdrawalPending: 0,
             iban: "",
             bankaAdi: "",
             hesapSahibi: ""
@@ -113,6 +115,7 @@ function SellerWallet() {
                 balance: 0,
                 pending: 0,
                 paid: 0,
+                withdrawalPending: 0,
                 iban: "",
                 bankaAdi: "",
                 hesapSahibi: ""
@@ -148,6 +151,9 @@ function SellerWallet() {
 
               paid:
                 Number(data.paid || 0),
+
+              withdrawalPending:
+                Number(data.withdrawalPending || 0),
 
               iban:
                 data.iban || "",
@@ -245,7 +251,7 @@ function SellerWallet() {
         <div className="wallet-card orange">
 
           <h3>
-            ⌛ Bekleyen Bakiye
+            ⌛ Bekleyen Hakediş
           </h3>
 
           <h1>
@@ -258,11 +264,17 @@ function SellerWallet() {
           </h1>
 
           <p>
-            Kargo teslim edilince aktarılır.
+            Teslimat sonrası kontrol süresi ve claim kontrollerinden sonra kullanılabilir olur.
           </p>
 
         </div>
 
+
+        <div className="wallet-card red">
+          <h3>⏳ Çekim Bekliyor</h3>
+          <h1>₺{Number(wallet.withdrawalPending || 0).toLocaleString("tr-TR")}</h1>
+          <p>Onay ve banka transferi sürecindeki tutar.</p>
+        </div>
 
         {/* ÖDENEN */}
 
@@ -299,7 +311,7 @@ function SellerWallet() {
           <h2>
 
             {wallet.iban
-              ? wallet.iban
+              ? `${wallet.iban.slice(0, 4)} **** **** **** **** **${wallet.iban.slice(-2)}`
               : "Tanımlı değil"
             }
 
@@ -359,7 +371,7 @@ function SellerWallet() {
               </td>
 
               <td>
-                {wallet.iban || "-"}
+                {wallet.iban ? `${wallet.iban.slice(0, 4)} **** **** **** **** **${wallet.iban.slice(-2)}` : "-"}
               </td>
 
             </tr>
