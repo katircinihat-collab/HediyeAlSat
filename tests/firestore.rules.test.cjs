@@ -868,3 +868,27 @@ test("71 - public açıklamalardaki iletişim bilgileri reddedilir", async () =>
     puan: 5, takipci: 0, tarih: new Date()
   }));
 });
+
+test("72 - yalnız aktif sponsorlu içerik public okunabilir", async () => {
+  await env.withSecurityRulesDisabled(async (context) => {
+    const db = context.firestore();
+    await setDoc(doc(db, "sponsoredContent", "active-ad"), {
+      active: true, placement: "middle_banner", title: "Sponsor"
+    });
+    await setDoc(doc(db, "sponsoredContent", "inactive-ad"), {
+      active: false, placement: "lower_banner", title: "Kapalı"
+    });
+  });
+
+  await assertSucceeds(getDoc(doc(dbFor(), "sponsoredContent", "active-ad")));
+  await assertFails(getDoc(doc(dbFor(), "sponsoredContent", "inactive-ad")));
+});
+
+test("73 - client sponsorlu içerik yazamaz", async () => {
+  await assertFails(setDoc(doc(dbFor(adminAuth), "sponsoredContent", "client-ad"), {
+    active: true, placement: "middle_banner", title: "Client"
+  }));
+  await assertFails(updateDoc(doc(dbFor(adminAuth), "sponsoredContent", "active-ad"), {
+    title: "Değiştirildi"
+  }));
+});

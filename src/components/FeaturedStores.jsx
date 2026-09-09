@@ -4,7 +4,7 @@ import { collection, getDocs } from "firebase/firestore";
 import { db } from "../firebase";
 import { Link } from "react-router-dom";
 
-function FeaturedStores() {
+function FeaturedStores({ sponsoredStore = null }) {
 
   const [stores, setStores] = useState([]);
 
@@ -44,7 +44,10 @@ function FeaturedStores() {
 
       <div className="stores-grid">
 
-        {stores.map(store => (
+        {[
+          ...(sponsoredStore ? [sponsoredStore] : []),
+          ...stores.filter((store) => store.id !== sponsoredStore?.id)
+        ].map(store => (
 
           <Link
 
@@ -52,9 +55,13 @@ function FeaturedStores() {
 
             to={`/magaza/${store.id}`}
 
-            className="store-card"
+            className={`store-card ${store.id === sponsoredStore?.id ? "store-card--sponsored" : ""}`}
 
           >
+
+            {store.id === sponsoredStore?.id && (
+              <span className="sponsored-label">Sponsorlu</span>
+            )}
 
             <img
               className="store-logo"

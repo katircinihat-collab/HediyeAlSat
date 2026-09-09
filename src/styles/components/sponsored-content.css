@@ -1,0 +1,26 @@
+.sponsor-banner {
+  position: relative;
+  width: calc(100% - 48px);
+  max-width: 1560px;
+  height: 116px;
+  margin: 36px auto;
+  display: block;
+  overflow: hidden;
+  border: 1px solid #e6e7ea;
+  border-radius: 15px;
+  background: #fff;
+  color: #202124;
+  text-decoration: none;
+  box-shadow: 0 5px 18px rgba(15, 23, 42, .055);
+}
+
+.sponsor-banner img { width: 100%; height: 100%; display: block; object-fit: cover; }
+.sponsor-banner strong { position: absolute; left: 18px; bottom: 13px; max-width: calc(100% - 36px); padding: 5px 9px; border-radius: 8px; background: rgba(255,255,255,.9); font-size: 14px; }
+.sponsored-label { position: absolute; z-index: 2; top: 10px; left: 10px; padding: 4px 7px; border: 1px solid rgba(80,80,80,.13); border-radius: 999px; background: rgba(255,255,255,.92); color: #6b7280; font-size: 10px; font-weight: 700; letter-spacing: .04em; }
+.sponsored-card-badge { position: absolute; z-index: 4; top: 9px; left: 9px; padding: 4px 7px; border: 1px solid #e2e4e8; border-radius: 999px; background: rgba(255,255,255,.94); color: #68707c; font-size: 9px; font-weight: 800; }
+.store-card--sponsored { position: relative; }
+
+@media (max-width: 650px) {
+  .sponsor-banner { width: calc(100% - 24px); height: 88px; margin: 25px auto; border-radius: 12px; }
+  .sponsor-banner strong { left: 10px; bottom: 8px; max-width: calc(100% - 20px); font-size: 11px; }
+}

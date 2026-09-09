@@ -31,12 +31,15 @@ import Footer from "../components/Footer";
 import TopDesignShowcase from "../components/TopDesignShowcase";
 import GiftBattle from "../components/GiftBattle";
 import DailyQuote from "../components/DailyQuote";
+import SponsorBanner from "../components/SponsorBanner";
+import useSponsoredContent from "../hooks/useSponsoredContent";
 
 import "../styles/pages/home.css";
 
 function Home() {
 
   const [ilanlar, setIlanlar] = useState([]);
+  const sponsored = useSponsoredContent();
 
   const [searchParams, setSearchParams] =
     useSearchParams();
@@ -514,6 +517,8 @@ function Home() {
 
       <AdBanner />
 
+      <SponsorBanner sponsor={sponsored.middle_banner} />
+
 
       <section
         className="shopping-hubs"
@@ -599,17 +604,27 @@ function Home() {
 
       <ProductSlider
         title="✨ Editörün Seçimi"
-        ilanlar={gosterEditor}
+        ilanlar={
+          sponsored.sponsored_product?.product
+            ? [
+                sponsored.sponsored_product.product,
+                ...gosterEditor.filter((item) => item.id !== sponsored.sponsored_product.product.id)
+              ]
+            : gosterEditor
+        }
+        sponsoredProductId={sponsored.sponsored_product?.product?.id}
       />
 
 
-      <FeaturedStores />
+      <FeaturedStores sponsoredStore={sponsored.sponsored_store?.store} />
 
       <GiftBattle />
 
       <GiftAssistant />
 
       <TopDesignShowcase />
+
+      <SponsorBanner sponsor={sponsored.lower_banner} />
 
       <Stats />
 

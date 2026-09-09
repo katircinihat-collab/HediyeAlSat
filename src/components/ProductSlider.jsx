@@ -4,7 +4,7 @@ import ProductCard from "./ProductCard";
 
 import "../styles/components/product-slider.css";
 
-function ProductSlider({ title, ilanlar }) {
+function ProductSlider({ title, ilanlar, sponsoredProductId = "" }) {
 
   const sliderRef = useRef(null);
 useEffect(() => {
@@ -134,7 +134,15 @@ useEffect(() => {
 
               >
 
-                <ProductCard ilan={ilan} variant="home" />
+                <ProductCard
+                  ilan={ilan}
+                  variant="home"
+                  cardExtra={
+                    ilan.id === sponsoredProductId
+                      ? <span className="sponsored-card-badge">Sponsorlu</span>
+                      : null
+                  }
+                />
 
               </div>
 
