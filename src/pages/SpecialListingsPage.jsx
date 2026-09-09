@@ -18,6 +18,7 @@ import {
   getMyDesignVotes,
   removeDesignVote
 } from "../services/designVoteApi";
+import { isListingPublished } from "../utils/listingAvailability";
 
 function fiyatSayiyaCevir(deger) {
   if (typeof deger === "number") return Number.isFinite(deger) ? deger : null;
@@ -63,7 +64,7 @@ function SpecialListingsPage({ tur }) {
 
         const liste = snap.docs
           .map((belge) => ({ id: belge.id, ...belge.data() }))
-          .filter((ilan) => ilan.aktif !== false)
+          .filter(isListingPublished)
           .filter((ilan) => {
             if (!yuzTlSayfasi) return isA4Listing(ilan);
 

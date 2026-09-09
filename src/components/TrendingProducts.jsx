@@ -3,6 +3,7 @@ import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "../firebase";
 import ProductCard from "./ProductCard";
 import { isA4Listing, isLegacySecondHandListing } from "../data/categories";
+import { isListingPublished } from "../utils/listingAvailability";
 
 function TrendingProducts() {
 
@@ -21,7 +22,7 @@ function TrendingProducts() {
           id: doc.id,
           ...doc.data()
         }))
-        .filter(item => item.oneCikan === true && !isLegacySecondHandListing(item) && !isA4Listing(item));
+        .filter(item => isListingPublished(item) && item.oneCikan === true && !isLegacySecondHandListing(item) && !isA4Listing(item));
 
       setUrunler(trend);
 

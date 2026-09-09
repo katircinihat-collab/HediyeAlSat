@@ -1,3 +1,5 @@
+import { isListingPublished, isDigitalListing } from "./listingAvailability.js";
+
 export const SPONSOR_PLACEMENTS = Object.freeze([
   "middle_banner",
   "sponsored_product",
@@ -42,11 +44,8 @@ export function mapSponsorsByPlacement(items) {
 }
 
 export function isEligibleSponsoredProduct(product) {
-  if (!product || product.onay !== true || product.aktif === false) return false;
-  const isDigital = product.urunTipi === "dijital"
-    || product.fizikselKargo === false
-    || product.dijitalTeslimat === true;
-  return isDigital || Number(product.stok || 0) > 0;
+  if (!isListingPublished(product)) return false;
+  return isDigitalListing(product) || Number(product.stok ?? product.adet ?? 1) > 0;
 }
 
 export function isEligibleSponsoredStore(store) {

@@ -14,6 +14,7 @@ import categories, {
   matchesMainCategory
 } from "../data/categories";
 import { listingMatchesSearch } from "../utils/search";
+import { isListingPublished } from "../utils/listingAvailability";
 
 import "../styles/pages/product.css";
 
@@ -74,6 +75,8 @@ function Listings() {
   */
 
   const filtrelenmisIlanlar = ilanlar.filter((ilan) => {
+
+    if (!isListingPublished(ilan)) return false;
 
     if (isA4Listing(ilan) && !arama) {
       return false;

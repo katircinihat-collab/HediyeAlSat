@@ -3,9 +3,11 @@ import "../styles/components/flash-sale.css";
 import { useRef } from "react";
 import { Link } from "react-router-dom";
 import ProductCard from "./ProductCard";
+import { filterAvailableListings } from "../utils/listingAvailability";
 
 function FlashSale({ ilanlar = [] }) {
   const trackRef = useRef(null);
+  const visibleListings = filterAvailableListings(ilanlar);
 
   function kaydir(direction) {
     trackRef.current?.scrollBy({ left: direction * 260, behavior: "smooth" });
@@ -38,11 +40,11 @@ function FlashSale({ ilanlar = [] }) {
         <Link className="flash-all-link" to="/gunun-firsatlari">Tümünü Gör <span aria-hidden="true">→</span></Link>
       </div>
 
-      {ilanlar.length > 0 && (
+      {visibleListings.length > 0 && (
         <div className="flash-products-wrap">
           <button type="button" className="flash-arrow flash-arrow-prev" onClick={() => kaydir(-1)} aria-label="Önceki fırsatlar">‹</button>
           <div className="flash-products" ref={trackRef}>
-            {ilanlar.map((ilan) => (
+            {visibleListings.map((ilan) => (
               <div className="flash-product-item" key={ilan.id}>
                 <ProductCard ilan={ilan} variant="deal" />
               </div>

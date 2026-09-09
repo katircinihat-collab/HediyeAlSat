@@ -1,17 +1,20 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useMemo } from "react";
 
 import ProductCard from "./ProductCard";
+import { filterAvailableListings } from "../utils/listingAvailability";
 
 import "../styles/components/product-slider.css";
 
 function ProductSlider({ title, ilanlar, sponsoredProductId = "" }) {
 
   const sliderRef = useRef(null);
+  const visibleListings = useMemo(() => filterAvailableListings(ilanlar), [ilanlar]);
+  const showArrows = visibleListings.length > 6;
 useEffect(() => {
 
   const slider = sliderRef.current;
 
-  if (!slider) return;
+  if (!slider || visibleListings.length <= 1) return;
 
   const interval = setInterval(() => {
 
@@ -44,7 +47,7 @@ useEffect(() => {
 
   return () => clearInterval(interval);
 
-}, []);
+}, [visibleListings.length]);
   function next() {
 
     sliderRef.current.scrollBy({
@@ -69,7 +72,7 @@ useEffect(() => {
 
   }
 
-  if (!ilanlar || ilanlar.length === 0) {
+  if (visibleListings.length === 0) {
 
     return null;
 
@@ -103,7 +106,7 @@ useEffect(() => {
 
       <div className="slider-wrapper">
 
-        <button
+        {showArrows && <button
 
           className="slider-arrow"
 
@@ -113,7 +116,7 @@ useEffect(() => {
 
           ❮
 
-        </button>
+        </button>}
 
         <div
   className="slider-products"
@@ -124,7 +127,7 @@ useEffect(() => {
 
           {
 
-            ilanlar.map((ilan)=>(
+            visibleListings.map((ilan)=>(
 
               <div
 
@@ -152,7 +155,7 @@ useEffect(() => {
 
         </div>
 
-        <button
+        {showArrows && <button
 
           className="slider-arrow"
 
@@ -162,7 +165,7 @@ useEffect(() => {
 
           ❯
 
-        </button>
+        </button>}
 
       </div>
 

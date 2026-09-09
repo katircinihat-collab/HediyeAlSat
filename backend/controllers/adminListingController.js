@@ -1,4 +1,5 @@
 const { firestore, FieldValue } = require("../config/firebase");
+const { buildApprovedListingState } = require("../utils/listingAvailability");
 
 const ADMIN_FLAGS = new Set([
     "oneCikan",
@@ -42,7 +43,10 @@ exports.onayla = async (req, res, next) => {
             });
         }
 
-        await ref.update({ onay: true });
+        await ref.update(buildApprovedListingState({
+            timestamp: FieldValue.serverTimestamp(),
+            adminUid: req.user.uid
+        }));
         res.json({ success: true });
     } catch (error) {
         next(error);
@@ -54,7 +58,14 @@ exports.reddet = async (req, res, next) => {
         const ref = await ilanGetir(req.params.id, res);
         if (!ref) return;
 
-        await ref.update({ onay: false });
+        await ref.update({
+            onay: false,
+            aktif: false,
+            yayinda: false,
+            durum: "Reddedildi",
+            durumGuncellemeTarihi: FieldValue.serverTimestamp(),
+            durumGuncelleyenUid: req.user.uid
+        });
         res.json({ success: true });
     } catch (error) {
         next(error);
