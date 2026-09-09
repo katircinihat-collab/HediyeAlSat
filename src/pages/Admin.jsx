@@ -101,17 +101,14 @@ function Admin() {
 
       const s = d.data();
 
-      const toplam = Number(s.toplam || 0);
-
-      satis += toplam;
-
-      const komisyonTutari = toplam * 0.05;
-
-      komisyon += komisyonTutari;
-
-      satici += (toplam - komisyonTutari);
-
       if (s.odemeDurumu) {
+
+        const toplamKurus = Math.round(Number(s.toplam || 0) * 100);
+        const komisyonKurusu = Math.round((toplamKurus * 8) / 100);
+
+        satis += toplamKurus / 100;
+        komisyon += komisyonKurusu / 100;
+        satici += (toplamKurus - komisyonKurusu) / 100;
 
         odenen++;
 

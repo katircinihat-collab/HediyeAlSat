@@ -36,11 +36,6 @@ function SellerWallet() {
       auth,
       (user) => {
 
-        console.log(
-          "🔐 Giriş yapan kullanıcı:",
-          user?.email
-        );
-
 
         // Kullanıcı giriş yapmamışsa
         if (!user) {
@@ -62,11 +57,6 @@ function SellerWallet() {
 
 
         const email = user.email;
-
-        console.log(
-          "💳 Wallet okunuyor:",
-          email
-        );
 
 
         /*
@@ -98,18 +88,8 @@ function SellerWallet() {
 
           (snap) => {
 
-            console.log(
-              "📦 Wallet bulundu:",
-              snap.exists()
-            );
-
 
             if (!snap.exists()) {
-
-              console.log(
-                "❌ Wallet bulunamadı:",
-                email
-              );
 
               setWallet({
                 balance: 0,
@@ -129,16 +109,6 @@ function SellerWallet() {
 
             const data = snap.data();
 
-
-            console.log(
-              "💰 Firebase wallet verisi:",
-              data
-            );
-
-            console.log(
-              "💰 Firebase balance:",
-              data.balance
-            );
 
 
             setWallet({

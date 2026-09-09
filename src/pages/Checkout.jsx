@@ -333,11 +333,6 @@ function Checkout() {
         const data =
           await response.json();
 
-        console.log(
-          "Sponsor ödeme cevabı:",
-          data
-        );
-
         if (data.paymentPageUrl) {
 
           window.location.href =
@@ -629,11 +624,6 @@ function Checkout() {
 
       const data =
         await response.json();
-
-      console.log(
-        "Ödeme cevabı:",
-        data
-      );
 
       if (data.paymentPageUrl) {
 

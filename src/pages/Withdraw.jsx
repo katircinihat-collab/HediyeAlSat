@@ -13,8 +13,6 @@ import {
 
 function Withdraw() {
 
-  console.log("🔥 YENİ WITHDRAW DOSYASI ÇALIŞIYOR");
-
   const [iban, setIban] = useState("");
   const [adSoyad, setAdSoyad] = useState("");
   const [tutar, setTutar] = useState("");
@@ -44,13 +42,10 @@ function Withdraw() {
     const kullanici = auth.currentUser;
 
     if (!kullanici) {
-      console.log("❌ Kullanıcı bulunamadı.");
       return;
     }
 
     const email = kullanici.email;
-
-    console.log("👤 Giriş yapan kullanıcı:", email);
 
     // ÖNEMLİ:
     // Backend wallet kaydını doğrudan
@@ -62,20 +57,11 @@ function Withdraw() {
       email
     );
 
-    console.log(
-      "🔎 Okunan wallet:",
-      `wallets/${email}`
-    );
-
     const unsub = onSnapshot(
       walletRef,
       (snap) => {
 
         if (!snap.exists()) {
-
-          console.log(
-            "❌ Wallet bulunamadı!"
-          );
 
           setBakiye(0);
 
@@ -83,34 +69,6 @@ function Withdraw() {
         }
 
         const data = snap.data();
-
-        console.log(
-          "========== WALLET =========="
-        );
-
-        console.log(
-          "Wallet ID:",
-          snap.id
-        );
-
-        console.log(
-          "Wallet verisi:",
-          data
-        );
-
-        console.log(
-          "Firebase balance:",
-          data.balance
-        );
-
-        console.log(
-          "Ekrana yazılacak:",
-          Number(data.balance || 0)
-        );
-
-        console.log(
-          "============================="
-        );
 
         setBakiye(
           Number(data.balance || 0)
@@ -188,11 +146,6 @@ function Withdraw() {
       String(tutar).replace(/\D/g, "")
     );
 
-    console.log(
-      "💸 Çekim tutarı:",
-      gercekTutar
-    );
-
     if (!auth.currentUser) {
 
       alert(
@@ -259,11 +212,6 @@ function Withdraw() {
 
       const data =
         await response.json();
-
-      console.log(
-        "💰 BACKEND CEVABI:",
-        data
-      );
 
       if (
         !response.ok ||

@@ -1,6 +1,4 @@
 
-console.log("paymentController yüklendi");
-
 const paymentService =
     require("../services/paymentService");
 

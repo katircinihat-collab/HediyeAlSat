@@ -26,13 +26,6 @@ function Wallet() {
             // Firebase giriş tokenını al
             const token = await user.getIdToken();
 
-            // GEÇİCİ TEST:
-            // Tarayıcı konsolunda token ve email görünecek.
-            console.log("=================================");
-            console.log("FIREBASE TOKEN:", token);
-            console.log("GİRİŞ YAPAN EMAIL:", user.email);
-            console.log("=================================");
-
             const response = await fetch(
                 apiUrl(`/api/wallet/${encodeURIComponent(
                     user.email
@@ -122,11 +115,6 @@ function Wallet() {
                     return;
                 }
 
-                console.log(
-                    "Giriş yapan kullanıcı:",
-                    user.email
-                );
-
                 try {
                     await walletGetir();
                     await talepleriGetir();
@@ -203,16 +191,6 @@ function Wallet() {
 
             // Firebase tokenını al
             const token = await user.getIdToken();
-
-            console.log(
-                "PARA ÇEKME TOKEN:",
-                token
-            );
-
-            console.log(
-                "PARA ÇEKEN EMAIL:",
-                user.email
-            );
 
             const response = await fetch(
                 apiUrl("/api/withdraw"),

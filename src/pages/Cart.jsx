@@ -35,8 +35,6 @@ function Cart() {
         return;
       }
 
-      console.log("Giriş yapan:", user.email);
-
       const q = query(
         collection(db, "sepet"),
         where("kullanici", "==", user.email)
