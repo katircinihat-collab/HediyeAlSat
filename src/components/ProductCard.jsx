@@ -25,6 +25,7 @@ import {
 import useFavorite from "../hooks/useFavorite";
 import useListingImpression from "../hooks/useListingImpression";
 import { formatImpressionCount } from "../utils/impressions";
+import { isListingPublished } from "../utils/listingAvailability";
 
 
 function ProductCard({ ilan, cardExtra = null, variant = "" }) {
@@ -311,6 +312,8 @@ function ProductCard({ ilan, cardExtra = null, variant = "" }) {
 
   }
 
+
+  if (!isListingPublished(ilan)) return null;
 
   return (
 

@@ -12,6 +12,7 @@ import { onAuthStateChanged } from "firebase/auth";
 
 import { Link } from "react-router-dom";
 import { isA4Listing } from "../data/categories";
+import { isListingPublished } from "../utils/listingAvailability";
 
 function MyListings() {
   const [ilanlar, setIlanlar] = useState([]);
@@ -579,14 +580,16 @@ function MyListings() {
 
                       <span
                         className={
-                          ilan.onay
+                          isListingPublished(ilan)
                             ? "my-listing-status is-live"
                             : "my-listing-status is-pending"
                         }
                       >
-                        {ilan.onay
+                        {isListingPublished(ilan)
                           ? "✅ Yayında"
-                          : "🟡 Onay Bekliyor"}
+                          : ilan.onay === true
+                            ? "⛔ Satışa Kapalı"
+                            : "🟡 Onay Bekliyor"}
                       </span>
                     </div>
 

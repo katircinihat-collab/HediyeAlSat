@@ -1,4 +1,5 @@
 import "../../styles/pages/seller-products.css";
+import { isListingPublished } from "../../utils/listingAvailability";
 
 function SellerProducts({ urunler }) {
 
@@ -81,11 +82,19 @@ function SellerProducts({ urunler }) {
 
                     {
 
-                      urun.onay ?
+                      isListingPublished(urun) ?
 
                       <span className="badge success">
 
                         ✅ Yayında
+
+                      </span>
+
+                      : urun.onay === true ?
+
+                      <span className="badge waiting">
+
+                        ⛔ Satışa Kapalı
 
                       </span>
 

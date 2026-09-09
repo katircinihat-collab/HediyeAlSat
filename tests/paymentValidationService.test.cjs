@@ -78,6 +78,16 @@ test("bulunamayan ilan reddedilir", () => rejectsCode({ getListing: async () => 
 test("pasif ilan reddedilir", () => rejectsCode({
     getListing: async () => ({ ...validListing, aktif: false })
 }, "LISTING_INACTIVE"));
+test("aktif alanı olmayan onaylı legacy ilan ödeme doğrulamasını geçer", async () => {
+    const listing = { ...validListing };
+    delete listing.aktif;
+    const result = await validateNormalPayment(dependencies(validOrder, listing));
+    assert.equal(result.verifiedItems.length, 1);
+});
+test("onaysız ve durumla pasifleştirilmiş ilanlar reddedilir", async () => {
+    await rejectsCode({ getListing: async () => ({ ...validListing, onay: false }) }, "LISTING_INACTIVE");
+    await rejectsCode({ getListing: async () => ({ ...validListing, durum: "Yayından Kaldırıldı" }) }, "LISTING_INACTIVE");
+});
 test("fiyat uyuşmazlığı reddedilir", () => rejectsCode({
     getOrder: async () => ({ ...validOrder, fiyat: 1 })
 }, "PRICE_MISMATCH"));

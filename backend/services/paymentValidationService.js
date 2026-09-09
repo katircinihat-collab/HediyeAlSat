@@ -1,3 +1,5 @@
+const { isListingPublished } = require("../utils/listingAvailability");
+
 class PaymentValidationError extends Error {
     constructor(message, status = 400, code = "PAYMENT_VALIDATION_FAILED") {
         super(message);
@@ -103,10 +105,7 @@ async function validateNormalPayment({
             );
         }
 
-        if (
-            listing.onay !== true ||
-            listing.aktif === false
-        ) {
+        if (!isListingPublished(listing)) {
             throw new PaymentValidationError(
                 "İlan aktif değil.",
                 409,

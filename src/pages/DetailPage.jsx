@@ -32,6 +32,7 @@ import { hydrateCommentLevels, submitVerifiedProductReview } from "../services/u
 import UserLevelLabel from "../components/UserLevelLabel";
 import { formatListingCategory } from "../data/categories";
 import useFavorite from "../hooks/useFavorite";
+import { isListingPublished } from "../utils/listingAvailability";
 
 import "../App.css";
 
@@ -782,6 +783,16 @@ function DetailPage() {
 
     );
 
+  }
+
+  if (!isListingPublished(ilan)) {
+    return (
+      <div className="page">
+        <h2>Bu ilan şu anda satışta değil.</h2>
+        <p>Yayındaki diğer ürünleri inceleyebilirsiniz.</p>
+        <Link to="/ilanlar">Ürünlere Dön</Link>
+      </div>
+    );
   }
 
 

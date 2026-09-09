@@ -1,0 +1,11 @@
+{
+  "inactiveStatuses": [
+    "pasif",
+    "kapalı",
+    "kapali",
+    "reddedildi",
+    "taslak",
+    "yayından kaldırıldı",
+    "yayindan kaldirildi"
+  ]
+}
