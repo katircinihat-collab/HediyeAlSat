@@ -6,7 +6,9 @@ import {
   getDoc,
   query,
   where,
-  getDocs
+  getDocs,
+  limit,
+  onSnapshot
 } from "firebase/firestore";
 
 import {
@@ -30,6 +32,7 @@ import {
   onAuthStateChanged,
   signOut
 } from "firebase/auth";
+import { selectOwnedStoreId } from "../utils/storeOwnership";
 
 
 function Navbar() {
@@ -39,7 +42,7 @@ function Navbar() {
   const searchRef = useRef(null);
 
   const [user, setUser] = useState(undefined);
-  const [magazaId, setMagazaId] = useState(null);
+  const [magazaId, setMagazaId] = useState(undefined);
 
   const [menuAcik, setMenuAcik] = useState(false);
   const [arama, setArama] = useState("");
@@ -57,9 +60,16 @@ function Navbar() {
 
   useEffect(() => {
 
+    let magazaUnsubscribe = null;
+
     const unsub = onAuthStateChanged(
       auth,
       async (currentUser) => {
+
+        if (magazaUnsubscribe) {
+          magazaUnsubscribe();
+          magazaUnsubscribe = null;
+        }
 
         setUser(currentUser);
 
@@ -70,6 +80,31 @@ function Navbar() {
           return;
 
         }
+
+        setMagazaId(undefined);
+
+        const legacyMagazaBul = async () => {
+          if (!currentUser.email) return null;
+
+          try {
+            const emailSnap = await getDocs(query(
+              collection(db, "magazalar"),
+              where("sahip", "==", currentUser.email),
+              limit(1)
+            ));
+
+            if (!emailSnap.empty) return selectOwnedStoreId({ emailDocs: emailSnap.docs });
+
+            const legacySnap = await getDoc(
+              doc(db, "magazalar", currentUser.email)
+            );
+
+            return selectOwnedStoreId({ legacyDoc: legacySnap });
+          } catch (error) {
+            console.error("Legacy mağaza kontrolü hatası:", error);
+            return null;
+          }
+        };
 
         try {
 
@@ -84,40 +119,26 @@ function Navbar() {
               "sahipUid",
               "==",
               currentUser.uid
-            )
+            ),
+            limit(1)
 
           );
 
-          const uidSnap = await getDocs(uidQuery);
+          magazaUnsubscribe = onSnapshot(uidQuery, async (uidSnap) => {
+            if (auth.currentUser?.uid !== currentUser.uid) return;
 
-          const emailSnap = uidSnap.empty
-            ? await getDocs(query(
-              collection(db, "magazalar"),
-              where("sahip", "==", currentUser.email)
-            ))
-            : null;
+            if (!uidSnap.empty) {
+              setMagazaId(selectOwnedStoreId({ uidDocs: uidSnap.docs }));
+              return;
+            }
 
-          let bulunanMagazaId = !uidSnap.empty
-            ? uidSnap.docs[0].id
-            : emailSnap?.docs[0]?.id;
-
-          if (!bulunanMagazaId) {
-            const legacySnap = await getDoc(
-              doc(db, "magazalar", currentUser.email)
-            );
-
-            if (legacySnap.exists()) bulunanMagazaId = legacySnap.id;
-          }
-
-          if (bulunanMagazaId) {
-
-            setMagazaId(bulunanMagazaId);
-
-          } else {
-
-            setMagazaId(null);
-
-          }
+            setMagazaId(await legacyMagazaBul());
+          }, async (error) => {
+            console.error("UID mağaza kontrolü hatası:", error);
+            if (auth.currentUser?.uid === currentUser.uid) {
+              setMagazaId(await legacyMagazaBul());
+            }
+          });
 
         } catch (error) {
 
@@ -133,7 +154,10 @@ function Navbar() {
       }
     );
 
-    return () => unsub();
+    return () => {
+      unsub();
+      if (magazaUnsubscribe) magazaUnsubscribe();
+    };
 
   }, []);
 
@@ -768,7 +792,17 @@ function Navbar() {
 
                   {/* MAĞAZA */}
 
-                  {magazaId ? (
+                  {magazaId === undefined ? (
+
+                    <div className="store-menu-status" role="status">
+                      <span>🏪</span>
+                      <div>
+                        <strong>Mağaza bilgisi kontrol ediliyor</strong>
+                        <small>Lütfen kısa bir süre bekleyin</small>
+                      </div>
+                    </div>
+
+                  ) : magazaId ? (
 
                     <>
 
@@ -790,7 +824,7 @@ function Navbar() {
                           </strong>
 
                           <small>
-                            Mağazanı yönet
+                            Mağazanı görüntüle ve yönet
                           </small>
                         </div>
 
@@ -815,7 +849,7 @@ function Navbar() {
                           </strong>
 
                           <small>
-                            Satışlarını yönet
+                            Sipariş, finans ve performansı yönet
                           </small>
                         </div>
 
