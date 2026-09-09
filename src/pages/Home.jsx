@@ -30,6 +30,7 @@ import Stats from "../components/Stats";
 import Footer from "../components/Footer";
 import TopDesignShowcase from "../components/TopDesignShowcase";
 import GiftBattle from "../components/GiftBattle";
+import DailyQuote from "../components/DailyQuote";
 
 import "../styles/pages/home.css";
 
@@ -611,6 +612,8 @@ function Home() {
       <TopDesignShowcase />
 
       <Stats />
+
+      <DailyQuote />
 
       <Footer />
 
