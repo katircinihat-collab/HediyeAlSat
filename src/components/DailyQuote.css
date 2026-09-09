@@ -1,102 +1,142 @@
 .daily-quote {
-  --sky: #fffaf6;
-  --sky-end: #f4f8f1;
-  --accent: #dd6b57;
-  --sun: #ffd995;
-  --leaf: #80a879;
-  --leaf-soft: #a9c5a0;
-  --ground: #789b6f;
-  --house: #fff4e9;
-  --house-alt: #f5a7a0;
-  --house-cool: #eaf3f8;
-  --house-warm: #f7d59b;
-  --roof: #ca6658;
   position: relative;
-  height: 300px;
-  min-height: 300px;
-  margin-top: 0;
+  isolation: isolate;
+  width: 100%;
+  height: 310px;
+  min-height: 310px;
+  margin: 0;
   overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  background: linear-gradient(180deg, var(--sky), var(--sky-end));
-  color: #20262b;
+  background: linear-gradient(135deg, #fff8f2, #dff2dc);
+  color: var(--dq-ink, #263641);
 }
 
 .daily-quote + .footer { margin-top: 0; }
-.daily-quote__copy { position: relative; z-index: 2; flex: 0 0 188px; width: min(980px, calc(100% - 32px)); margin: 0 auto; padding-top: 34px; box-sizing: border-box; text-align: center; }
-.daily-quote__heading-row { display: flex; align-items: center; justify-content: center; gap: 18px; }
-.daily-quote__heading-row span { width: 66px; height: 1.5px; background: var(--accent); opacity: .75; }
-.daily-quote h2 { margin: 0; color: var(--accent); font-size: 26px; letter-spacing: -.025em; }
-.daily-quote blockquote { margin: 16px 0 8px; font-size: 26px; font-weight: 800; line-height: 1.22; letter-spacing: -.025em; }
-.daily-quote__copy p { margin: 0; color: #707780; font-size: 16px; }
-.daily-quote__village { position: relative; z-index: 1; display: block; flex: 0 0 112px; width: 100%; height: 112px; margin: 0; }
-.daily-quote__sun { fill: var(--sun); opacity: .72; }
-.daily-quote__moon { fill: #f8edb7; opacity: 0; }
-.daily-quote__stars { fill: #fff3bb; stroke: #fff3bb; opacity: 0; }
-.daily-quote__clouds { fill: #dfe5e8; opacity: .43; }
-.daily-quote__birds { fill: none; stroke: #829096; stroke-width: 2.5; stroke-linecap: round; opacity: .48; }
-.daily-quote__rain { fill: none; stroke: #7ca1b4; stroke-width: 2; opacity: 0; }
-.daily-quote__ground-back { fill: var(--leaf-soft); opacity: .65; }
-.daily-quote__trees .trunk { fill: none; stroke: #675f54; stroke-width: 3; stroke-linecap: round; }
-.daily-quote__trees .crown { fill: var(--leaf); }
-.daily-quote__trees .crown circle:nth-child(even) { fill: var(--leaf-soft); }
-.daily-quote__trees .snow-crown { fill: #fff; opacity: 0; }
-.daily-quote__houses .house { fill: var(--house); }
-.daily-quote__houses .house--alt { fill: var(--house-alt); }
-.daily-quote__houses .house--cool { fill: var(--house-cool); }
-.daily-quote__houses .house--warm { fill: var(--house-warm); }
-.daily-quote__houses .roof--red { fill: var(--roof); }
-.daily-quote__houses .roof--dark { fill: #39494e; }
-.daily-quote__houses .chimney { fill: #39494e; }
-.daily-quote__houses .snow-cap { fill: #fff; opacity: 0; }
-.daily-quote__houses .door { fill: #8b6857; }
-.daily-quote__houses .door--blue { fill: #64859a; }
-.daily-quote__houses .windows rect, .daily-quote__houses .attic-window { fill: #b8d5df; stroke: #fff; stroke-width: 3; }
-.daily-quote__houses .windows { stroke: #fff; stroke-width: 1; }
-.daily-quote__houses .heart { fill: #f28a88; opacity: .86; }
-.daily-quote__shrubs { fill: #70966d; }
-.daily-quote__shrubs ellipse:nth-child(2) { fill: var(--leaf-soft); }
-.daily-quote__fences { fill: none; stroke: #fff; stroke-width: 5; stroke-linecap: round; opacity: .94; }
-.daily-quote__flowers { fill: #ed8580; stroke: #fff4d8; stroke-width: 2; }
-.daily-quote__leaves { fill: #dc914c; opacity: 0; }
-.daily-quote__snow { fill: #fff; opacity: 0; }
-.daily-quote__ground { fill: var(--ground); }
 
-.daily-quote--summer { --sky: #fff9e7; --sky-end: #eef9e8; --sun: #ffc45b; --leaf: #4f9862; --leaf-soft: #86bd78; --ground: #5a995e; --roof: #de7551; }
-.daily-quote--autumn { --sky: #fff8ed; --sky-end: #f7e9d8; --accent: #c56b3d; --sun: #f6c778; --leaf: #c77b44; --leaf-soft: #dfa85e; --ground: #9a784d; --roof: #9b5443; }
-.daily-quote--winter { --sky: #f7fbff; --sky-end: #e8f0f5; --accent: #668da5; --sun: #e7d9ae; --leaf: #9eb2b4; --leaf-soft: #c8d6d8; --ground: #dce8ea; --roof: #71838d; }
-.daily-quote--winter .daily-quote__snow { opacity: .92; }
-.daily-quote--winter .daily-quote__houses .snow-cap, .daily-quote--winter .daily-quote__trees .snow-crown { opacity: .9; }
-.daily-quote--winter .daily-quote__trees .crown { opacity: .25; }
-.daily-quote--sunny { --sky: #fffaf0; --sky-end: #f1f8e8; --accent: #dc7650; --sun: #ffc85c; --leaf: #69a56e; }
-.daily-quote--rainy { --sky: #f5f8fa; --sky-end: #e7eef1; --accent: #688da0; --sun: #ccd6dc; --leaf: #76947d; --leaf-soft: #9aafa1; --ground: #6f8b77; }
-.daily-quote--rainy .daily-quote__rain { opacity: .55; }
-.daily-quote--rainy .daily-quote__clouds { opacity: .78; }
-.daily-quote--night { --sky: #273344; --sky-end: #43506a; --accent: #f2c97d; --sun: #f8edb7; --leaf: #38544d; --leaf-soft: #49665d; --ground: #263f38; --house: #dce3e7; --house-alt: #9b6470; --house-cool: #bdccd4; --house-warm: #d1a773; --roof: #4d3943; color: #f8fafc; }
-.daily-quote--night .daily-quote__copy p { color: #d3dae3; }
-.daily-quote--night .daily-quote__sun { opacity: 0; }
-.daily-quote--night .daily-quote__moon { opacity: .9; }
-.daily-quote--night .daily-quote__stars { opacity: .9; }
-.daily-quote--night .daily-quote__clouds { opacity: .15; }
-.daily-quote--night .daily-quote__houses .windows rect, .daily-quote--night .daily-quote__houses .attic-window { fill: #ffd984; }
-.daily-quote--romantic { --sky: #fff8f7; --sky-end: #f8efed; --accent: #d9656d; --sun: #ffd8b8; --leaf: #86a47c; --leaf-soft: #b1c3a6; --roof: #c85f68; --house-alt: #f4a7ad; }
-.daily-quote--romantic .daily-quote__heart { opacity: 1; }
-.daily-quote--autumn .daily-quote__leaves { opacity: .9; }
-
-@media (max-width: 700px) {
-  .daily-quote { height: 280px; min-height: 280px; }
-  .daily-quote__copy { flex-basis: 168px; margin: 0 auto; padding-top: 25px; }
-  .daily-quote__heading-row { gap: 10px; }
-  .daily-quote__heading-row span { width: 42px; }
-  .daily-quote h2 { font-size: 22px; }
-  .daily-quote blockquote { margin-top: 12px; font-size: 20px; }
-  .daily-quote__copy p { font-size: 14px; }
-  .daily-quote__copy p { max-width: 330px; margin-inline: auto; line-height: 1.45; }
-  .daily-quote__village { flex-basis: 112px; width: 720px; max-width: none; height: 112px; margin: 0; transform: translateX(calc((100vw - 720px) / 2)); }
+.dq-scene {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .daily-quote__clouds { animation: daily-quote-clouds 12s ease-in-out infinite alternate; }
-  @keyframes daily-quote-clouds { to { transform: translateX(12px); } }
+.daily-quote::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 28%, rgba(255, 255, 255, .9) 0, rgba(255, 255, 255, .62) 29%, transparent 57%);
+}
+
+.daily-quote--dark::after {
+  background: radial-gradient(ellipse at 50% 29%, rgba(19, 28, 52, .68) 0, rgba(24, 34, 59, .38) 32%, transparent 60%);
+}
+
+.daily-quote__copy {
+  width: min(880px, calc(100% - 40px));
+  margin: 0 auto;
+  padding-top: 46px;
+  text-align: center;
+}
+
+.daily-quote__eyebrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+}
+
+.daily-quote__eyebrow span {
+  width: 58px;
+  height: 1px;
+  background: var(--dq-accent, #e86b5c);
+  opacity: .75;
+}
+
+.daily-quote__eyebrow h2 {
+  margin: 0;
+  color: var(--dq-accent, #e86b5c);
+  font-size: clamp(21px, 1.7vw, 26px);
+  font-weight: 750;
+  letter-spacing: -.02em;
+}
+
+.daily-quote__copy blockquote {
+  max-width: 800px;
+  margin: 16px auto 8px;
+  color: var(--dq-ink, #263641);
+  font-size: clamp(21px, 2vw, 28px);
+  font-weight: 800;
+  line-height: 1.22;
+  letter-spacing: -.025em;
+  text-wrap: balance;
+}
+
+.daily-quote__copy p {
+  margin: 0;
+  color: color-mix(in srgb, var(--dq-ink, #263641) 74%, transparent);
+  font-size: clamp(14px, 1.1vw, 16px);
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+.daily-quote--dark .daily-quote__eyebrow h2 { color: var(--dq-accent); }
+.daily-quote--dark .daily-quote__copy blockquote { color: var(--dq-ink); text-shadow: 0 1px 14px rgba(0, 0, 0, .28); }
+.daily-quote--dark .daily-quote__copy p { color: color-mix(in srgb, var(--dq-ink) 78%, transparent); }
+
+@media (max-width: 700px) {
+  .daily-quote {
+    height: 320px;
+    min-height: 320px;
+  }
+
+  .dq-scene {
+    width: 170%;
+    max-width: none;
+    left: -35%;
+  }
+
+  .dq-scene__village > g:nth-child(even),
+  .dq-scene__trees > g:nth-child(3n) {
+    display: none;
+  }
+
+  .daily-quote::after {
+    background: linear-gradient(to bottom, rgba(255,255,255,.78), rgba(255,255,255,.56) 53%, transparent 76%);
+  }
+
+  .daily-quote--dark::after {
+    background: linear-gradient(to bottom, rgba(18,27,51,.72), rgba(18,27,51,.48) 54%, transparent 78%);
+  }
+
+  .daily-quote__copy {
+    width: min(100% - 32px, 560px);
+    padding-top: 42px;
+  }
+
+  .daily-quote__eyebrow { gap: 12px; }
+  .daily-quote__eyebrow span { width: 34px; }
+  .daily-quote__copy blockquote { margin-top: 15px; }
+}
+
+@media (max-width: 420px) {
+  .daily-quote {
+    height: 330px;
+    min-height: 330px;
+  }
+
+  .daily-quote__copy {
+    width: calc(100% - 28px);
+    padding-top: 38px;
+  }
+
+  .daily-quote__eyebrow h2 { font-size: 20px; }
+  .daily-quote__copy blockquote { font-size: 21px; line-height: 1.28; }
+  .daily-quote__copy p { font-size: 14px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .daily-quote * { animation: none !important; }
 }
