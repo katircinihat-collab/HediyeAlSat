@@ -88,6 +88,19 @@ test("yetersiz stok reddedilir", () => rejectsCode({
     getListing: async () => ({ ...validListing, stok: 1 })
 }, "INSUFFICIENT_STOCK"));
 
+test("UID tabanlı yeni ilanda satıcı e-postası trusted backend resolver ile çözülür", async () => {
+    const listing = { ...validListing };
+    delete listing.sahip;
+    const order = { ...validOrder, saticiUid: "seller-uid" };
+    delete order.satici;
+    const result = await validateNormalPayment({
+        ...dependencies(order, listing),
+        resolveSellerEmail: async (uid) => uid === "seller-uid" ? "seller@example.com" : ""
+    });
+    assert.equal(result.verifiedItems[0].sellerUid, "seller-uid");
+    assert.equal(result.verifiedItems[0].sellerEmail, "seller@example.com");
+});
+
 async function resultForPrice(price) {
     return validateNormalPayment(dependencies(
         { ...validOrder, fiyat: price, adet: 1 },

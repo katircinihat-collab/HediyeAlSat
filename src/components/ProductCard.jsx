@@ -151,10 +151,9 @@ function ProductCard({ ilan, cardExtra = null, variant = "" }) {
     }
 
 
-    if (
-      auth.currentUser.email ===
-      ilan.sahip
-    ) {
+    if (ilan.sahipUid
+      ? auth.currentUser.uid === ilan.sahipUid
+      : auth.currentUser.email === ilan.sahip) {
 
       alert(
         "Kendi ürününüzü sepete ekleyemezsiniz."
@@ -268,8 +267,7 @@ function ProductCard({ ilan, cardExtra = null, variant = "" }) {
           adet:
             1,
 
-          satici:
-            ilan.sahip || "",
+          saticiUid: ilan.sahipUid || "",
 
           eklenmeTarihi:
             new Date()

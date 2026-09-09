@@ -7,11 +7,14 @@ import {
   getDoc,
   getDocs,
   query,
+  setDoc,
   updateDoc,
+  deleteField,
   where
 } from "firebase/firestore";
 
 import "../styles/pages/my-store.css";
+import { validatePublicContent } from "../utils/publicContentModeration";
 
 function duzenlenebilirMagazaVerisi(magaza) {
   return {
@@ -76,6 +79,8 @@ function MyStore() {
     if (!bulunanBelge) return;
 
     const veri = bulunanBelge.data();
+    const profilSnap = await getDoc(doc(db, "profiller", auth.currentUser.uid));
+    const profil = profilSnap.exists() ? profilSnap.data() : {};
 
     setMagazaId(bulunanBelge.id);
     setLogoHatasi(false);
@@ -84,7 +89,7 @@ function MyStore() {
       magazaAdi: veri.magazaAdi || veri.adi || "",
       logo: veri.logo || "",
       kapak: veri.kapak || veri.banner || "",
-      telefon: veri.telefon || "",
+      telefon: profil.telefon || veri.telefon || "",
       sehir: veri.sehir || "",
       aciklama: veri.aciklama || "",
       aktif: veri.aktif !== false
@@ -104,11 +109,23 @@ function MyStore() {
       return;
     }
 
-    const kaydedilecekVeri = duzenlenebilirMagazaVerisi(magaza);
+    let guvenliAciklama;
+    try {
+      guvenliAciklama = validatePublicContent(magaza.aciklama);
+    } catch (error) {
+      alert(error.message);
+      return;
+    }
+    const kaydedilecekVeri = duzenlenebilirMagazaVerisi({ ...magaza, aciklama: guvenliAciklama });
 
     try {
       setKaydediliyor(true);
-      await updateDoc(doc(db, "magazalar", magazaId), kaydedilecekVeri);
+      const { telefon, ...publicMagazaVerisi } = kaydedilecekVeri;
+      await updateDoc(doc(db, "magazalar", magazaId), {
+        ...publicMagazaVerisi,
+        telefon: deleteField()
+      });
+      await setDoc(doc(db, "profiller", auth.currentUser.uid), { telefon }, { merge: true });
       setIlkMagazaVerisi(kaydedilecekVeri);
       alert("✅ Mağaza kaydedildi.");
     } catch (error) {

@@ -81,7 +81,9 @@ function Cart() {
             baslik: ilan?.baslik || sepetVerisi.baslik || "Ürün",
             fiyat: ilan?.fiyat ?? sepetVerisi.fiyat,
             resim: ilan?.resim || sepetVerisi.resim,
-            satici: ilan?.sahip || sepetVerisi.satici,
+            saticiUid: ilan?.sahipUid || sepetVerisi.saticiUid || "",
+            satici: ilan?.sahip || sepetVerisi.satici || "",
+            magazaAdi: ilan?.magazaAdi || sepetVerisi.magazaAdi || "",
             urunTipi: ilan?.urunTipi || sepetVerisi.urunTipi || "",
             fizikselKargo: typeof ilan?.fizikselKargo === "boolean"
               ? ilan.fizikselKargo

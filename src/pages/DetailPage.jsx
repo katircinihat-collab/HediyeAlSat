@@ -265,11 +265,9 @@ function DetailPage() {
 
         {
 
-          gonderen:
-            auth.currentUser.email,
-
-          alan:
-            ilan.sahip,
+          ...(ilan.sahipUid
+            ? { gonderenUid: auth.currentUser.uid, alanUid: ilan.sahipUid }
+            : { gonderen: auth.currentUser.email, alan: ilan.sahip }),
 
           ilanId:
             ilan.id,
@@ -492,10 +490,9 @@ function DetailPage() {
     }
 
 
-    if (
-      auth.currentUser.email ===
-      ilan.sahip
-    ) {
+    if (ilan.sahipUid
+      ? auth.currentUser.uid === ilan.sahipUid
+      : auth.currentUser.email === ilan.sahip) {
 
       alert(
         "Kendi ürününüzü sepete ekleyemezsiniz."
@@ -590,8 +587,7 @@ function DetailPage() {
           resim:
             ilan.resim || "",
 
-          satici:
-            ilan.sahip || "",
+          saticiUid: ilan.sahipUid || "",
 
           adet:
             1,
@@ -641,10 +637,9 @@ function DetailPage() {
     }
 
 
-    if (
-      auth.currentUser.email ===
-      ilan.sahip
-    ) {
+    if (ilan.sahipUid
+      ? auth.currentUser.uid === ilan.sahipUid
+      : auth.currentUser.email === ilan.sahip) {
 
       alert(
         "Kendi ilanınızı satın alamazsınız."
@@ -697,8 +692,9 @@ function DetailPage() {
             magazaId:
               ilan.magazaId || "",
 
-            satici:
-              ilan.sahip,
+            ...(ilan.sahipUid
+              ? { saticiUid: ilan.sahipUid }
+              : { satici: ilan.sahip || "" }),
 
             alici:
               auth.currentUser.email,

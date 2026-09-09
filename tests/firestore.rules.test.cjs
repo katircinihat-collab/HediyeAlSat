@@ -1,5 +1,6 @@
 const fs = require("node:fs");
 const path = require("node:path");
+const assert = require("node:assert/strict");
 const { after, before, test } = require("node:test");
 const {
   assertFails,
@@ -496,7 +497,7 @@ test("30 - alıcı yalnız onaylı ilanın gerçek fiyatı ve satıcısıyla sip
   const validOrder = {
     ilanId: "published",
     ilanBaslik: "Yayındaki ilan",
-    satici: ownerAuth.email,
+    saticiUid: ownerAuth.uid,
     alici: otherAuth.email,
     fiyat: 100,
     adet: 1,
@@ -520,7 +521,7 @@ test("30a - güncel Checkout fiziksel ve dijital sipariş türlerini güvenli ol
   const db = dbFor(otherAuth);
   const physical = {
     ilanId: "published", ilanBaslik: "Yayındaki ilan",
-    satici: ownerAuth.email, alici: otherAuth.email,
+    saticiUid: ownerAuth.uid, alici: otherAuth.email,
     fiyat: 100, adet: 1, toplam: 100,
     adSoyad: "Test Alıcı", telefon: "05000000000", adres: "Test adresi",
     il: "Sakarya", ilce: "Adapazarı", kargo: "Standart Kargo", siparisNotu: "",
@@ -554,7 +555,6 @@ test("31 - dijital ilan güvenli başlangıç alanlarıyla oluşturulabilir", as
     altKategori: "Poster",
     tip: "Satılık",
     sehir: "Sakarya",
-    telefon: "",
     adet: 1,
     stok: 1,
     marka: "",
@@ -565,7 +565,6 @@ test("31 - dijital ilan güvenli başlangıç alanlarıyla oluşturulabilir", as
     video: "",
     ozelGunler: [],
     sahipUid: ownerAuth.uid,
-    sahip: ownerAuth.email,
     magazaId: "store",
     magazaAdi: "Mağaza",
     paraBirimi: "TRY",
@@ -783,4 +782,68 @@ test("59 - buyer identity kayıtları client ve admin client erişimine tamamen 
   await assertFails(setDoc(ownerRef, { identityNumber: "10000000146" }));
   await assertFails(updateDoc(adminRef, { last4: "0146" }));
   await assertFails(deleteDoc(adminRef));
+});
+
+test("66 - yeni public ilan telefon alanı içeremez", async () => {
+  await assertFails(setDoc(doc(dbFor(ownerAuth), "ilanlar", "phone-listing"), {
+    ilanNo: 999, baslik: "Telefonlu ilan", fiyat: 100, kategori: "Hediye",
+    altKategori: "", tip: "Satılık", sehir: "Sakarya", telefon: "05000000000",
+    adet: 1, stok: 1, marka: "", renk: "", aciklama: "Açıklama",
+    resim: "", resimler: [], video: "", ozelGunler: [], sahipUid: ownerAuth.uid,
+    sahip: ownerAuth.email, magazaId: "store", magazaAdi: "Mağaza", paraBirimi: "TRY",
+    puan: 5, yorumSayisi: 0, favoriSayisi: 0, satisSayisi: 0, goruntulenme: 0,
+    onay: false, oneCikan: false, trend: false, kampanyali: false, indirim: 0,
+    ucretsizKargo: true, ayniGunKargo: false, guvenliOdeme: true, kargoUcreti: 0,
+    teslimatSuresi: "", aktif: true, tarih: new Date()
+  }));
+});
+
+test("67 - yeni public mağaza telefon alanı içeremez", async () => {
+  await assertFails(setDoc(doc(dbFor(ownerAuth), "magazalar", "phone-store"), {
+    sahipUid: ownerAuth.uid, magazaAdi: "Telefonlu mağaza",
+    telefon: "05000000000", sehir: "Sakarya", aciklama: "Açıklama",
+    logo: "", kapak: "", puan: 5, takipci: 0, tarih: new Date()
+  }));
+});
+
+test("68 - yeni mağaza yorumu ve puanı e-posta snapshot kabul etmez", async () => {
+  const db = dbFor(ownerAuth);
+  await assertFails(setDoc(doc(db, "magazaYorumlari", "email-review"), {
+    magazaId: "store", kullaniciUid: ownerAuth.uid, kullanici: ownerAuth.email,
+    yorum: "Yorum", tarih: new Date()
+  }));
+  await assertFails(setDoc(doc(db, "magazaPuanlari", "email-rating"), {
+    magazaId: "store", kullaniciUid: ownerAuth.uid, kullanici: ownerAuth.email,
+    puan: 5, tarih: new Date()
+  }));
+});
+
+test("69 - başka kullanıcı private finans kayıtlarını okuyamaz", async () => {
+  const strangerDb = dbFor({ uid: "stranger", email: "stranger@example.com" });
+  await assertFails(getDoc(doc(strangerDb, "wallets", ownerAuth.email)));
+  await assertFails(getDoc(doc(strangerDb, "bakiyeHareketleri", "owner-movement")));
+  await assertFails(getDoc(doc(strangerDb, "paraCekmeTalepleri", "owner-withdrawal")));
+});
+
+test("70 - UID tabanlı yeni public ilan ve mağaza e-posta içermez", async () => {
+  const ownerDb = dbFor(ownerAuth);
+  await assertSucceeds(setDoc(doc(ownerDb, "magazalar", "uid-store"), {
+    sahipUid: ownerAuth.uid, magazaAdi: "UID Mağaza", sehir: "Sakarya",
+    aciklama: "Güvenli mağaza açıklaması", logo: "", kapak: "",
+    puan: 5, takipci: 0, tarih: new Date()
+  }));
+  const storeSnap = await assertSucceeds(getDoc(doc(dbFor(), "magazalar", "uid-store")));
+  assert.equal(storeSnap.data().sahip, undefined);
+  assert.equal(storeSnap.data().telefon, undefined);
+  const listingSnap = await assertSucceeds(getDoc(doc(dbFor(), "ilanlar", "published-digital")));
+  assert.equal(listingSnap.data().telefon, undefined);
+});
+
+test("71 - public açıklamalardaki iletişim bilgileri reddedilir", async () => {
+  const ref = doc(dbFor(ownerAuth), "magazalar", "blocked-contact-store");
+  await assertFails(setDoc(ref, {
+    sahipUid: ownerAuth.uid, magazaAdi: "Mağaza", sehir: "Sakarya",
+    aciklama: "WhatsApp 0532 111 22 33", logo: "", kapak: "",
+    puan: 5, takipci: 0, tarih: new Date()
+  }));
 });

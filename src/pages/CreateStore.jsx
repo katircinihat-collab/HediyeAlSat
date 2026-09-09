@@ -10,6 +10,7 @@ import {
   where
 } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
+import { validatePublicContent } from "../utils/publicContentModeration";
 
 const CLOUD_NAME = "dsncigidz";
 const UPLOAD_PRESET = "zcqdaoum";
@@ -23,7 +24,6 @@ function CreateStore() {
   const [magaza,setMagaza]=useState({
 
     magazaAdi:"",
-    telefon:"",
     sehir:"",
     aciklama:"",
     logo:"",
@@ -173,6 +173,14 @@ function CreateStore() {
 
     }
 
+    let guvenliAciklama;
+    try {
+      guvenliAciklama = validatePublicContent(magaza.aciklama);
+    } catch (error) {
+      alert(error.message);
+      return;
+    }
+
     await addDoc(
 
       collection(db,"magazalar"),
@@ -181,15 +189,11 @@ function CreateStore() {
 
         sahipUid:auth.currentUser.uid,
 
-        sahip:auth.currentUser.email,
-
         magazaAdi:magaza.magazaAdi,
-
-        telefon:magaza.telefon,
 
         sehir:magaza.sehir,
 
-        aciklama:magaza.aciklama,
+        aciklama:guvenliAciklama,
 
         logo:magaza.logo,
 
@@ -223,12 +227,6 @@ function CreateStore() {
           placeholder="Mağaza Adı"
           value={magaza.magazaAdi}
           onChange={(e)=>setMagaza({...magaza,magazaAdi:e.target.value})}
-        />
-
-        <input
-          placeholder="Telefon"
-          value={magaza.telefon}
-          onChange={(e)=>setMagaza({...magaza,telefon:e.target.value})}
         />
 
         <input

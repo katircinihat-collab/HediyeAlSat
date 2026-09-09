@@ -24,7 +24,8 @@ async function validateNormalPayment({
     siparisIds,
     user,
     getOrder,
-    getListing
+    getListing,
+    resolveSellerEmail
 }) {
     if (!Array.isArray(siparisIds) || siparisIds.length === 0) {
         throw new PaymentValidationError(
@@ -186,19 +187,33 @@ async function validateNormalPayment({
             }
         }
 
+        const sellerUid = listing.sahipUid || order.saticiUid || "";
+        const sellerEmail = listing.sahip || order.satici || (
+            sellerUid && resolveSellerEmail
+                ? await resolveSellerEmail(sellerUid)
+                : ""
+        );
+        if (!sellerEmail) {
+            throw new PaymentValidationError(
+                "Satıcı ödeme hesabı doğrulanamadı.",
+                409,
+                "SELLER_ACCOUNT_UNRESOLVED"
+            );
+        }
+
         verifiedItems.push({
             siparisId,
             listingId,
 
             sellerKey:
-                listing.sahipUid ||
+                sellerUid ||
                 listing.sahip ||
                 order.satici,
 
             sellerEmail:
-                listing.sahip ||
-                order.satici ||
-                "",
+                sellerEmail,
+
+            sellerUid,
 
             name:
                 listing.baslik ||

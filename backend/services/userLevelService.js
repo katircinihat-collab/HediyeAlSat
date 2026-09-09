@@ -1,4 +1,5 @@
 const levels = require("../../shared/userLevels.json");
+const { validatePublicContent } = require("./publicContentModerationService");
 const { FieldValue } = require("../config/firebase");
 const { normalizeOrderStatus, ORDER_STATUSES } = require("../constants/orderStatuses");
 
@@ -103,7 +104,7 @@ async function getVerifiedReviewIds(firestore, reviewIds) {
 
 async function createVerifiedProductReview({ firestore, user, listingId, rating, comment }) {
     const numericRating = Number(rating);
-    const text = String(comment || "").trim();
+    const text = validatePublicContent(comment);
     if (!listingId || !Number.isInteger(numericRating) || numericRating < 1 || numericRating > 5 || text.length < 3 || text.length > 2000) {
         const error = new Error("Yorum bilgileri geçersiz."); error.status = 400; throw error;
     }
@@ -114,7 +115,7 @@ async function createVerifiedProductReview({ firestore, user, listingId, rating,
     await firestore.runTransaction(async (tx) => {
         const current = await tx.get(reviewRef);
         if (current.exists) { const error = new Error("Bu ürünü daha önce değerlendirdiniz."); error.status = 409; throw error; }
-        tx.set(reviewRef, { ilanId: listingId, kullanici: user.email, kullaniciUid: user.uid, puan: numericRating, yorum: text, dogrulanmisAlici: true, tarih: FieldValue.serverTimestamp() });
+        tx.set(reviewRef, { ilanId: listingId, kullaniciUid: user.uid, puan: numericRating, yorum: text, dogrulanmisAlici: true, tarih: FieldValue.serverTimestamp() });
     });
     await syncUserLevel({ firestore, uid: user.uid, email: user.email });
     return { id: reviewRef.id, verifiedBuyer: true };

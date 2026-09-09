@@ -473,8 +473,9 @@ function Checkout() {
               alici:
                 auth.currentUser.email,
 
-              satici:
-                urun.satici,
+              ...((urun.sahipUid || urun.saticiUid)
+                ? { saticiUid: urun.sahipUid || urun.saticiUid }
+                : { satici: urun.satici || "" }),
 
               ilanId:
                 urun.ilanId,

@@ -16,6 +16,7 @@ import { db } from "../firebase";
 import categories from "../data/categories";
 import cities from "../data/cities";
 import { apiUrl } from "../config/api";
+import { validatePublicContent } from "../utils/publicContentModeration";
 
 import "../App.css";
 
@@ -84,7 +85,6 @@ function AddListing() {
     altKategori: "",
     tip: "Satılık",
     sehir: "",
-    telefon: "",
     adet: "",
     marka: "",
     renk: "",
@@ -537,6 +537,14 @@ function AddListing() {
        FIREBASE KAYDI
     =========================== */
 
+    let guvenliAciklama;
+    try {
+      guvenliAciklama = validatePublicContent(ilan.aciklama);
+    } catch (error) {
+      alert(error.message);
+      return;
+    }
+
     const dijitalAlanlar = a4Tasarlaniyor ? {
       urunTipi: "dijital",
       dosyaFormatlari: [orijinalDosya.type === "application/pdf" ? "PDF" : orijinalDosya.type === "image/png" ? "PNG" : "JPG"],
@@ -572,9 +580,6 @@ function AddListing() {
       sehir:
         ilan.sehir,
 
-      telefon:
-        ilan.telefon,
-
       adet:
         Number(
           ilan.adet || 1
@@ -592,7 +597,7 @@ function AddListing() {
         ilan.renk,
 
       aciklama:
-        ilan.aciklama,
+        guvenliAciklama,
 
       resim:
         ilan.resim,
@@ -606,9 +611,6 @@ function AddListing() {
       /* ⭐ ÖZEL GÜNLER */
       ozelGunler:
         ilan.ozelGunler,
-
-      sahip:
-        auth.currentUser.email,
 
       sahipUid:
         auth.currentUser.uid,
@@ -710,7 +712,6 @@ function AddListing() {
         altKategori: "",
         tip: "Satılık",
         sehir: "",
-        telefon: "",
         adet: "",
         marka: "",
         renk: "",
@@ -791,18 +792,6 @@ function AddListing() {
           }
         />
 
-
-        <input
-          placeholder="Telefon"
-          value={ilan.telefon}
-          onChange={(e) =>
-            setIlan({
-              ...ilan,
-              telefon:
-                e.target.value
-            })
-          }
-        />
 
 
         <input

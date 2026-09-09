@@ -113,7 +113,7 @@ function CartItem({
 
           <b>
 
-            {urun.satici}
+            {urun.magazaAdi || "HediyeAlSat Satıcısı"}
 
           </b>
 

@@ -3,12 +3,14 @@ import {useParams,useNavigate} from "react-router-dom";
 import {
 doc,
 getDoc,
-updateDoc
+updateDoc,
+deleteField
 } from "firebase/firestore";
 
 import {db} from "../firebase";
 
 import { auth } from "../firebase";
+import { validatePublicContent } from "../utils/publicContentModeration";
 
 function EditListing(){
 
@@ -40,10 +42,12 @@ return;
 
 
 
-if(
-snap.data().sahip !== auth.currentUser?.email &&
-auth.currentUser?.email !== "alper54nihat@hediyealsat.com"
-){
+const veri=snap.data();
+const sahibiMi=veri.sahipUid
+? veri.sahipUid===auth.currentUser?.uid
+: veri.sahip===auth.currentUser?.email;
+
+if(!sahibiMi && auth.currentUser?.email !== "alper54nihat@hediyealsat.com"){
 
 alert("Bu ilanı düzenleme yetkin yok");
 
@@ -84,6 +88,14 @@ async function kaydet(e){
 
 e.preventDefault();
 
+let guvenliAciklama;
+try {
+guvenliAciklama=validatePublicContent(ilan.aciklama);
+} catch (error) {
+alert(error.message);
+return;
+}
+
 
 await updateDoc(
 
@@ -94,9 +106,9 @@ baslik:ilan.baslik,
 
 fiyat:ilan.fiyat,
 
-telefon:ilan.telefon,
+telefon:deleteField(),
 
-aciklama:ilan.aciklama,
+aciklama:guvenliAciklama,
 
 kategori:ilan.kategori,
 
@@ -282,24 +294,6 @@ fiyat:e.target.value
 />
 
 
-
-<input
-
-value={ilan.telefon}
-
-onChange={e=>
-
-setIlan({
-
-...ilan,
-
-telefon:e.target.value
-
-})
-
-}
-
-/>
 
 
 

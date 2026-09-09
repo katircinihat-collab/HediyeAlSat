@@ -33,6 +33,7 @@ function Messages() {
   const [gonderiliyor, setGonderiliyor] = useState(false);
 
   const currentEmail = auth.currentUser?.email;
+  const currentUid = auth.currentUser?.uid;
 
 
   /*
@@ -58,7 +59,7 @@ function Messages() {
 
   useEffect(() => {
 
-    if (!currentEmail) return;
+    if (!currentEmail || !currentUid) return;
 
     const gonderilenQuery = query(
       collection(db, "mesajlar"),
@@ -72,14 +73,19 @@ function Messages() {
       orderBy("tarih", "desc")
     );
 
+    const uidGonderilenQuery = query(collection(db, "mesajlar"), where("gonderenUid", "==", currentUid), orderBy("tarih", "desc"));
+    const uidAlinanQuery = query(collection(db, "mesajlar"), where("alanUid", "==", currentUid), orderBy("tarih", "desc"));
+
     let gonderilenMesajlar = [];
     let alinanMesajlar = [];
+    let uidGonderilenMesajlar = [];
+    let uidAlinanMesajlar = [];
 
     function mesajlariBirlestir() {
 
       const benzersizMesajlar = new Map();
 
-      [...gonderilenMesajlar, ...alinanMesajlar]
+      [...gonderilenMesajlar, ...alinanMesajlar, ...uidGonderilenMesajlar, ...uidAlinanMesajlar]
         .forEach((mesaj) => {
           benzersizMesajlar.set(mesaj.id, mesaj);
         });
@@ -117,12 +123,23 @@ function Messages() {
 
     });
 
+    const uidGonderilenUnsub = onSnapshot(uidGonderilenQuery, (snap) => {
+      uidGonderilenMesajlar = snap.docs.map((item) => ({ id: item.id, ...item.data() }));
+      mesajlariBirlestir();
+    });
+    const uidAlinanUnsub = onSnapshot(uidAlinanQuery, (snap) => {
+      uidAlinanMesajlar = snap.docs.map((item) => ({ id: item.id, ...item.data() }));
+      mesajlariBirlestir();
+    });
+
     return () => {
       gonderilenUnsub();
       alinanUnsub();
+      uidGonderilenUnsub();
+      uidAlinanUnsub();
     };
 
-  }, [currentEmail]);
+  }, [currentEmail, currentUid]);
 
 
   /*
@@ -137,10 +154,10 @@ function Messages() {
 
     mesajlar.forEach((m) => {
 
-      const digerKisi =
-        m.gonderen === currentEmail
-          ? m.alan
-          : m.gonderen;
+      const uidTabanli = Boolean(m.gonderenUid && m.alanUid);
+      const digerKisi = uidTabanli
+        ? (m.gonderenUid === currentUid ? m.alanUid : m.gonderenUid)
+        : (m.gonderen === currentEmail ? m.alan : m.gonderen);
 
       const anahtar =
         `${m.ilanId || "genel"}_${digerKisi}`;
@@ -153,6 +170,7 @@ function Messages() {
           ilanBaslik:
             m.ilanBaslik || "Genel Sohbet",
           digerKisi,
+          uidTabanli,
           mesajlar: []
         };
 
@@ -183,7 +201,7 @@ function Messages() {
 
         const okunmamis = sohbet.mesajlar.filter(
           (m) =>
-            m.alan === currentEmail &&
+            (m.alanUid === currentUid || m.alan === currentEmail) &&
             m.okundu !== true
         ).length;
 
@@ -206,7 +224,7 @@ function Messages() {
 
       });
 
-  }, [mesajlar, currentEmail]);
+  }, [mesajlar, currentEmail, currentUid]);
 
 
   /*
@@ -222,7 +240,7 @@ function Messages() {
     const okunmamisMesajlar =
       sohbet.mesajlar.filter(
         (m) =>
-          m.alan === currentEmail &&
+          (m.alanUid === currentUid || m.alan === currentEmail) &&
           m.okundu !== true
       );
 
@@ -283,8 +301,9 @@ function Messages() {
       await addDoc(
         collection(db, "mesajlar"),
         {
-          gonderen: currentEmail,
-          alan: alan,
+          ...(secili.uidTabanli
+            ? { gonderenUid: currentUid, alanUid: alan }
+            : { gonderen: currentEmail, alan }),
           ilanId: secili.ilanId,
           ilanBaslik: secili.ilanBaslik,
           mesaj: yeniMesaj.trim(),
@@ -501,9 +520,7 @@ function Messages() {
               Sohbetlerim
             </strong>
 
-            <span>
-              {currentEmail}
-            </span>
+            <span>Güvenli mesajlaşma hesabı</span>
 
           </div>
 
@@ -570,9 +587,7 @@ function Messages() {
 
                   </div>
 
-                  <strong>
-                    {sohbet.digerKisi}
-                  </strong>
+                  <strong>HediyeAlSat kullanıcısı</strong>
 
                   <p>
 
@@ -666,9 +681,7 @@ function Messages() {
                     {secili.ilanBaslik}
                   </h2>
 
-                  <p>
-                    {secili.digerKisi}
-                  </p>
+                  <p>HediyeAlSat güvenli mesajlaşma</p>
 
                 </div>
 

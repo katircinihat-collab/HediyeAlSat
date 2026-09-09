@@ -13,6 +13,7 @@ import StoreRating from "../components/StoreRating";
 import StoreComments from "../components/StoreComments";
 import StoreProducts from "../components/StoreProducts";
 import { getPublicLevel, hydrateCommentLevels } from "../services/userLevelApi";
+import { validatePublicContent } from "../utils/publicContentModeration";
 import "../styles/pages/store-detail.css";
 
 function StoreDetail() {
@@ -104,7 +105,10 @@ function StoreDetail() {
             : null
         );
         setPuanVerdiMi(
-          Boolean(auth.currentUser && puanlar.some((kayit) => kayit.kullanici === auth.currentUser.email))
+          Boolean(auth.currentUser && puanlar.some((kayit) =>
+            kayit.kullaniciUid === auth.currentUser.uid ||
+            kayit.kullanici === auth.currentUser.email
+          ))
         );
 
         const yorumListesi = yorumSnap.docs
@@ -170,7 +174,7 @@ function StoreDetail() {
 
     await addDoc(collection(db, "magazaPuanlari"), {
       magazaId: id,
-      kullanici: auth.currentUser.email,
+      kullaniciUid: auth.currentUser.uid,
       puan,
       tarih: new Date()
     });
@@ -192,19 +196,24 @@ function StoreDetail() {
       return;
     }
 
+    let guvenliYorum;
+    try {
+      guvenliYorum = validatePublicContent(yorum);
+    } catch (error) {
+      alert(error.message);
+      return;
+    }
     const tarih = new Date();
     const yeniYorum = await addDoc(collection(db, "magazaYorumlari"), {
       magazaId: id,
-      kullanici: auth.currentUser.email,
       kullaniciUid: auth.currentUser.uid,
-      yorum: yorum.trim(),
+      yorum: guvenliYorum,
       tarih
     });
     setYorumlar((onceki) => [{
       id: yeniYorum.id,
-      kullanici: auth.currentUser.email,
       kullaniciUid: auth.currentUser.uid,
-      yorum: yorum.trim(),
+      yorum: guvenliYorum,
       tarih
     }, ...onceki].slice(0, 20));
     setYorum("");

@@ -8,7 +8,7 @@ const orderService = require("./orderService");
 
 const walletService = require("./walletService");
 
-const { firestore, FieldValue } = require("../config/firebase");
+const { admin, firestore, FieldValue } = require("../config/firebase");
 const orderModel = require("../models/orderModel");
 const { PaymentValidationError, validateNormalPayment, buildIyzicoBasket } = require("./paymentValidationService");
 const { validateRetrievedPayment, mapPaymentItemTransactions, finalizePayment } = require("./paymentCallbackService");
@@ -110,7 +110,8 @@ async function createPayment(data, authenticatedUser, requestContext = {}) {
             getListing: async (listingId) => {
                 const snapshot = await firestore.collection("ilanlar").doc(listingId).get();
                 return snapshot.exists ? { id: snapshot.id, ...snapshot.data() } : null;
-            }
+            },
+            resolveSellerEmail: async (uid) => (await admin.auth().getUser(uid)).email || ""
         });
 
         trustedPrice = verified.payableTotal;
@@ -136,7 +137,11 @@ async function createPayment(data, authenticatedUser, requestContext = {}) {
 
         await Promise.all(verified.verifiedItems.map((item) => orderModel.updateOrder(
             item.siparisId,
-            { kargoOdemeTipi: item.shippingPayer }
+            {
+                kargoOdemeTipi: item.shippingPayer,
+                satici: item.sellerEmail,
+                saticiUid: item.sellerUid || null
+            }
         )));
     }
 

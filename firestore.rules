@@ -29,11 +29,20 @@ service cloud.firestore {
       return request.resource.data.diff(resource.data).affectedKeys().hasOnly(fields);
     }
 
+    function publicTextIsSafe(text) {
+      return text is string
+        && !text.matches('.*[A-Za-z0-9._%+\\-]+@[A-Za-z0-9.\\-]+\\.[A-Za-z]{2,}.*')
+        && !text.matches('.*(\\+?90|0)?[ ]*5[0-9]{2}([ ().\\-]*[0-9]){7}.*')
+        && !text.matches('.*([Ww][Hh][Aa][Tt][Ss][Aa][Pp][Pp]|[Ww][Aa]\\.[Mm][Ee]|[Ii][Nn][Ss][Tt][Aa][Gg][Rr][Aa][Mm]|[Ii][Nn][Ss][Tt][Aa]:|[Tt][Ee][Ll][Ee][Gg][Rr][Aa][Mm]|[Tt]\\.[Mm][Ee]|[Bb][Ee][Nn][Ii] [Aa][Rr][Aa]).*');
+    }
+
     function ownsOrder(data) {
-      return hasEmail()
-        && (("alici" in data && data.alici == request.auth.token.email)
+      return signedIn()
+        && (("aliciUid" in data && data.aliciUid == request.auth.uid)
+          || ("saticiUid" in data && data.saticiUid == request.auth.uid)
+          || (hasEmail() && (("alici" in data && data.alici == request.auth.token.email)
           || ("satici" in data && data.satici == request.auth.token.email)
-          || ("kullanici" in data && data.kullanici == request.auth.token.email));
+          || ("kullanici" in data && data.kullanici == request.auth.token.email))));
     }
 
     function validOrderCreate() {
@@ -42,18 +51,26 @@ service cloud.firestore {
         || (("fizikselKargo" in listing) && listing.fizikselKargo == false);
       return hasEmail()
         && request.resource.data.keys().hasOnly([
-          "ilanId", "ilanBaslik", "magazaId", "satici", "alici",
+          "ilanId", "ilanBaslik", "magazaId", "satici", "saticiUid", "alici",
           "fiyat", "adet", "toplam", "adSoyad", "telefon", "adres",
           "il", "ilce", "kargo", "siparisNotu", "durum", "odemeDurumu",
           "kargoNo", "teslimEdildi", "tarih", "olusturmaTarihi",
           "urunTipi", "fizikselKargo"
         ])
         && request.resource.data.alici == request.auth.token.email
-        && request.resource.data.alici != request.resource.data.satici
         && request.resource.data.ilanId is string
         && exists(/databases/$(database)/documents/ilanlar/$(request.resource.data.ilanId))
         && get(/databases/$(database)/documents/ilanlar/$(request.resource.data.ilanId)).data.onay == true
-        && request.resource.data.satici == get(/databases/$(database)/documents/ilanlar/$(request.resource.data.ilanId)).data.sahip
+        && (("sahipUid" in listing
+              && request.resource.data.saticiUid is string
+              && request.resource.data.saticiUid == listing.sahipUid
+              && request.resource.data.saticiUid != request.auth.uid
+              && !("satici" in request.resource.data))
+          || (!("sahipUid" in listing)
+              && request.resource.data.satici is string
+              && request.resource.data.satici == listing.sahip
+              && request.resource.data.satici != request.auth.token.email
+              && !("saticiUid" in request.resource.data)))
         && request.resource.data.fiyat == get(/databases/$(database)/documents/ilanlar/$(request.resource.data.ilanId)).data.fiyat
         && request.resource.data.fiyat is number
         && request.resource.data.fiyat >= 0
@@ -180,19 +197,28 @@ service cloud.firestore {
     }
 
     match /mesajlar/{messageId} {
-      allow read: if hasEmail()
-        && (resource.data.gonderen == request.auth.token.email
-          || resource.data.alan == request.auth.token.email);
+      allow read: if signedIn()
+        && ((resource.data.gonderenUid == request.auth.uid
+              || resource.data.alanUid == request.auth.uid)
+          || (hasEmail() && (resource.data.gonderen == request.auth.token.email
+              || resource.data.alan == request.auth.token.email)));
 
-      allow create: if hasEmail()
-        && request.resource.data.gonderen == request.auth.token.email
-        && request.resource.data.alan is string
+      allow create: if signedIn()
+        && ((request.resource.data.gonderenUid == request.auth.uid
+              && request.resource.data.alanUid is string
+              && !("gonderen" in request.resource.data)
+              && !("alan" in request.resource.data))
+          || (hasEmail()
+              && request.resource.data.gonderen == request.auth.token.email
+              && request.resource.data.alan is string))
         && request.resource.data.mesaj is string
         && request.resource.data.mesaj.size() <= 5000
+        && publicTextIsSafe(request.resource.data.mesaj)
         && request.resource.data.okundu == false;
 
-      allow update: if hasEmail()
-        && resource.data.alan == request.auth.token.email
+      allow update: if signedIn()
+        && (resource.data.alanUid == request.auth.uid
+          || (hasEmail() && resource.data.alan == request.auth.token.email))
         && onlyChanged(["okundu"])
         && request.resource.data.okundu is bool;
 
@@ -205,9 +231,9 @@ service cloud.firestore {
       allow create: if signedIn()
         && request.resource.data.keys().hasOnly([
           "ilanNo", "baslik", "fiyat", "eskiFiyat", "kategori",
-          "altKategori", "tip", "sehir", "telefon", "adet", "stok",
+          "altKategori", "tip", "sehir", "adet", "stok",
           "marka", "renk", "aciklama", "resim", "resimler", "video",
-          "ozelGunler", "sahipUid", "sahip", "magazaId", "magazaAdi",
+          "ozelGunler", "sahipUid", "magazaId", "magazaAdi",
           "paraBirimi", "puan", "yorumSayisi", "favoriSayisi",
           "satisSayisi", "goruntulenme", "onay", "oneCikan", "trend",
           "kampanyali", "indirim", "ucretsizKargo", "ayniGunKargo",
@@ -217,7 +243,6 @@ service cloud.firestore {
           "hakOnayiTarihi", "hakOnayiSurumu", "dijitalDosyaDurumu"
         ])
         && request.resource.data.sahipUid == request.auth.uid
-        && request.resource.data.sahip == request.auth.token.email
         && request.resource.data.onay == false
         && request.resource.data.trend == false
         && request.resource.data.oneCikan == false
@@ -228,6 +253,7 @@ service cloud.firestore {
         && request.resource.data.satisSayisi == 0
         && request.resource.data.goruntulenme == 0
         && request.resource.data.guvenliOdeme == true
+        && publicTextIsSafe(request.resource.data.aciklama)
         && ((!("urunTipi" in request.resource.data)
             && !request.resource.data.keys().hasAny([
               "dosyaFormatlari", "dijitalTeslimat", "fizikselKargo", "hakOnayi",
@@ -251,7 +277,9 @@ service cloud.firestore {
           "video", "ozelGunler", "tip", "sehir", "adet", "stok",
           "eskiFiyat", "indirim", "ucretsizKargo", "ayniGunKargo",
           "kargoUcreti", "teslimatSuresi", "aktif", "paraBirimi"
-        ]));
+        ]) && !("telefon" in request.resource.data)
+          && (!("aciklama" in request.resource.data)
+            || publicTextIsSafe(request.resource.data.aciklama)));
 
       allow delete: if listingOwner() || isAdmin();
     }
@@ -304,19 +332,21 @@ service cloud.firestore {
 
       allow create: if signedIn()
         && request.resource.data.keys().hasOnly([
-          "sahipUid", "sahip", "magazaAdi", "telefon", "sehir",
+          "sahipUid", "magazaAdi", "sehir",
           "aciklama", "logo", "kapak", "puan", "takipci", "tarih"
         ])
         && request.resource.data.sahipUid == request.auth.uid
-        && request.resource.data.sahip == request.auth.token.email
         && request.resource.data.puan == 5
-        && request.resource.data.takipci == 0;
+        && request.resource.data.takipci == 0
+        && publicTextIsSafe(request.resource.data.aciklama);
 
       allow update: if isAdmin()
         || (storeOwner(storeId) && onlyChanged([
           "magazaAdi", "adi", "logo", "kapak", "banner",
           "telefon", "sehir", "aciklama"
-        ]));
+        ]) && !("telefon" in request.resource.data)
+          && (!("aciklama" in request.resource.data)
+            || publicTextIsSafe(request.resource.data.aciklama)));
 
       allow delete: if isAdmin();
     }
@@ -325,34 +355,41 @@ service cloud.firestore {
       allow read: if true;
       allow create: if false;
       allow update: if false;
-      allow delete: if emailOwnedExisting() || isAdmin();
+      allow delete: if (signedIn() && resource.data.kullaniciUid == request.auth.uid)
+        || emailOwnedExisting() || isAdmin();
     }
 
     match /magazaPuanlari/{ratingId} {
       allow read: if true;
-      allow create: if emailOwnedCreate()
+      allow create: if signedIn()
+        && request.resource.data.kullaniciUid == request.auth.uid
+        && !("kullanici" in request.resource.data)
         && request.resource.data.magazaId is string
         && request.resource.data.puan is number
         && request.resource.data.puan >= 1
         && request.resource.data.puan <= 5;
       allow update: if false;
-      allow delete: if emailOwnedExisting() || isAdmin();
+      allow delete: if (signedIn() && resource.data.kullaniciUid == request.auth.uid)
+        || emailOwnedExisting() || isAdmin();
     }
 
     match /magazaYorumlari/{reviewId} {
       allow read: if true;
-      allow create: if emailOwnedCreate()
+      allow create: if signedIn()
         && request.resource.data.kullaniciUid == request.auth.uid
+        && !("kullanici" in request.resource.data)
         && request.resource.data.magazaId is string
         && request.resource.data.yorum is string
         && request.resource.data.yorum.size() >= 1
         && request.resource.data.yorum.size() <= 2000
+        && publicTextIsSafe(request.resource.data.yorum)
         && (!("puan" in request.resource.data)
           || (request.resource.data.puan is number
             && request.resource.data.puan >= 1
             && request.resource.data.puan <= 5));
       allow update: if false;
-      allow delete: if emailOwnedExisting() || isAdmin();
+      allow delete: if (signedIn() && resource.data.kullaniciUid == request.auth.uid)
+        || emailOwnedExisting() || isAdmin();
     }
 
     match /takipciler/{followId} {
@@ -364,7 +401,7 @@ service cloud.firestore {
     }
 
     match /takipler/{followId} {
-      allow read: if true;
+      allow read: if emailOwnedExisting() || isAdmin();
       allow create: if emailOwnedCreate()
         && request.resource.data.magaza is string;
       allow update: if false;
