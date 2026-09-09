@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { auth, db } from "../firebase";
 import { useLocation } from "react-router-dom";
 import { apiUrl } from "../config/api";
+import { isValidTurkishIdentityNumber, normalizeTurkishIdentityNumber } from "../utils/buyerIdentity";
 import "../styles/pages/checkout.css";
 
 import {
@@ -13,6 +14,35 @@ import {
   doc,
   addDoc
 } from "firebase/firestore";
+
+function BuyerIdentityBox({ checking, configured, masked, value, error, onChange }) {
+  return (
+    <div className="checkout-box checkout-identity-box">
+      <h2>🔐 Ödeme için gerekli bilgi</h2>
+      <p>Ödeme işleminizin güvenli şekilde tamamlanabilmesi için gereklidir.</p>
+      {checking ? (
+        <span className="checkout-identity-status">Kimlik bilgisi kontrol ediliyor...</span>
+      ) : configured ? (
+        <span className="checkout-identity-success">Kimlik bilgisi kayıtlı ✓ {masked}</span>
+      ) : (
+        <label className="checkout-identity-field">
+          T.C. Kimlik Numarası
+          <input
+            type="text"
+            inputMode="numeric"
+            autoComplete="off"
+            maxLength="11"
+            value={value}
+            onChange={onChange}
+            aria-describedby="checkout-identity-error"
+            placeholder="11 haneli T.C. Kimlik Numarası"
+          />
+        </label>
+      )}
+      {error && <p id="checkout-identity-error" className="checkout-identity-error" role="alert">{error}</p>}
+    </div>
+  );
+}
 
 function Checkout() {
 
@@ -35,6 +65,12 @@ function Checkout() {
   const [urunler, setUrunler] = useState([]);
 
   const [loading, setLoading] = useState(false);
+  const [kimlikKontrolEdiliyor, setKimlikKontrolEdiliyor] = useState(true);
+  const [kimlikKayitli, setKimlikKayitli] = useState(false);
+  const [maskeliKimlik, setMaskeliKimlik] = useState("");
+  const [kimlikNumarasi, setKimlikNumarasi] = useState("");
+  const [kimlikHatasi, setKimlikHatasi] = useState("");
+  const odemeBaslatiliyorRef = useRef(false);
 
   // ==================================================
   // TESLİMAT / İLETİŞİM BİLGİLERİ
@@ -72,6 +108,71 @@ function Checkout() {
     }
 
   }, [sponsorOdeme]);
+
+  useEffect(() => {
+    let active = true;
+
+    async function kimlikDurumunuGetir() {
+      await auth.authStateReady();
+      if (!auth.currentUser) {
+        if (active) setKimlikKontrolEdiliyor(false);
+        return;
+      }
+
+      setKimlikKontrolEdiliyor(true);
+      setKimlikHatasi("");
+      try {
+        const token = await auth.currentUser.getIdToken();
+        const response = await fetch(apiUrl("/api/buyer-identity"), {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.message || "Kimlik bilgisi durumu alınamadı.");
+        if (active) {
+          setKimlikKayitli(result.configured === true);
+          setMaskeliKimlik(result.masked || "");
+        }
+      } catch {
+        if (active) setKimlikHatasi("Kimlik bilgisi durumu kontrol edilemedi. Lütfen tekrar deneyin.");
+      } finally {
+        if (active) setKimlikKontrolEdiliyor(false);
+      }
+    }
+
+    kimlikDurumunuGetir();
+    return () => { active = false; };
+  }, []);
+
+  async function kimligiOdemeIcinHazirla(token) {
+    if (kimlikKayitli) return true;
+
+    const normalized = normalizeTurkishIdentityNumber(kimlikNumarasi);
+    if (!isValidTurkishIdentityNumber(normalized)) {
+      setKimlikHatasi("Geçerli bir T.C. Kimlik Numarası girin.");
+      return false;
+    }
+
+    try {
+      const response = await fetch(apiUrl("/api/buyer-identity"), {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ identityNumber: normalized })
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.message || "Kimlik bilgisi kaydedilemedi.");
+      setKimlikKayitli(true);
+      setMaskeliKimlik(result.masked || "");
+      setKimlikNumarasi("");
+      setKimlikHatasi("");
+      return true;
+    } catch (error) {
+      setKimlikHatasi(error.message || "Kimlik bilgisi kaydedilemedi.");
+      return false;
+    }
+  }
 
   async function sepetiGetir() {
 
@@ -240,11 +341,15 @@ function Checkout() {
         return;
       }
 
+      if (odemeBaslatiliyorRef.current) return;
+      odemeBaslatiliyorRef.current = true;
+
       setLoading(true);
 
       try {
 
         const token = await auth.currentUser.getIdToken();
+        if (!(await kimligiOdemeIcinHazirla(token))) return;
 
         const adParcalari =
           (
@@ -365,6 +470,7 @@ function Checkout() {
 
       } finally {
 
+        odemeBaslatiliyorRef.current = false;
         setLoading(false);
 
       }
@@ -430,11 +536,15 @@ function Checkout() {
       return;
     }
 
+    if (odemeBaslatiliyorRef.current) return;
+    odemeBaslatiliyorRef.current = true;
+
     setLoading(true);
 
     try {
 
       const token = await auth.currentUser.getIdToken();
+      if (!(await kimligiOdemeIcinHazirla(token))) return;
 
       const adParcalari =
         adSoyad
@@ -657,6 +767,7 @@ function Checkout() {
 
     } finally {
 
+      odemeBaslatiliyorRef.current = false;
       setLoading(false);
     }
   }
@@ -763,6 +874,18 @@ function Checkout() {
 
             </div>
 
+            <BuyerIdentityBox
+              checking={kimlikKontrolEdiliyor}
+              configured={kimlikKayitli}
+              masked={maskeliKimlik}
+              value={kimlikNumarasi}
+              error={kimlikHatasi}
+              onChange={(event) => {
+                setKimlikNumarasi(normalizeTurkishIdentityNumber(event.target.value));
+                setKimlikHatasi("");
+              }}
+            />
+
           </div>
 
           <div className="checkout-right">
@@ -834,7 +957,7 @@ function Checkout() {
 
               <button
                 className="checkout-btn"
-                disabled={loading}
+                disabled={loading || kimlikKontrolEdiliyor}
                 onClick={odemeYap}
               >
 
@@ -938,6 +1061,18 @@ function Checkout() {
                 )}
 
               </div>
+
+              <BuyerIdentityBox
+                checking={kimlikKontrolEdiliyor}
+                configured={kimlikKayitli}
+                masked={maskeliKimlik}
+                value={kimlikNumarasi}
+                error={kimlikHatasi}
+                onChange={(event) => {
+                  setKimlikNumarasi(normalizeTurkishIdentityNumber(event.target.value));
+                  setKimlikHatasi("");
+                }}
+              />
 
               {fizikselUrunVar ? (
 
@@ -1072,7 +1207,7 @@ function Checkout() {
 
                 <button
                   className="checkout-btn"
-                  disabled={loading}
+                  disabled={loading || kimlikKontrolEdiliyor}
                   onClick={odemeYap}
                 >
 

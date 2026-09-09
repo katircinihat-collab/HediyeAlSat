@@ -90,7 +90,7 @@ async function resolveBuyerIdentity(uid, dependencies = {}) {
         : dependencies.sandboxIdentity;
     if (fallback) return fallback;
     throw new PaymentValidationError(
-        "Ödeme için kimlik bilginizi profilinizden kaydetmelisiniz.",
+        "Ödeme için kimlik bilginizi güvenli biçimde kaydetmelisiniz.",
         409,
         "BUYER_IDENTITY_REQUIRED"
     );
