@@ -892,3 +892,9 @@ test("73 - client sponsorlu içerik yazamaz", async () => {
     title: "Değiştirildi"
   }));
 });
+
+test("74 - ilan sahibi impressionCount alanını doğrudan değiştiremez", async () => {
+  await assertFails(updateDoc(doc(dbFor(ownerAuth), "ilanlar", "published"), {
+    impressionCount: 999999
+  }));
+});

@@ -23,9 +23,16 @@ import {
   isA4Listing
 } from "../data/categories";
 import useFavorite from "../hooks/useFavorite";
+import useListingImpression from "../hooks/useListingImpression";
+import { formatImpressionCount } from "../utils/impressions";
 
 
 function ProductCard({ ilan, cardExtra = null, variant = "" }) {
+
+  const { impressionRef, impressionCount } = useListingImpression(
+    ilan.id,
+    ilan.impressionCount
+  );
 
 
   /* =========================
@@ -310,6 +317,8 @@ function ProductCard({ ilan, cardExtra = null, variant = "" }) {
 
     <Link
 
+      ref={impressionRef}
+
       to={`/ilan/${ilan.id}`}
 
       className={`product-card ${
@@ -551,15 +560,11 @@ function ProductCard({ ilan, cardExtra = null, variant = "" }) {
 
         <div className="product-stats">
 
-
-          <span>
-
-            👁
-            {" "}
-            {ilan.goruntulenme || 0}
-
-          </span>
-
+          {impressionCount > 0 && (
+            <span title={`${impressionCount.toLocaleString("tr-TR")} gösterim`}>
+              👁 {formatImpressionCount(impressionCount)} gösterim
+            </span>
+          )}
 
           <span>
 

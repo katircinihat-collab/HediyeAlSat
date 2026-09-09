@@ -77,6 +77,8 @@ const buyerIdentityRoutes =
     require("./routes/buyerIdentityRoutes");
 const userLevelRoutes =
     require("./routes/userLevelRoutes");
+const listingRoutes =
+    require("./routes/listingRoutes");
 const { startWalletReleaseJob } =
     require("./jobs/walletReleaseJob");
 
@@ -100,6 +102,7 @@ app.use(
     buyerIdentityRoutes
 );
 app.use("/api/user-levels", userLevelRoutes);
+app.use("/api/listings", listingRoutes);
 
 
 // -----------------------------------------------------

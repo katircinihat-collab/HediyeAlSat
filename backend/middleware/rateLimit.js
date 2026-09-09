@@ -31,4 +31,10 @@ const downloadRateLimit = createRateLimit({
     message: "Çok fazla indirme isteği gönderildi. Lütfen kısa süre sonra tekrar deneyin."
 });
 
-module.exports = { createRateLimit, financialRateLimit, downloadRateLimit };
+const impressionRateLimit = createRateLimit({
+    windowMs: 60 * 1000,
+    max: 60,
+    message: "Çok fazla gösterim isteği gönderildi. Lütfen kısa süre sonra tekrar deneyin."
+});
+
+module.exports = { createRateLimit, financialRateLimit, downloadRateLimit, impressionRateLimit };
