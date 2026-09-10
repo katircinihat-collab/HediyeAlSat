@@ -1,0 +1,37 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "mesajlar",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "gonderen", "order": "ASCENDING" },
+        { "fieldPath": "tarih", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "mesajlar",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "alan", "order": "ASCENDING" },
+        { "fieldPath": "tarih", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "mesajlar",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "gonderenUid", "order": "ASCENDING" },
+        { "fieldPath": "tarih", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "mesajlar",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "alanUid", "order": "ASCENDING" },
+        { "fieldPath": "tarih", "order": "DESCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}
