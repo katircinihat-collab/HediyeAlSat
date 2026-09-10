@@ -1,8 +1,10 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const {
-    attachMarketplaceSettlement
+    attachMarketplaceSettlement,
+    isPlatformSeller
 } = require("../backend/services/sellerMarketplaceService");
+const { getPlatformSellerUids } = require("../backend/config/platformSellers");
 const { buildIyzicoBasket } = require("../backend/services/paymentValidationService");
 
 function item(overrides = {}) {
@@ -85,6 +87,30 @@ test("platform-owned sepet LISTING olur ve submerchant alanı taşımaz", async 
     });
     const basket = buildIyzicoBasket({ verifiedItems: settlement.items, shippingDetails: [] });
     assert.equal(settlement.paymentGroup, "LISTING");
+    assert.equal("subMerchantKey" in basket[0], false);
+    assert.equal("subMerchantPrice" in basket[0], false);
+});
+
+test("canonical admin seller backend-only platform hesabı olarak çözülür", () => {
+    const platformSellerUid = "VyMaxebniicENgXpDYYhoAUAew63";
+    assert.equal(isPlatformSeller(platformSellerUid), true);
+    assert.equal(getPlatformSellerUids({}).has(platformSellerUid), true);
+});
+
+test("50 TL Poster platform sepeti LISTING request şekline dönüşür", async () => {
+    const settlement = await attachMarketplaceSettlement({
+        verifiedItems: [item({
+            listingId: "QafendRXMMMHuuPqtIVr",
+            sellerUid: "VyMaxebniicENgXpDYYhoAUAew63",
+            total: 50
+        })],
+        resolveSubMerchantKey: async () => { throw new Error("platform item için çağrılmamalı"); }
+    });
+    const basket = buildIyzicoBasket({ verifiedItems: settlement.items, shippingDetails: [] });
+
+    assert.equal(settlement.paymentGroup, "LISTING");
+    assert.equal(basket[0].id, "QafendRXMMMHuuPqtIVr");
+    assert.equal(basket[0].price, "50.00");
     assert.equal("subMerchantKey" in basket[0], false);
     assert.equal("subMerchantPrice" in basket[0], false);
 });

@@ -1,4 +1,5 @@
 const { hesaplaNetTutar } = require("../utils/commission");
+const { getPlatformSellerUids } = require("../config/platformSellers");
 
 const SELLER_PAYMENT_PROFILES = "sellerPaymentProfiles";
 
@@ -27,15 +28,6 @@ async function resolveSellerSubMerchantKey({ firestore, sellerUid }) {
         : "";
 
     return profile.active === true && key ? key : null;
-}
-
-function getPlatformSellerUids(environment = process.env) {
-    return new Set(
-        String(environment.PLATFORM_SELLER_UIDS || "")
-            .split(",")
-            .map((value) => value.trim())
-            .filter(Boolean)
-    );
 }
 
 function isPlatformSeller(sellerUid, platformSellerUids = getPlatformSellerUids()) {
@@ -103,6 +95,5 @@ module.exports = {
     SELLER_PAYMENT_PROFILES,
     resolveSellerSubMerchantKey,
     attachMarketplaceSettlement,
-    getPlatformSellerUids,
     isPlatformSeller
 };
