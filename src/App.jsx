@@ -51,6 +51,7 @@ import NotFound from "./pages/NotFound";
 import AdminRoute from "./components/AdminRoute";
 import SpecialListingsPage from "./pages/SpecialListingsPage";
 import TopDesigns from "./pages/TopDesigns";
+import ScrollManager from "./components/ScrollManager";
 
 
 /* ==============================
@@ -107,6 +108,8 @@ function App() {
   return (
 
     <BrowserRouter>
+
+      <ScrollManager />
 
       <Routes>
 

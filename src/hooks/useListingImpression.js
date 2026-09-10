@@ -21,7 +21,7 @@ export default function useListingImpression(listingId, initialCount = 0) {
     const key = impressionSessionKey(listingId);
 
     let alreadyRecorded = false;
-    try { alreadyRecorded = sessionStorage.getItem(key) !== null; } catch { alreadyRecorded = false; }
+    try { alreadyRecorded = sessionStorage.getItem(key) !== null; } catch { /* storage unavailable */ }
     if (alreadyRecorded) return undefined;
 
     const clearTimer = () => {

@@ -6,6 +6,8 @@ export function firebaseAuthErrorMessage(error) {
     "auth/invalid-credential": "E-posta veya şifre hatalı.",
     "auth/wrong-password": "E-posta veya şifre hatalı.",
     "auth/user-not-found": "E-posta veya şifre hatalı.",
+    "auth/requires-recent-login": "Güvenliğiniz için yeniden giriş yapıp işlemi tekrar deneyin.",
+    "auth/user-token-expired": "Oturumunuz sona erdi. Lütfen yeniden giriş yapın.",
     "auth/too-many-requests": "Çok fazla deneme yapıldı. Lütfen biraz sonra tekrar deneyin.",
     "auth/network-request-failed": "Bağlantı kurulamadı. İnternet bağlantınızı kontrol edin."
   };
