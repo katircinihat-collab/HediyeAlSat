@@ -14,6 +14,7 @@ const { PaymentValidationError, validateNormalPayment, buildIyzicoBasket } = req
 const { validateRetrievedPayment, mapPaymentItemTransactions, finalizePayment } = require("./paymentCallbackService");
 const { reserveStock, releaseReservation, releaseExpiredReservations } = require("./stockReservationService");
 const { resolveBuyerIdentity } = require("./buyerIdentityService");
+const { normalizeIyzicoGsmNumber } = require("../utils/buyerPhone");
 
 const KOMISYON_ORANI = 0.08;
 
@@ -67,6 +68,7 @@ async function createPayment(data, authenticatedUser, requestContext = {}) {
     let trustedShippingDetails = [];
     let trustedPaymentItems = [];
     let trustedBuyer = null;
+    let trustedBuyerPhone = null;
     let stockReservation = null;
 
     if (sponsorOdeme) {
@@ -127,6 +129,14 @@ async function createPayment(data, authenticatedUser, requestContext = {}) {
             itemType: item.itemType
         }));
         trustedBuyer = verified.verifiedItems[0]?.buyer || null;
+        trustedBuyerPhone = normalizeIyzicoGsmNumber(trustedBuyer?.phone);
+        if (!trustedBuyerPhone) {
+            throw new PaymentValidationError(
+                "Geçerli bir telefon numarası girin.",
+                409,
+                "BUYER_PHONE_INVALID"
+            );
+        }
 
         stockReservation = await reserveStock({
             firestore,
@@ -276,6 +286,9 @@ async function createPayment(data, authenticatedUser, requestContext = {}) {
 
             identityNumber:
                 identityNumber,
+
+            gsmNumber:
+                trustedBuyerPhone,
 
             registrationAddress:
                 trustedAddress || "Dijital Teslimat",
