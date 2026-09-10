@@ -214,6 +214,9 @@ async function validateNormalPayment({
 
             sellerUid,
 
+            storeId:
+                listing.magazaId || null,
+
             name:
                 listing.baslik ||
                 order.ilanBaslik ||
@@ -424,7 +427,12 @@ function buildIyzicoBasket(
                     item.itemType,
 
                 price:
-                    item.total.toFixed(2)
+                    item.total.toFixed(2),
+
+                ...(item.subMerchantKey ? {
+                    subMerchantKey: item.subMerchantKey,
+                    subMerchantPrice: Number(item.subMerchantPrice).toFixed(2)
+                } : {})
             }));
 
     verifiedPayment

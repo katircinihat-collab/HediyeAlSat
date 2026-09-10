@@ -15,6 +15,10 @@ const { validateRetrievedPayment, mapPaymentItemTransactions, finalizePayment } 
 const { reserveStock, releaseReservation, releaseExpiredReservations } = require("./stockReservationService");
 const { resolveBuyerIdentity } = require("./buyerIdentityService");
 const { normalizeIyzicoGsmNumber } = require("../utils/buyerPhone");
+const {
+    resolveSellerSubMerchantKey,
+    attachMarketplaceSettlement
+} = require("./sellerMarketplaceService");
 
 const KOMISYON_ORANI = 0.08;
 
@@ -70,6 +74,7 @@ async function createPayment(data, authenticatedUser, requestContext = {}) {
     let trustedBuyer = null;
     let trustedBuyerPhone = null;
     let stockReservation = null;
+    let trustedPaymentGroup = "PRODUCT";
 
     if (sponsorOdeme) {
         if (!sponsorBasvuruId) {
@@ -115,6 +120,16 @@ async function createPayment(data, authenticatedUser, requestContext = {}) {
             },
             resolveSellerEmail: async (uid) => (await admin.auth().getUser(uid)).email || ""
         });
+
+        const marketplaceSettlement = await attachMarketplaceSettlement({
+            verifiedItems: verified.verifiedItems,
+            resolveSubMerchantKey: ({ sellerUid }) => resolveSellerSubMerchantKey({
+                firestore,
+                sellerUid
+            })
+        });
+        verified.verifiedItems = marketplaceSettlement.items;
+        trustedPaymentGroup = marketplaceSettlement.paymentGroup;
 
         trustedPrice = verified.payableTotal;
         trustedProductTotal = verified.productTotal;
@@ -264,7 +279,7 @@ async function createPayment(data, authenticatedUser, requestContext = {}) {
 
         currency: "TRY",
 
-        paymentGroup: "PRODUCT",
+        paymentGroup: trustedPaymentGroup,
 
         callbackUrl:
             process.env.CALLBACK_URL,

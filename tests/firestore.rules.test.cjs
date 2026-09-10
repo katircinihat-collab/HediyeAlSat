@@ -805,6 +805,16 @@ test("59 - buyer identity kayıtları client ve admin client erişimine tamamen 
   await assertFails(deleteDoc(adminRef));
 });
 
+test("60 - seller marketplace ödeme profilleri tüm client erişimine kapalıdır", async () => {
+  const ownerRef = doc(dbFor(ownerAuth), "sellerPaymentProfiles", ownerAuth.uid);
+  const adminRef = doc(dbFor(adminAuth), "sellerPaymentProfiles", ownerAuth.uid);
+  await assertFails(getDoc(ownerRef));
+  await assertFails(getDoc(adminRef));
+  await assertFails(setDoc(ownerRef, { active: true, subMerchantKey: "client-key" }));
+  await assertFails(updateDoc(adminRef, { active: false }));
+  await assertFails(deleteDoc(adminRef));
+});
+
 test("66 - yeni public ilan telefon alanı içeremez", async () => {
   await assertFails(setDoc(doc(dbFor(ownerAuth), "ilanlar", "phone-listing"), {
     ilanNo: 999, baslik: "Telefonlu ilan", fiyat: 100, kategori: "Hediye",

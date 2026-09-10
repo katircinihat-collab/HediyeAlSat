@@ -6,6 +6,7 @@ const adminListingController = require("../controllers/adminListingController");
 const orderStatusController = require("../controllers/orderStatusController");
 const orderClaimController = require("../controllers/orderClaimController");
 const financialReconciliationController = require("../controllers/financialReconciliationController");
+const sellerMarketplaceController = require("../controllers/sellerMarketplaceController");
 
 const router = express.Router();
 
@@ -29,5 +30,6 @@ router.post("/order-claims/:claimId/refund", financialRateLimit, orderClaimContr
 router.get("/financial-reconciliations", financialReconciliationController.list);
 router.get("/financial-reconciliations/:id", financialReconciliationController.get);
 router.patch("/financial-reconciliations/:id", financialRateLimit, financialReconciliationController.update);
+router.post("/sellers/:sellerUid/marketplace/onboard", financialRateLimit, sellerMarketplaceController.onboardAsAdmin);
 
 module.exports = router;

@@ -142,6 +142,10 @@ service cloud.firestore {
       allow read, create, update, delete: if false;
     }
 
+    match /sellerPaymentProfiles/{uid} {
+      allow read, create, update, delete: if false;
+    }
+
     match /userPointEvents/{eventId} {
       allow read, create, update, delete: if false;
     }
