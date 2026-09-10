@@ -9,6 +9,7 @@ import { db } from "../firebase";
 import { Link } from "react-router-dom";
 import { adminApi } from "../config/adminApi";
 import { formatListingCategory } from "../data/categories";
+import { isDigitalListing, isListingPublished } from "../utils/listingAvailability";
 import AdminStores from "../components/admin/AdminStores";
 import AdminOrderClaims from "../components/admin/AdminOrderClaims";
 import AdminFinancialReconciliations from "../components/admin/AdminFinancialReconciliations";
@@ -46,6 +47,8 @@ function fiyatFormat(fiyat) {
 function Admin() {
 
   const [ilanlar, setIlanlar] = useState([]);
+  const [stokTaslaklari, setStokTaslaklari] = useState({});
+  const [ilanIslemi, setIlanIslemi] = useState("");
 
   const [toplamSatis, setToplamSatis] = useState(0);
   const [toplamKomisyon, setToplamKomisyon] = useState(0);
@@ -203,10 +206,49 @@ function Admin() {
   }
 
   async function onayla(id) {
-    await adminApi(`/listings/${id}/approve`, { method: "PUT" });
+    try {
+      setIlanIslemi(id);
+      await adminApi(`/listings/${id}/approve`, { method: "PUT" });
+      await getir();
+    } catch (error) {
+      alert(error.message);
+    } finally {
+      setIlanIslemi("");
+    }
 
-    getir();
+  }
 
+  async function stokKaydet(ilan) {
+    try {
+      setIlanIslemi(ilan.id);
+      const stok = stokTaslaklari[ilan.id] ?? ilan.stok ?? ilan.adet ?? 0;
+      await adminApi(`/listings/${ilan.id}/stock`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ stok: Number(stok) })
+      });
+      await getir();
+    } catch (error) {
+      alert(error.message);
+    } finally {
+      setIlanIslemi("");
+    }
+  }
+
+  async function yayinDurumuDegistir(ilan) {
+    try {
+      setIlanIslemi(ilan.id);
+      await adminApi(`/listings/${ilan.id}/publication`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ published: !isListingPublished(ilan) })
+      });
+      await getir();
+    } catch (error) {
+      alert(error.message);
+    } finally {
+      setIlanIslemi("");
+    }
   }
 
   async function sil(id) {
@@ -641,32 +683,46 @@ alt={ilan.baslik}
 
 </div>
 
-<div className="admin-product-status">
-
-{
-
-ilan.onay
-
-?
-
-"✅ Yayında"
-
-:
-
-"⌛ Onay Bekliyor"
-
-}
+<div className={`admin-product-status ${isListingPublished(ilan) ? "published" : ilan.onay === true ? "closed" : "pending"}`}>
+{isListingPublished(ilan)
+  ? "✅ Yayında"
+  : ilan.onay !== true
+    ? "⌛ Onay Bekliyor"
+    : "⛔ Yayında Değil"}
 
 </div>
+
+<div className="admin-product-stock-status">
+{isDigitalListing(ilan)
+  ? "💻 Dijital ürün · stok sınırsız"
+  : Number(ilan.stok ?? ilan.adet ?? 0) > 0
+    ? `📦 Stok: ${Number(ilan.stok ?? ilan.adet)}`
+    : "❌ Stok Tükendi"}
+</div>
+
+{!isDigitalListing(ilan) && <div className="admin-stock-editor">
+<input
+type="number"
+min="0"
+step="1"
+aria-label={`${ilan.baslik || "İlan"} stok miktarı`}
+value={stokTaslaklari[ilan.id] ?? ilan.stok ?? ilan.adet ?? 0}
+onChange={(event)=>setStokTaslaklari((onceki)=>({...onceki,[ilan.id]:event.target.value}))}
+/>
+<button type="button" disabled={ilanIslemi===ilan.id} onClick={()=>stokKaydet(ilan)}>Stok Düzenle</button>
+</div>}
 
 <div className="admin-product-actions">
 
 <button
 className="admin-action-btn admin-approve"
-onClick={()=>onayla(ilan.id)}
+disabled={ilanIslemi===ilan.id}
+onClick={()=>ilan.onay===true ? yayinDurumuDegistir(ilan) : onayla(ilan.id)}
 >
-✅
+{isListingPublished(ilan) ? "Yayından Kaldır" : "Yayınla"}
 </button>
+
+<Link className="admin-action-btn admin-edit" to={`/duzenle/${ilan.id}`}>Düzenle</Link>
 
 <button
 className={
@@ -684,7 +740,7 @@ ilan.id,
 )
 }
 >
-⭐
+⭐ Öne Çıkar
 </button>
 
 <button
@@ -703,14 +759,14 @@ ilan.id,
 )
 }
 >
-👑
+👑 Editör Seçimi
 </button>
 
 <button
 className="admin-action-btn admin-delete"
 onClick={()=>sil(ilan.id)}
 >
-🗑️
+🗑️ Sil
 </button>
 
 </div>

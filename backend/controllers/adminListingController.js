@@ -1,5 +1,10 @@
 const { firestore, FieldValue } = require("../config/firebase");
-const { buildApprovedListingState } = require("../utils/listingAvailability");
+const {
+    buildListingStockUpdate,
+    buildPublishedListingState,
+    buildUnpublishedListingState,
+    isDigitalListing
+} = require("../utils/listingAvailability");
 
 const ADMIN_FLAGS = new Set([
     "oneCikan",
@@ -36,19 +41,66 @@ exports.onayla = async (req, res, next) => {
 
         const snap = await ref.get();
         const listing = snap.data();
-        if (listing.urunTipi === "dijital" && listing.dijitalDosyaDurumu !== "hazir") {
+        if (isDigitalListing(listing) && listing.dijitalDosyaDurumu !== "hazir") {
             return res.status(409).json({
                 success: false,
                 message: "Korumalı orijinal dosyası hazır olmayan dijital ilan onaylanamaz."
             });
         }
 
-        await ref.update(buildApprovedListingState({
+        await ref.update(buildPublishedListingState({
+            listing,
             timestamp: FieldValue.serverTimestamp(),
             adminUid: req.user.uid
         }));
         res.json({ success: true });
     } catch (error) {
+        if (error.status) return res.status(error.status).json({ success: false, code: error.code, message: error.message });
+        next(error);
+    }
+};
+
+exports.stokGuncelle = async (req, res, next) => {
+    try {
+        const ref = await ilanGetir(req.params.id, res);
+        if (!ref) return;
+        const snap = await ref.get();
+        const update = buildListingStockUpdate({
+            listing: snap.data(),
+            stock: req.body.stok,
+            timestamp: FieldValue.serverTimestamp(),
+            adminUid: req.user.uid
+        });
+        await ref.update(update);
+        return res.json({ success: true, stok: update.stok });
+    } catch (error) {
+        if (error.status) return res.status(error.status).json({ success: false, code: error.code, message: error.message });
+        next(error);
+    }
+};
+
+exports.yayinDurumuGuncelle = async (req, res, next) => {
+    try {
+        if (typeof req.body.published !== "boolean") {
+            return res.status(400).json({ success: false, message: "Geçersiz yayın durumu." });
+        }
+        const ref = await ilanGetir(req.params.id, res);
+        if (!ref) return;
+        const snap = await ref.get();
+        const listing = snap.data();
+
+        if (req.body.published && isDigitalListing(listing) && listing.dijitalDosyaDurumu !== "hazir") {
+            return res.status(409).json({ success: false, message: "Korumalı orijinal dosyası hazır olmayan dijital ilan yayınlanamaz." });
+        }
+
+        const timestamp = FieldValue.serverTimestamp();
+        const update = req.body.published
+            ? buildPublishedListingState({ listing, timestamp, adminUid: req.user.uid })
+            : buildUnpublishedListingState({ timestamp, adminUid: req.user.uid });
+        await ref.update(update);
+        return res.json({ success: true, published: req.body.published });
+    } catch (error) {
+        if (error.status) return res.status(error.status).json({ success: false, code: error.code, message: error.message });
         next(error);
     }
 };

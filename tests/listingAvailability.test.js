@@ -6,6 +6,9 @@ import { isListingPublished as frontendRule } from "../src/utils/listingAvailabi
 const require = createRequire(import.meta.url);
 const {
   buildApprovedListingState,
+  buildListingStockUpdate,
+  buildPublishedListingState,
+  buildUnpublishedListingState,
   isListingPublished: backendRule
 } = require("../backend/utils/listingAvailability.js");
 
@@ -53,4 +56,39 @@ test("filtre sonrası kalan ilanlar boş slotsuz ardışık kalır", async () =>
     { id: "three", onay: true, urunTipi: "dijital", stok: 0 }
   ];
   assert.deepEqual(filterAvailableListings(listings).map((listing) => listing.id), ["one", "two", "three"]);
+});
+
+test("admin fiziksel stoğu 0'dan 1'e güvenli biçimde günceller ama otomatik yayınlamaz", () => {
+  const update = buildListingStockUpdate({ listing: { urunTipi: "fiziksel", aktif: false }, stock: 1, timestamp: "now", adminUid: "admin" });
+  assert.equal(update.stok, 1);
+  assert.equal("aktif" in update, false);
+});
+
+test("negatif ve kesirli stok reddedilir", () => {
+  for (const stock of [-1, 1.5, "abc"]) {
+    assert.throws(() => buildListingStockUpdate({ listing: {}, stock }), /tam sayı/);
+  }
+});
+
+test("stok sıfır fiziksel ilan yayınlanamaz", () => {
+  assert.throws(() => buildPublishedListingState({ listing: { onay: true, stok: 0 }, timestamp: "now", adminUid: "admin" }), /stoğunu girin/);
+});
+
+test("stoklu fiziksel ilan canonical alanlarla yayınlanır", () => {
+  const update = buildPublishedListingState({ listing: { onay: true, stok: 1 }, timestamp: "now", adminUid: "admin" });
+  assert.equal(update.onay, true);
+  assert.equal(update.aktif, true);
+  assert.equal(update.yayinda, true);
+  assert.equal(update.durum, "Yayında");
+});
+
+test("dijital ilan stok sıfırken yayınlanabilir", () => {
+  assert.equal(buildPublishedListingState({ listing: { urunTipi: "dijital", stok: 0 }, timestamp: "now", adminUid: "admin" }).aktif, true);
+});
+
+test("yayından kaldırma canonical kapalı alanları yazar", () => {
+  const update = buildUnpublishedListingState({ timestamp: "now", adminUid: "admin" });
+  assert.equal(update.aktif, false);
+  assert.equal(update.yayinda, false);
+  assert.equal(update.durum, "Yayından Kaldırıldı");
 });
