@@ -1,835 +1,194 @@
-import { useEffect, useMemo, useState } from "react";
-
-import {
-  collection,
-  query,
-  onSnapshot,
-  addDoc,
-  serverTimestamp,
-  orderBy,
-  where,
-  doc,
-  updateDoc
-} from "firebase/firestore";
-
-import { db, auth } from "../firebase";
-
-import {
-  useNavigate,
-  useLocation
-} from "react-router-dom";
-
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { addDoc, collection, doc, onSnapshot, orderBy, query, serverTimestamp, updateDoc, where } from "firebase/firestore";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth, db } from "../firebase";
+import { buildConversations, filterConversations, isIncomingMessage, isOwnMessage, messagePreview, messageTimeValue } from "../utils/messages";
 import "../styles/pages/messages.css";
 
+function toDate(value) {
+  if (!value) return null;
+  const date = value.toDate ? value.toDate() : new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function listTime(value) {
+  const date = toDate(value);
+  if (!date) return "";
+  const today = new Date();
+  return date.toDateString() === today.toDateString()
+    ? date.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })
+    : date.toLocaleDateString("tr-TR", { day: "2-digit", month: "2-digit" });
+}
+
+function messageTime(value) {
+  const date = toDate(value);
+  return date ? date.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" }) : "";
+}
+
+function safeInitial(value) {
+  return String(value || "H").trim().slice(0, 1).toLocaleUpperCase("tr-TR");
+}
 
 function Messages() {
-
   const navigate = useNavigate();
   const location = useLocation();
+  const chatPanelRef = useRef(null);
+  const shouldStickToBottom = useRef(true);
+  const [user, setUser] = useState(undefined);
+  const [messages, setMessages] = useState([]);
+  const [selectedKey, setSelectedKey] = useState("");
+  const [draft, setDraft] = useState("");
+  const [sending, setSending] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [queryError, setQueryError] = useState("");
+  const [sendError, setSendError] = useState("");
+  const [search, setSearch] = useState("");
+  const [unreadOnly, setUnreadOnly] = useState(false);
 
-  const [mesajlar, setMesajlar] = useState([]);
-  const [secili, setSecili] = useState(null);
-  const [yeniMesaj, setYeniMesaj] = useState("");
-  const [gonderiliyor, setGonderiliyor] = useState(false);
-
-  const currentEmail = auth.currentUser?.email;
-  const currentUid = auth.currentUser?.uid;
-
-
-  /*
-  ==========================================
-  GERİ BUTONU
-  ==========================================
-  */
-
-  function geriDon() {
-
-    if (location.key === "default") {
-
-      navigate("/");
-
-    } else {
-
-      navigate(-1);
-
-    }
-
-  }
-
+  useEffect(() => onAuthStateChanged(auth, (currentUser) => setUser(currentUser)), []);
+  const currentUid = user?.uid || "";
+  const currentEmail = user?.email || "";
 
   useEffect(() => {
-
-    if (!currentEmail || !currentUid) return;
-
-    const gonderilenQuery = query(
-      collection(db, "mesajlar"),
-      where("gonderen", "==", currentEmail),
-      orderBy("tarih", "desc")
-    );
-
-    const alinanQuery = query(
-      collection(db, "mesajlar"),
-      where("alan", "==", currentEmail),
-      orderBy("tarih", "desc")
-    );
-
-    const uidGonderilenQuery = query(collection(db, "mesajlar"), where("gonderenUid", "==", currentUid), orderBy("tarih", "desc"));
-    const uidAlinanQuery = query(collection(db, "mesajlar"), where("alanUid", "==", currentUid), orderBy("tarih", "desc"));
-
-    let gonderilenMesajlar = [];
-    let alinanMesajlar = [];
-    let uidGonderilenMesajlar = [];
-    let uidAlinanMesajlar = [];
-
-    function mesajlariBirlestir() {
-
-      const benzersizMesajlar = new Map();
-
-      [...gonderilenMesajlar, ...alinanMesajlar, ...uidGonderilenMesajlar, ...uidAlinanMesajlar]
-        .forEach((mesaj) => {
-          benzersizMesajlar.set(mesaj.id, mesaj);
-        });
-
-      const liste = [...benzersizMesajlar.values()]
-        .sort((a, b) => {
-          const ta = a.tarih?.seconds || 0;
-          const tb = b.tarih?.seconds || 0;
-          return tb - ta;
-        });
-
-      setMesajlar(liste);
-
+    if (user === undefined) return undefined;
+    if (!currentUid || !currentEmail) {
+      setLoading(false);
+      return undefined;
     }
 
-    const gonderilenUnsub = onSnapshot(gonderilenQuery, (snap) => {
+    setLoading(true);
+    setQueryError("");
+    const buckets = [[], [], [], []];
+    const loaded = [false, false, false, false];
+    const definitions = [
+      ["gonderen", currentEmail], ["alan", currentEmail],
+      ["gonderenUid", currentUid], ["alanUid", currentUid]
+    ];
 
-      gonderilenMesajlar = snap.docs.map((item) => ({
-        id: item.id,
-        ...item.data()
-      }));
-
-      mesajlariBirlestir();
-
-    });
-
-    const alinanUnsub = onSnapshot(alinanQuery, (snap) => {
-
-      alinanMesajlar = snap.docs.map((item) => ({
-        id: item.id,
-        ...item.data()
-      }));
-
-      mesajlariBirlestir();
-
-    });
-
-    const uidGonderilenUnsub = onSnapshot(uidGonderilenQuery, (snap) => {
-      uidGonderilenMesajlar = snap.docs.map((item) => ({ id: item.id, ...item.data() }));
-      mesajlariBirlestir();
-    });
-    const uidAlinanUnsub = onSnapshot(uidAlinanQuery, (snap) => {
-      uidAlinanMesajlar = snap.docs.map((item) => ({ id: item.id, ...item.data() }));
-      mesajlariBirlestir();
-    });
-
-    return () => {
-      gonderilenUnsub();
-      alinanUnsub();
-      uidGonderilenUnsub();
-      uidAlinanUnsub();
+    const merge = () => {
+      const unique = new Map(buckets.flat().map((message) => [message.id, message]));
+      setMessages([...unique.values()].sort((a, b) => messageTimeValue(b.tarih) - messageTimeValue(a.tarih)));
+      if (loaded.every(Boolean)) setLoading(false);
+    };
+    const fail = () => {
+      setQueryError("Mesajlarınız şu anda yüklenemiyor. Lütfen biraz sonra tekrar deneyin.");
+      setLoading(false);
     };
 
-  }, [currentEmail, currentUid]);
+    const unsubscribers = definitions.map(([field, value], index) => onSnapshot(
+      query(collection(db, "mesajlar"), where(field, "==", value), orderBy("tarih", "desc")),
+      (snapshot) => {
+        buckets[index] = snapshot.docs.map((item) => ({ id: item.id, ...item.data() }));
+        loaded[index] = true;
+        merge();
+      },
+      fail
+    ));
+    return () => unsubscribers.forEach((unsubscribe) => unsubscribe());
+  }, [currentEmail, currentUid, user]);
 
+  const conversations = useMemo(() => buildConversations(messages, currentUid, currentEmail), [messages, currentUid, currentEmail]);
+  const visibleConversations = useMemo(() => filterConversations(conversations, search, unreadOnly), [conversations, search, unreadOnly]);
+  const selected = useMemo(() => conversations.find((conversation) => conversation.key === selectedKey) || null, [conversations, selectedKey]);
+  const totalUnread = conversations.reduce((total, conversation) => total + conversation.unreadCount, 0);
 
-  /*
-  ==========================================
-  SOHBETLERİ GRUPLA
-  ==========================================
-  */
+  useEffect(() => {
+    if (selectedKey && !selected && !loading) setSelectedKey("");
+  }, [loading, selected, selectedKey]);
 
-  const sohbetler = useMemo(() => {
+  useLayoutEffect(() => {
+    if (!selected || !chatPanelRef.current || !shouldStickToBottom.current) return;
+    chatPanelRef.current.scrollTo({ top: chatPanelRef.current.scrollHeight, behavior: "auto" });
+    shouldStickToBottom.current = true;
+  }, [selected, selected?.messages.length]);
 
-    const gruplar = {};
+  function goBack() {
+    if (location.key === "default") navigate("/"); else navigate(-1);
+  }
 
-    mesajlar.forEach((m) => {
+  async function openConversation(conversation) {
+    shouldStickToBottom.current = true;
+    setSelectedKey(conversation.key);
+    setSendError("");
+    const unread = conversation.messages.filter((message) => isIncomingMessage(message, currentUid, currentEmail) && message.okundu !== true);
+    await Promise.allSettled(unread.map((message) => updateDoc(doc(db, "mesajlar", message.id), { okundu: true })));
+  }
 
-      const uidTabanli = Boolean(m.gonderenUid && m.alanUid);
-      const digerKisi = uidTabanli
-        ? (m.gonderenUid === currentUid ? m.alanUid : m.gonderenUid)
-        : (m.gonderen === currentEmail ? m.alan : m.gonderen);
+  function closeConversation() {
+    setSelectedKey("");
+    setSendError("");
+  }
 
-      const anahtar =
-        `${m.ilanId || "genel"}_${digerKisi}`;
+  function trackChatScroll(event) {
+    const element = event.currentTarget;
+    shouldStickToBottom.current = element.scrollHeight - element.scrollTop - element.clientHeight < 100;
+  }
 
-      if (!gruplar[anahtar]) {
-
-        gruplar[anahtar] = {
-          key: anahtar,
-          ilanId: m.ilanId || "",
-          ilanBaslik:
-            m.ilanBaslik || "Genel Sohbet",
-          digerKisi,
-          uidTabanli,
-          mesajlar: []
-        };
-
-      }
-
-      gruplar[anahtar].mesajlar.push(m);
-
-    });
-
-    return Object.values(gruplar)
-      .map((sohbet) => {
-
-        const sirali = [...sohbet.mesajlar].sort(
-          (a, b) => {
-
-            const ta =
-              a.tarih?.seconds || 0;
-
-            const tb =
-              b.tarih?.seconds || 0;
-
-            return tb - ta;
-
-          }
-        );
-
-        const sonMesaj = sirali[0];
-
-        const okunmamis = sohbet.mesajlar.filter(
-          (m) =>
-            (m.alanUid === currentUid || m.alan === currentEmail) &&
-            m.okundu !== true
-        ).length;
-
-        return {
-          ...sohbet,
-          sonMesaj,
-          okunmamis
-        };
-
-      })
-      .sort((a, b) => {
-
-        const ta =
-          a.sonMesaj?.tarih?.seconds || 0;
-
-        const tb =
-          b.sonMesaj?.tarih?.seconds || 0;
-
-        return tb - ta;
-
+  async function sendMessage() {
+    const text = draft.trim();
+    if (!selected || !user || !text || sending) return;
+    setSending(true);
+    setSendError("");
+    shouldStickToBottom.current = true;
+    try {
+      await addDoc(collection(db, "mesajlar"), {
+        ...(selected.uidBased
+          ? { gonderenUid: currentUid, alanUid: selected.counterpart }
+          : { gonderen: currentEmail, alan: selected.counterpart }),
+        ilanId: selected.ilanId,
+        ilanBaslik: selected.ilanBaslik,
+        mesaj: text,
+        okundu: false,
+        tarih: serverTimestamp()
       });
-
-  }, [mesajlar, currentEmail, currentUid]);
-
-
-  /*
-  ==========================================
-  SOHBETİ AÇ
-  ==========================================
-  */
-
-  async function sohbetAc(sohbet) {
-
-    setSecili(sohbet);
-
-    const okunmamisMesajlar =
-      sohbet.mesajlar.filter(
-        (m) =>
-          (m.alanUid === currentUid || m.alan === currentEmail) &&
-          m.okundu !== true
-      );
-
-    for (const mesaj of okunmamisMesajlar) {
-
-      try {
-
-        await updateDoc(
-          doc(db, "mesajlar", mesaj.id),
-          {
-            okundu: true
-          }
-        );
-
-      } catch (error) {
-
-        console.log(
-          "Okundu güncellenemedi:",
-          error
-        );
-
-      }
-
-    }
-
-  }
-
-
-  /*
-  ==========================================
-  MESAJ GÖNDER
-  ==========================================
-  */
-
-  async function mesajGonder() {
-
-    if (!currentEmail) {
-
-      alert("Önce giriş yapmalısınız.");
-
-      return;
-
-    }
-
-    if (!secili) return;
-
-    if (!yeniMesaj.trim()) return;
-
-    if (gonderiliyor) return;
-
-    setGonderiliyor(true);
-
-    const alan =
-      secili.digerKisi;
-
-    try {
-
-      await addDoc(
-        collection(db, "mesajlar"),
-        {
-          ...(secili.uidTabanli
-            ? { gonderenUid: currentUid, alanUid: alan }
-            : { gonderen: currentEmail, alan }),
-          ilanId: secili.ilanId,
-          ilanBaslik: secili.ilanBaslik,
-          mesaj: yeniMesaj.trim(),
-          okundu: false,
-          tarih: serverTimestamp()
-        }
-      );
-
-      setYeniMesaj("");
-
-    } catch (error) {
-
-      console.error(
-        "Mesaj gönderilemedi:",
-        error
-      );
-
-      alert(
-        "Mesaj gönderilirken bir hata oluştu."
-      );
-
+      setDraft("");
+    } catch {
+      setSendError("Mesaj gönderilemedi. Bağlantınızı kontrol edip tekrar deneyin.");
     } finally {
-
-      setGonderiliyor(false);
-
+      setSending(false);
     }
-
   }
 
-
-  /*
-  ==========================================
-  ENTER İLE GÖNDER
-  ==========================================
-  */
-
-  function klavyeGonder(e) {
-
-    if (
-      e.key === "Enter" &&
-      !e.shiftKey
-    ) {
-
-      e.preventDefault();
-
-      mesajGonder();
-
+  function handleComposerKey(event) {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      sendMessage();
     }
-
   }
 
+  if (user === undefined || loading) return <main className="messages-shell"><div className="messages-skeleton" aria-live="polite"><span /><span /><span /><p>Mesajlarınız yükleniyor...</p></div></main>;
+  if (!user) return <main className="messages-shell messages-guest"><button type="button" className="messages-page-back" onClick={goBack}>← Geri</button><section><span aria-hidden="true">💬</span><h1>Mesajlarınıza erişin</h1><p>Satıcılarla ve alıcılarla HediyeAlSat üzerinden güvenle iletişim kurun.</p><Link to="/login">Giriş Yap</Link></section></main>;
 
-  /*
-  ==========================================
-  TARİH
-  ==========================================
-  */
-
-  function tarihGoster(tarih) {
-
-    if (!tarih) return "";
-
-    try {
-
-      const date = tarih.toDate
-        ? tarih.toDate()
-        : new Date(tarih);
-
-      return date.toLocaleDateString(
-        "tr-TR",
-        {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric"
-        }
-      );
-
-    } catch {
-
-      return "";
-
-    }
-
-  }
-
-
-  function saatGoster(tarih) {
-
-    if (!tarih) return "";
-
-    try {
-
-      const date = tarih.toDate
-        ? tarih.toDate()
-        : new Date(tarih);
-
-      return date.toLocaleTimeString(
-        "tr-TR",
-        {
-          hour: "2-digit",
-          minute: "2-digit"
-        }
-      );
-
-    } catch {
-
-      return "";
-
-    }
-
-  }
-
-
-  /*
-  ==========================================
-  GİRİŞ KONTROLÜ
-  ==========================================
-  */
-
-  if (!currentEmail) {
-
-    return (
-
-      <div className="messages-page">
-
-        <button
-          type="button"
-          className="messages-back-button"
-          onClick={geriDon}
-        >
-          ← Geri
-        </button>
-
-        <div className="messages-login">
-
-          <div className="messages-login-card">
-
-            <div className="messages-login-icon">
-              💬
-            </div>
-
-            <h2>
-              Mesajlarınızı görmek için
-              giriş yapın
-            </h2>
-
-            <p>
-              Satıcılarla ve alıcılarla
-              güvenli şekilde iletişim kurun.
-            </p>
-
-          </div>
-
-        </div>
-
+  return <main className={`messages-shell ${selected ? "conversation-open" : ""}`}>
+    <aside className="messages-inbox" aria-label="Konuşmalar">
+      <header className="messages-inbox-header"><div><button type="button" onClick={goBack} aria-label="Önceki sayfaya dön">←</button><div><small>HESABIM</small><h1>Mesajlar</h1></div></div><span aria-label={`${totalUnread} okunmamış mesaj`}>{totalUnread || conversations.length}</span></header>
+      <div className="messages-tools">
+        <label><span aria-hidden="true">⌕</span><input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Konuşmalarda ara" aria-label="Konuşmalarda ara" /></label>
+        <div role="group" aria-label="Konuşma filtresi"><button type="button" className={!unreadOnly ? "active" : ""} onClick={() => setUnreadOnly(false)}>Tümü</button><button type="button" className={unreadOnly ? "active" : ""} onClick={() => setUnreadOnly(true)}>Okunmamış {totalUnread > 0 && <span>{totalUnread}</span>}</button></div>
       </div>
+      {queryError ? <div className="messages-list-state error" role="alert"><span>!</span><h2>Mesajlar yüklenemedi</h2><p>{queryError}</p></div> : visibleConversations.length === 0 ? <div className="messages-list-state"><span aria-hidden="true">{conversations.length ? "⌕" : "💬"}</span><h2>{conversations.length ? "Sonuç bulunamadı" : "Henüz konuşmanız yok"}</h2><p>{conversations.length ? "Aramanızı veya filtrenizi değiştirin." : "Bir ürün hakkında soru sorduğunuzda konuşmanız burada görünür."}</p></div> : <div className="conversation-list">
+        {visibleConversations.map((conversation) => <button type="button" key={conversation.key} className={selectedKey === conversation.key ? "conversation-item active" : "conversation-item"} onClick={() => openConversation(conversation)} aria-current={selectedKey === conversation.key ? "true" : undefined}>
+          <span className="conversation-avatar" aria-hidden="true">{safeInitial(conversation.ilanBaslik)}</span>
+          <span className="conversation-summary"><span><strong>HediyeAlSat kullanıcısı</strong><time>{listTime(conversation.lastMessage?.tarih)}</time></span><b>{conversation.ilanBaslik}</b><span className="conversation-preview">{messagePreview(conversation.lastMessage, currentUid, currentEmail)}</span></span>
+          {conversation.unreadCount > 0 && <span className="conversation-unread" aria-label={`${conversation.unreadCount} okunmamış mesaj`}>{conversation.unreadCount}</span>}
+        </button>)}
+      </div>}
+    </aside>
 
-    );
-
-  }
-
-
-  return (
-
-    <div className="messages-page">
-
-      {/* GERİ BUTONU */}
-
-      <button
-        type="button"
-        className="messages-back-button"
-        onClick={geriDon}
-      >
-        ← Geri
-      </button>
-
-
-      {/* SOL PANEL */}
-
-      <aside className="messages-sidebar">
-
-        <div className="messages-sidebar-header">
-
-          <div>
-
-            <span className="messages-label">
-              HEDİYE ALSAT
-            </span>
-
-            <h1>
-              💬 Mesajlar
-            </h1>
-
-          </div>
-
-          <div className="message-count">
-
-            {sohbetler.length}
-
-          </div>
-
+    <section className="messages-chat" aria-label="Aktif konuşma">
+      {!selected ? <div className="messages-chat-empty"><span aria-hidden="true">✉️</span><h2>Mesaj merkeziniz</h2><p>Konuşmalarınızı görüntülemek için soldan bir sohbet seçin.</p><div><span>🔒 Güvenli iletişim</span><span>📦 Ürün bazlı sohbet</span></div></div> : <>
+        <header className="messages-chat-header"><button type="button" className="mobile-conversation-back" onClick={closeConversation} aria-label="Konuşma listesine dön">←</button><span className="chat-person-avatar" aria-hidden="true">{safeInitial(selected.ilanBaslik)}</span><div><strong>HediyeAlSat kullanıcısı</strong><span>{selected.ilanBaslik}</span></div>{selected.ilanId && <Link to={`/ilan/${selected.ilanId}`}>İlanı Gör <span aria-hidden="true">→</span></Link>}</header>
+        <div className="messages-thread" ref={chatPanelRef} onScroll={trackChatScroll}>
+          {selected.messages.length === 0 ? <div className="thread-empty">Bu konuşmada henüz mesaj yok.</div> : selected.messages.map((message) => {
+            const mine = isOwnMessage(message, currentUid, currentEmail);
+            return <article key={message.id} className={mine ? "thread-message mine" : "thread-message received"}><div><p>{message.mesaj}</p><footer><time>{messageTime(message.tarih)}</time>{mine && <span aria-label={message.okundu ? "Okundu" : "Gönderildi"}>{message.okundu ? "✓✓" : "✓"}</span>}</footer></div></article>;
+          })}
         </div>
-
-
-        <div className="messages-user">
-
-          <div className="profile-circle">
-            👤
-          </div>
-
-          <div>
-
-            <strong>
-              Sohbetlerim
-            </strong>
-
-            <span>Güvenli mesajlaşma hesabı</span>
-
-          </div>
-
-        </div>
-
-
-        <div className="chat-list">
-
-          {sohbetler.length === 0 ? (
-
-            <div className="no-chat">
-
-              <div className="no-chat-icon">
-                💬
-              </div>
-
-              <h3>
-                Henüz mesaj yok
-              </h3>
-
-              <p>
-                Bir ürün hakkında
-                iletişim kurduğunuzda
-                sohbetiniz burada görünecek.
-              </p>
-
-            </div>
-
-          ) : (
-
-            sohbetler.map((sohbet) => (
-
-              <button
-                key={sohbet.key}
-                className={
-                  secili?.key === sohbet.key
-                    ? "chat-item active"
-                    : "chat-item"
-                }
-                onClick={() =>
-                  sohbetAc(sohbet)
-                }
-              >
-
-                <div className="chat-avatar">
-                  🏪
-                </div>
-
-                <div className="chat-info">
-
-                  <div className="chat-top">
-
-                    <h3>
-                      {sohbet.ilanBaslik}
-                    </h3>
-
-                    {sohbet.okunmamis > 0 && (
-
-                      <span className="unread-badge">
-                        {sohbet.okunmamis}
-                      </span>
-
-                    )}
-
-                  </div>
-
-                  <strong>HediyeAlSat kullanıcısı</strong>
-
-                  <p>
-
-                    {sohbet.sonMesaj?.gonderen ===
-                    currentEmail
-                      ? "Siz: "
-                      : ""}
-
-                    {sohbet.sonMesaj?.mesaj ||
-                      "Mesaj"}
-
-                  </p>
-
-                  <small>
-
-                    {tarihGoster(
-                      sohbet.sonMesaj?.tarih
-                    )}
-
-                  </small>
-
-                </div>
-
-              </button>
-
-            ))
-
-          )}
-
-        </div>
-
-      </aside>
-
-
-      {/* SAĞ PANEL */}
-
-      <main className="messages-content">
-
-        {!secili ? (
-
-          <div className="chat-empty">
-
-            <div className="empty-chat-icon">
-              💌
-            </div>
-
-            <h2>
-              Mesajlarınız
-            </h2>
-
-            <p>
-              Soldan bir sohbet seçerek
-              konuşmaya başlayabilirsiniz.
-            </p>
-
-            <div className="empty-features">
-
-              <span>
-                🔒 Güvenli iletişim
-              </span>
-
-              <span>
-                📦 Ürün bazlı sohbet
-              </span>
-
-              <span>
-                ⚡ Anlık mesajlaşma
-              </span>
-
-            </div>
-
-          </div>
-
-        ) : (
-
-          <>
-
-            {/* CHAT HEADER */}
-
-            <header className="chat-header">
-
-              <div className="chat-header-user">
-
-                <div className="chat-header-avatar">
-                  🏪
-                </div>
-
-                <div>
-
-                  <h2>
-                    {secili.ilanBaslik}
-                  </h2>
-
-                  <p>HediyeAlSat güvenli mesajlaşma</p>
-
-                </div>
-
-              </div>
-
-              <div className="chat-status">
-                ● Aktif sohbet
-              </div>
-
-            </header>
-
-
-            {/* MESAJLAR */}
-
-            <div className="chat-messages">
-
-              {[...secili.mesajlar]
-
-                .sort((a, b) => {
-
-                  const ta =
-                    a.tarih?.seconds || 0;
-
-                  const tb =
-                    b.tarih?.seconds || 0;
-
-                  return ta - tb;
-
-                })
-
-                .map((m) => {
-
-                  const benim =
-                    m.gonderen === currentEmail;
-
-                  return (
-
-                    <div
-                      key={m.id}
-                      className={
-                        benim
-                          ? "message-row mine"
-                          : "message-row theirs"
-                      }
-                    >
-
-                      <div
-                        className={
-                          benim
-                            ? "message-bubble mine-bubble"
-                            : "message-bubble"
-                        }
-                      >
-
-                        <p>
-                          {m.mesaj}
-                        </p>
-
-                        <div className="message-meta">
-
-                          <span>
-                            {saatGoster(
-                              m.tarih
-                            )}
-                          </span>
-
-                          {benim && (
-
-                            <span
-                              className={
-                                m.okundu
-                                  ? "message-read"
-                                  : "message-sent"
-                              }
-                            >
-
-                              {m.okundu
-                                ? "✓✓"
-                                : "✓"}
-
-                            </span>
-
-                          )}
-
-                        </div>
-
-                      </div>
-
-                    </div>
-
-                  );
-
-                })}
-
-            </div>
-
-
-            {/* MESAJ GÖNDER */}
-
-            <div className="chat-send">
-
-              <div className="chat-input-wrapper">
-
-                <textarea
-                  value={yeniMesaj}
-                  onChange={(e) =>
-                    setYeniMesaj(
-                      e.target.value
-                    )
-                  }
-                  onKeyDown={klavyeGonder}
-                  placeholder="Mesajınızı yazın..."
-                  rows="1"
-                />
-
-                <span className="input-hint">
-                  Enter = Gönder
-                </span>
-
-              </div>
-
-              <button
-                className="send-button"
-                onClick={mesajGonder}
-                disabled={
-                  gonderiliyor ||
-                  !yeniMesaj.trim()
-                }
-              >
-
-                {gonderiliyor
-                  ? "Gönderiliyor..."
-                  : "📨 Gönder"}
-
-              </button>
-
-            </div>
-
-          </>
-
-        )}
-
-      </main>
-
-    </div>
-
-  );
-
+        <div className="message-composer"><label htmlFor="message-draft" className="sr-only">Mesajınız</label><textarea id="message-draft" value={draft} onChange={(event) => { setDraft(event.target.value.slice(0, 5000)); setSendError(""); }} onKeyDown={handleComposerKey} placeholder="Mesajınızı yazın…" rows={1} maxLength={5000} /><button type="button" onClick={sendMessage} disabled={sending || !draft.trim()} aria-label="Mesajı gönder">{sending ? "Gönderiliyor…" : "Gönder"}<span aria-hidden="true">➤</span></button>{sendError && <p role="alert">{sendError}</p>}<small>Enter ile gönder · Shift+Enter ile satır atla</small></div>
+      </>}
+    </section>
+  </main>;
 }
 
 export default Messages;
