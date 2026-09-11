@@ -22,14 +22,14 @@ function lookupFirestore(listing = liveListing) {
 test("3/7/30 günlük paket fiyatları backend configinden gelir", () => {
   assert.deepEqual(["boost_3", "boost_7", "boost_30"].map((id) => {
     const item = getListingBoostPackage(id); return [item.days, item.price];
-  }), [[3, 29], [7, 49], [30, 99]]);
+  }), [[3, 499], [7, 999], [30, 1999]]);
 });
 
 test("boost iyzico requesti platform LISTING hizmetidir ve subMerchant alanı taşımaz", () => {
   const built = buildListingBoostPaymentData({ id: "listing-1" }, getListingBoostPackage("boost_3"));
-  assert.equal(built.price, 29);
+  assert.equal(built.price, 499);
   assert.equal(built.paymentGroup, "LISTING");
-  assert.equal(built.basketItems[0].price, "29.00");
+  assert.equal(built.basketItems[0].price, "499.00");
   assert.equal(built.basketItems[0].itemType, "VIRTUAL");
   assert.equal("subMerchantKey" in built.basketItems[0], false);
   assert.equal("subMerchantPrice" in built.basketItems[0], false);
@@ -43,7 +43,7 @@ test("geçersiz paket ve başkasının ilanı reddedilir", async () => {
 test("pasif fiziksel ilan reddedilir, stok sıfır dijital ilan kabul edilir", async () => {
   await assert.rejects(prepareListingBoost({ firestore: lookupFirestore({ ...liveListing, aktif: false }), listingId: "l1", packageId: "boost_3", user: owner }), (error) => error.code === "LISTING_BOOST_NOT_ELIGIBLE");
   const result = await prepareListingBoost({ firestore: lookupFirestore({ ...liveListing, stok: 0, urunTipi: "dijital", fizikselKargo: false }), listingId: "l1", packageId: "boost_3", user: owner });
-  assert.equal(result.package.price, 29);
+  assert.equal(result.package.price, 499);
 });
 
 test("paket süreleri server zamanından tam gün hesabıyla oluşturulur", () => {
@@ -93,7 +93,7 @@ function memoryFirestore(seed) {
 
 function boostSeed() {
   return {
-    "odemeler/conv-boost": { id: "conv-boost", paymentStatus: "WAITING", listingBoost: true, listingId: "listing-1", listingOwnerUid: owner.uid, kullanici: owner.email, boostPackageId: "boost_3", boostDays: 3, boostPrice: 29, toplamTutar: 29 },
+    "odemeler/conv-boost": { id: "conv-boost", paymentStatus: "WAITING", listingBoost: true, listingId: "listing-1", listingOwnerUid: owner.uid, kullanici: owner.email, boostPackageId: "boost_3", boostDays: 3, boostPrice: 499, toplamTutar: 499 },
     "ilanlar/listing-1": { ...liveListing, fiyat: 500, stok: 2 }
   };
 }
@@ -106,8 +106,8 @@ test("başarılı boost callback tek kayıt üretir; wallet, stok ve komisyon ak
   assert.equal(listing.boostActive, true);
   assert.equal(listing.boostEndAt.getTime(), now.getTime() + 3 * DAY_MS);
   assert.equal(listing.stok, 2);
-  assert.equal(database.data.get("listingPromotions/boost-pay-1").amount, 29);
-  assert.equal(database.data.get("platformRevenueEvents/listing_boost_boost-pay-1").amount, 29);
+  assert.equal(database.data.get("listingPromotions/boost-pay-1").amount, 499);
+  assert.equal(database.data.get("platformRevenueEvents/listing_boost_boost-pay-1").amount, 499);
   assert.equal([...database.data.keys()].some((key) => key.startsWith("wallets/") || key.startsWith("bakiyeHareketleri/") || key.startsWith("siparisler/")), false);
 });
 

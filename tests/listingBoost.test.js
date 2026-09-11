@@ -2,8 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { isListingBoostActive, LISTING_BOOST_PACKAGES, sortListingsByBoost } from "../src/utils/listingBoost.js";
 
-test("frontend paketleri backend ile ortak 29/49/99 configini kullanır", () => {
-  assert.deepEqual(LISTING_BOOST_PACKAGES.map(({ days, price }) => [days, price]), [[3, 29], [7, 49], [30, 99]]);
+test("frontend paketleri backend ile ortak 499/999/1999 configini kullanır", () => {
+  assert.deepEqual(LISTING_BOOST_PACKAGES.map(({ days, price }) => [days, price]), [[3, 499], [7, 999], [30, 1999]]);
 });
 
 test("aktif boost normal ilanın önüne geçer, süresi dolan avantaj alamaz", () => {
