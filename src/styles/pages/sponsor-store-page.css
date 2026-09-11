@@ -134,8 +134,39 @@
 
 /* BUTON */
 
+.sponsor-application-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 24px;
+  border: 1px solid #eee;
+  border-radius: 14px;
+  background: #fafafa;
+  text-align: center;
+}
+
+.sponsor-application-icon {
+  font-size: 30px;
+  line-height: 1;
+}
+
+.sponsor-application-box h3 {
+  margin: 0 0 8px;
+  font-size: 20px;
+}
+
+.sponsor-application-box p {
+  margin: 0;
+  color: #666;
+  line-height: 1.55;
+}
+
 .sponsor-store-button {
-  width: 100%;
+  width: min(100%, 340px);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border: none;
   border-radius: 12px;
   padding: 15px 20px;
@@ -145,6 +176,9 @@
 
   font-size: 16px;
   font-weight: 700;
+  line-height: 1.25;
+  text-align: center;
+  text-decoration: none;
 
   cursor: pointer;
   transition: 0.2s;
@@ -153,6 +187,25 @@
 .sponsor-store-button:hover {
   transform: translateY(-1px);
   opacity: 0.9;
+}
+
+.sponsor-store-info {
+  margin-top: 28px;
+  padding: 22px 24px;
+  border: 1px solid #e8e8e8;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.sponsor-store-info strong {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.sponsor-store-info p {
+  margin: 0;
+  color: #666;
+  line-height: 1.55;
 }
 
 /* ==============================
@@ -188,6 +241,19 @@
 
   .sponsor-store-features > div {
     padding: 18px;
+  }
+
+  .sponsor-application-box {
+    padding: 20px 16px;
+  }
+
+  .sponsor-store-button {
+    width: 100%;
+  }
+
+  .sponsor-store-info {
+    margin-top: 22px;
+    padding: 20px;
   }
 
 }
