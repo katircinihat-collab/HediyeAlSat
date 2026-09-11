@@ -23,6 +23,7 @@ function Listings() {
 
   const [searchParams] = useSearchParams();
   const arama = (searchParams.get("search") || "").trim();
+  const view = searchParams.get("view") || "";
 
   const [ilanlar, setIlanlar] = useState([]);
   const [yukleniyor, setYukleniyor] = useState(true);
@@ -110,9 +111,16 @@ function Listings() {
       return false;
     }
 
+    if (view === "editors-choice" && ilan.oneCikan !== true) return false;
+    if (view === "premium" && ilan.premium !== true) return false;
+
     return true;
 
-  }));
+  })).sort((a, b) => {
+    if (view === "best-sellers") return (b.satisSayisi || 0) - (a.satisSayisi || 0);
+    if (view === "new") return (b.tarih?.seconds || 0) - (a.tarih?.seconds || 0);
+    return 0;
+  });
 
 
   return (

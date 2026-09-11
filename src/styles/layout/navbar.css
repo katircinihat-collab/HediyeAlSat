@@ -1,105 +1,435 @@
 /* =========================================================
-   HEDİYEALSAT - PROFESYONEL NAVBAR
+   HEDİYEALSAT - REFERANS TASARIM HEADER
 ========================================================= */
 
 .navbar {
   width: 100%;
-  background: rgba(255, 255, 255, 0.97);
+  background: #ffffff;
   position: sticky;
   top: 0;
   z-index: 9999;
-  border-bottom: 1px solid #eeeeee;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.07);
-  backdrop-filter: blur(12px);
-  transition:
-    box-shadow 0.3s ease,
-    background 0.3s ease;
+  border-bottom: 1px solid #ececec;
+  box-shadow: 0 6px 24px rgba(15, 23, 42, 0.08);
 }
 
 .navbar-scrolled {
-  background: rgba(255, 255, 255, 0.99);
-  box-shadow: 0 7px 30px rgba(0, 0, 0, 0.11);
+  box-shadow: 0 9px 30px rgba(15, 23, 42, 0.11);
 }
-
-/* =========================================================
-   YÜKLENİYOR
-========================================================= */
 
 .navbar-loading {
-  min-height: 82px;
+  min-height: 100px;
 }
 
-.navbar-loading .navbar-top {
-  height: 82px;
+.mobile-navbar-top {
+  display: none;
 }
 
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
 
-/* =========================================================
-   ÜST SATIR
-========================================================= */
+.navbar-inner-page .navbar-top {
+  display: none;
+}
+
+.navbar-inner-page .navbar-bottom {
+  padding-top: 8px;
+}
 
 .navbar-top {
   width: 100%;
-  max-width: 1750px;
-  min-height: 82px;
+  max-width: 1820px;
   margin: 0 auto;
-  padding: 12px 28px;
-  display: flex;
-  align-items: center;
-  gap: 24px;
+  padding: 16px 18px 8px;
+  display: grid;
+  grid-template-columns: 175px minmax(0, 1fr) 455px;
+  align-items: stretch;
+  gap: 10px;
 }
-
 
 /* =========================================================
    LOGO
 ========================================================= */
+
+.brand-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding-top: 4px;
+}
 
 .navbar-logo {
   display: flex;
   align-items: center;
   gap: 9px;
   text-decoration: none;
-  flex-shrink: 0;
-  transition: transform 0.25s ease;
-}
-
-.navbar-logo:hover {
-  transform: translateY(-1px);
 }
 
 .logo-icon {
-  width: 49px;
-  height: 49px;
+  width: 58px;
+  height: 58px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #c1121f, #e63946);
-  color: white;
-  border-radius: 14px;
-  font-size: 26px;
-  box-shadow: 0 7px 18px rgba(193, 18, 31, 0.23);
+  border-radius: 15px;
+  background: linear-gradient(145deg, #ef261e, #bd0c17);
+  color: #fff;
+  font-size: 29px;
+  box-shadow: 0 8px 20px rgba(193, 18, 31, 0.22);
 }
 
 .logo-text {
   display: flex;
   flex-direction: column;
-  line-height: 0.92;
+  line-height: 0.88;
 }
 
 .logo-text span {
-  font-size: 18px;
-  font-weight: 800;
-  color: #333333;
-  letter-spacing: -0.4px;
+  color: #242424;
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: -0.7px;
 }
 
 .logo-text b {
-  font-size: 28px;
-  font-weight: 900;
-  color: #c1121f;
-  letter-spacing: -1.2px;
+  color: #c8141e;
+  font-size: 31px;
+  font-weight: 950;
+  letter-spacing: -1.4px;
 }
 
+.brand-tagline {
+  margin-top: 8px;
+  color: #666;
+  font-size: 12px;
+  line-height: 1.06;
+}
+
+/* =========================================================
+   ORTA DÖNEN VİTRİN
+========================================================= */
+
+.navbar-feature-showcase {
+  position: relative;
+  min-width: 0;
+  height: 170px;
+  overflow: hidden;
+  border: 1px solid #efddd6;
+  border-radius: 17px;
+  background:
+    radial-gradient(circle at 10% 10%, rgba(255, 194, 126, 0.36), transparent 34%),
+    radial-gradient(circle at 93% 10%, rgba(133, 190, 97, 0.28), transparent 30%),
+    linear-gradient(135deg, #fff3e5 0%, #fffaf8 55%, #fff0eb 100%);
+  box-shadow: 0 8px 22px rgba(116, 70, 39, 0.09);
+}
+
+.feature-showcase-main {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-columns: 34% 42% 24%;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 46px 20px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.feature-showcase-disabled {
+  cursor: default;
+}
+
+/* Poster kartları */
+.feature-visual {
+  position: relative;
+  height: 132px;
+  min-width: 0;
+}
+
+.feature-paper {
+  position: absolute;
+  top: 7px;
+  width: 72px;
+  height: 116px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  background: #fffdf8;
+  border: 1px solid #eadfd5;
+  box-shadow: 0 10px 20px rgba(73, 49, 31, 0.16);
+  font-size: 35px;
+  color: #202020;
+}
+
+.feature-paper span {
+  white-space: pre-line;
+  text-align: center;
+}
+
+.feature-paper-one {
+  left: 4%;
+  transform: rotate(-6deg);
+}
+
+.feature-paper-two {
+  left: 32%;
+  z-index: 2;
+  transform: rotate(1deg);
+}
+
+.feature-paper-three {
+  left: 59%;
+  transform: rotate(6deg);
+  font-size: 18px;
+  line-height: 1.1;
+  font-family: Georgia, serif;
+  font-style: italic;
+}
+
+.feature-copy {
+  min-width: 0;
+  text-align: center;
+}
+
+.feature-eyebrow {
+  display: block;
+  margin-bottom: 3px;
+  color: #c41b24;
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 1.25px;
+}
+
+.feature-copy h2 {
+  margin: 0;
+  color: #111820;
+  font-size: clamp(26px, 2.1vw, 38px);
+  line-height: 1;
+  letter-spacing: -1.4px;
+  white-space: nowrap;
+}
+
+.feature-copy p {
+  max-width: 390px;
+  margin: 8px auto 9px;
+  color: #252525;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.feature-cta {
+  min-width: 168px;
+  height: 38px;
+  padding: 0 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 11px;
+  background: linear-gradient(135deg, #e7101c, #ff421b);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 900;
+  box-shadow: 0 7px 17px rgba(224, 20, 28, 0.18);
+}
+
+.feature-perks {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-left: 5px;
+}
+
+.feature-perks span {
+  color: #202020;
+  font-size: 10px;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.feature-arrow {
+  position: absolute;
+  top: 50%;
+  z-index: 6;
+  width: 42px;
+  height: 42px;
+  border: 0;
+  border-radius: 50%;
+  background: #34373b;
+  color: #fff;
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+  transform: translateY(-50%);
+  box-shadow: 0 7px 18px rgba(0, 0, 0, 0.2);
+}
+
+.feature-arrow-left {
+  left: 12px;
+}
+
+.feature-arrow-right {
+  right: 12px;
+}
+
+.feature-dots {
+  position: absolute;
+  left: 50%;
+  bottom: 7px;
+  z-index: 7;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  transform: translateX(-50%);
+}
+
+.feature-dot {
+  width: 9px;
+  height: 9px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: #c7c7c7;
+  cursor: pointer;
+}
+
+.feature-dot-active {
+  background: #e8232b;
+}
+
+/* =========================================================
+   SAĞ KUTULAR
+========================================================= */
+
+.navbar-tools {
+  min-width: 0;
+  height: 170px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: 1px solid #f0e3e4;
+  border-radius: 17px;
+  background: linear-gradient(145deg, #fffafa, #fff5f5);
+}
+
+.navbar-right {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.header-action,
+.user-btn {
+  min-width: 0;
+  height: 82px;
+  padding: 5px 3px;
+  border: 1px solid #eadfe0;
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.96);
+  color: #1f1f1f;
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  box-shadow: 0 4px 13px rgba(104, 47, 51, 0.05);
+  cursor: pointer;
+}
+
+.header-action:hover,
+.user-btn:hover {
+  background: #fffafa;
+  border-color: #e8c8ca;
+}
+
+.header-action > span,
+.user-avatar {
+  width: 33px;
+  height: 33px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+}
+
+.header-action strong,
+.user-name {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: inherit;
+  font-size: 10px;
+  font-weight: 900;
+  text-align: center;
+}
+
+.header-action small,
+.user-button-copy small {
+  color: #777;
+  font-size: 8px;
+  text-align: center;
+}
+
+.header-action-primary {
+  border-color: transparent;
+  background: linear-gradient(145deg, #e52118, #ff3b1b);
+  color: #fff;
+  box-shadow: 0 8px 20px rgba(229, 31, 23, 0.2);
+}
+
+.header-action-primary small {
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.header-action-admin span {
+  color: #d7a200;
+}
+
+.navbar-user {
+  position: relative;
+  min-width: 0;
+}
+
+.user-btn {
+  width: 100%;
+  font-family: inherit;
+}
+
+.user-avatar {
+  background: transparent;
+}
+
+.user-button-copy {
+  min-width: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.user-arrow {
+  position: absolute;
+  right: 5px;
+  bottom: 5px;
+  font-size: 7px;
+}
+
+.user-arrow.arrow-up {
+  transform: rotate(180deg);
+}
 
 /* =========================================================
    ARAMA
@@ -107,398 +437,144 @@
 
 .navbar-search {
   flex: 1;
-  min-width: 180px;
-  max-width: 720px;
-  height: 50px;
-  margin: 0 auto;
+  min-height: 52px;
   display: flex;
   align-items: center;
-  background: #ffffff;
-  border: 2px solid #eeeeee;
-  border-radius: 15px;
   overflow: hidden;
-  transition:
-    border-color 0.25s ease,
-    box-shadow 0.25s ease,
-    transform 0.25s ease;
-}
-
-.navbar-search:hover {
-  border-color: #dddddd;
+  border: 1px solid #e1d8da;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.96);
 }
 
 .navbar-search.search-active {
   border-color: #c1121f;
-  box-shadow: 0 0 0 4px rgba(193, 18, 31, 0.08);
+  box-shadow: 0 0 0 3px rgba(193, 18, 31, 0.08);
 }
 
 .search-icon {
-  margin-left: 17px;
-  font-size: 18px;
-  flex-shrink: 0;
-  opacity: 0.75;
+  margin-left: 16px;
+  font-size: 20px;
 }
 
 .navbar-search input {
   flex: 1;
-  width: 100%;
   min-width: 0;
   height: 100%;
-  border: none;
-  outline: none;
+  padding: 0 11px;
+  border: 0;
+  outline: 0;
   background: transparent;
-  padding: 0 14px;
-  color: #222222;
-  font-size: 15px;
-  font-weight: 500;
+  color: #222;
+  font-size: 12px;
 }
 
 .navbar-search input::placeholder {
-  color: #999999;
+  color: #8d8d8d;
 }
 
 .search-clear {
-  width: 34px;
-  height: 34px;
-  margin-right: 3px;
-  border: none;
+  width: 30px;
+  height: 30px;
+  border: 0;
   border-radius: 50%;
-  background: #f1f1f1;
-  color: #777777;
-  font-size: 23px;
-  line-height: 1;
+  background: #eee;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition:
-    background 0.2s ease,
-    color 0.2s ease;
-}
-
-.search-clear:hover {
-  background: #e6e6e6;
-  color: #222222;
 }
 
 .search-button {
-  height: 42px;
-  min-width: 78px;
-  margin-right: 4px;
-  border: none;
-  border-radius: 11px;
-  background: linear-gradient(
-    135deg,
-    #c1121f,
-    #d91e2b
-  );
-  color: white;
-  font-size: 14px;
-  font-weight: 800;
+  align-self: stretch;
+  min-width: 86px;
+  margin: 3px;
+  border: 0;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #cf0f18, #e72715);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 900;
   cursor: pointer;
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease,
-    background 0.2s ease;
 }
-
-.search-button:hover {
-  background: linear-gradient(
-    135deg,
-    #a90f1b,
-    #c1121f
-  );
-  box-shadow: 0 5px 13px rgba(193, 18, 31, 0.22);
-}
-
-.search-button:active {
-  transform: scale(0.97);
-}
-
 
 /* =========================================================
-   SAĞ TARAF
+   ALT MENÜ
 ========================================================= */
 
-.navbar-right {
+.navbar-bottom {
+  width: 100%;
+  max-width: 1820px;
+  margin: 0 auto;
+  padding: 0 18px 8px;
   display: flex;
   align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
+  justify-content: space-between;
+  gap: 15px;
 }
 
-
-/* =========================================================
-   FAVORİ - SEPET - MESAJ
-========================================================= */
-
-.nav-icon {
-  position: relative;
-  width: 43px;
-  height: 43px;
+.navbar-menu {
+  min-width: 0;
   display: flex;
   align-items: center;
-  justify-content: center;
-  border-radius: 12px;
-  background: #f7f7f8;
-  color: #333333;
-  text-decoration: none;
-  font-size: 19px;
-  border: 1px solid #eeeeee;
-  transition:
-    background 0.25s ease,
-    color 0.25s ease,
-    transform 0.25s ease,
-    box-shadow 0.25s ease;
+  gap: 5px;
+  overflow-x: auto;
+  scrollbar-width: none;
 }
 
-.nav-icon:hover {
-  background: #fff1f2;
-  border-color: #ffd5d8;
-  color: #c1121f;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 15px rgba(193, 18, 31, 0.12);
+.navbar-menu::-webkit-scrollbar {
+  display: none;
 }
 
-.nav-icon:active {
-  transform: scale(0.95);
-}
-
-
-/* =========================================================
-   GENEL BUTONLAR
-========================================================= */
-
-.login-btn,
-.admin-btn,
-.add-btn,
-.user-btn {
-  min-height: 43px;
-  padding: 0 15px;
-  border: none;
-  border-radius: 11px;
-  font-size: 14px;
-  font-weight: 800;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  white-space: nowrap;
-  transition:
-    transform 0.25s ease,
-    box-shadow 0.25s ease,
-    background 0.25s ease;
-}
-
-
-/* =========================================================
-   MİSAFİR GİRİŞ / ÜYELİK
-========================================================= */
-
-.guest-auth-actions {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-}
-
-.guest-auth-btn {
+.navbar-menu a {
+  min-height: 44px;
+  padding: 0 17px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 7px;
-  min-height: 44px;
-  box-sizing: border-box;
-  padding: 0 15px;
-  border: 1px solid transparent;
-  border-radius: 11px;
-  font-size: 14px;
-  font-weight: 800;
-  line-height: 1;
+  border-radius: 10px;
+  color: #222;
   text-decoration: none;
-  white-space: nowrap;
-  transition: transform .2s ease, background .2s ease, border-color .2s ease, box-shadow .2s ease;
-}
-
-.guest-login-btn {
-  border-color: #e2dadd;
-  background: #fff;
-  color: #4f4549;
-}
-
-.guest-login-btn:hover {
-  border-color: #c1121f;
-  background: #fff7f7;
-  color: #a50f1a;
-  transform: translateY(-1px);
-}
-
-.guest-register-btn {
-  background: #c1121f;
-  color: #fff;
-  box-shadow: 0 5px 14px rgba(193, 18, 31, .18);
-}
-
-.guest-register-btn:hover {
-  background: #a90f1b;
-  color: #fff;
-  transform: translateY(-1px);
-  box-shadow: 0 8px 18px rgba(193, 18, 31, .22);
-}
-
-.guest-auth-btn:focus-visible {
-  outline: 3px solid rgba(193, 18, 31, .2);
-  outline-offset: 2px;
-}
-
-.guest-auth-btn:active {
-  transform: translateY(0) scale(.98);
-}
-
-
-/* =========================================================
-   ADMIN
-========================================================= */
-
-.admin-link {
-  text-decoration: none;
-}
-
-.admin-btn {
-  background: #171717;
-  color: #ffffff;
-}
-
-.admin-btn:hover {
-  background: #000000;
-  transform: translateY(-2px);
-  box-shadow: 0 7px 17px rgba(0, 0, 0, 0.2);
-}
-
-
-/* =========================================================
-   İLAN VER
-========================================================= */
-
-.add-link {
-  text-decoration: none;
-}
-
-.add-btn {
-  min-width: 108px;
-  background: linear-gradient(
-    135deg,
-    #ff6b00,
-    #ff851b
-  );
-  color: #ffffff;
-  box-shadow: 0 6px 17px rgba(255, 107, 0, 0.2);
-}
-
-.add-btn:hover {
-  background: linear-gradient(
-    135deg,
-    #e85c00,
-    #f06a00
-  );
-  transform: translateY(-2px);
-  box-shadow: 0 9px 20px rgba(255, 107, 0, 0.27);
-}
-
-.add-btn span {
-  font-size: 18px;
-  line-height: 1;
-}
-
-
-/* =========================================================
-   KULLANICI BUTONU
-========================================================= */
-
-.navbar-user {
-  position: relative;
-}
-
-.user-btn {
-  max-width: 185px;
-  background: #f7f7f8;
-  color: #222222;
-  border: 1px solid #e9e9e9;
-}
-
-.user-btn:hover,
-.user-btn-active {
-  background: #f0f0f1;
-  border-color: #dddddd;
-}
-
-.user-avatar {
-  width: 27px;
-  height: 27px;
-  border-radius: 50%;
-  background: #ffffff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 15px;
-  border: 1px solid #e5e5e5;
-}
-
-.user-name {
-  max-width: 92px;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: 12px;
+  font-weight: 850;
   white-space: nowrap;
 }
 
-.user-arrow {
-  font-size: 10px;
-  transition: transform 0.25s ease;
+.navbar-menu a:hover {
+  background: #f5f5f5;
 }
 
-.user-arrow.arrow-up {
-  transform: rotate(180deg);
+.navbar-menu a.active {
+  background: linear-gradient(135deg, #e61e22, #f13516);
+  color: #fff;
+  box-shadow: 0 7px 17px rgba(216, 25, 30, 0.2);
 }
 
+.navbar-slogan {
+  flex-shrink: 0;
+  padding-right: 8px;
+  color: #e4252e;
+  font-size: 16px;
+  line-height: 0.95;
+  font-style: italic;
+  font-family: cursive;
+  text-align: center;
+  transform: rotate(-4deg);
+}
 
 /* =========================================================
-   KULLANICI DROPDOWN
+   DROPDOWN
 ========================================================= */
 
 .user-dropdown {
   position: absolute;
-  top: calc(100% + 12px);
+  top: calc(100% + 10px);
   right: 0;
+  z-index: 30;
   width: 295px;
   padding: 8px;
-  background: #ffffff;
-  border: 1px solid #eeeeee;
+  background: #fff;
+  border: 1px solid #eee;
   border-radius: 17px;
-  box-shadow:
-    0 20px 55px rgba(0, 0, 0, 0.15),
-    0 4px 12px rgba(0, 0, 0, 0.05);
-  overflow: hidden;
-  animation: dropdownAc 0.18s ease-out;
+  box-shadow: 0 20px 55px rgba(0, 0, 0, 0.15);
 }
-
-@keyframes dropdownAc {
-
-  from {
-    opacity: 0;
-    transform: translateY(-7px) scale(0.98);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-
-}
-
-
-/* =========================================================
-   DROPDOWN HEADER
-========================================================= */
 
 .dropdown-user-header {
   display: flex;
@@ -510,19 +586,12 @@
 .dropdown-avatar {
   width: 45px;
   height: 45px;
-  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 13px;
-  background: linear-gradient(
-    135deg,
-    #c1121f,
-    #e63946
-  );
-  color: white;
-  font-size: 21px;
-  box-shadow: 0 6px 15px rgba(193, 18, 31, 0.18);
+  background: linear-gradient(135deg, #c1121f, #e63946);
+  color: #fff;
 }
 
 .dropdown-user-info {
@@ -532,26 +601,17 @@
   gap: 4px;
 }
 
-.dropdown-user-info strong {
-  color: #222222;
-  font-size: 14px;
+.dropdown-user-info strong,
+.dropdown-user-info small {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .dropdown-user-info small {
-  color: #888888;
+  color: #888;
   font-size: 11px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
-
-
-/* =========================================================
-   DROPDOWN LİNKLER
-========================================================= */
 
 .user-dropdown a {
   min-height: 55px;
@@ -562,13 +622,12 @@
   margin: 2px 0;
   border-radius: 11px;
   text-decoration: none;
-  color: #333333;
-  transition:
-    background 0.2s ease,
-    transform 0.2s ease;
+  color: #333;
 }
 
-.user-dropdown a > span {
+.user-dropdown a > span,
+.store-menu-status > span,
+.logout-btn > span {
   width: 35px;
   height: 35px;
   flex-shrink: 0;
@@ -577,585 +636,508 @@
   justify-content: center;
   border-radius: 10px;
   background: #f7f7f8;
-  font-size: 17px;
 }
 
-.user-dropdown a > div {
+.user-dropdown a > div,
+.store-menu-status > div,
+.logout-btn > div {
   min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 3px;
 }
 
-.user-dropdown a strong {
-  font-size: 13px;
-  color: #333333;
-}
-
-.user-dropdown a small {
-  font-size: 10px;
-  color: #999999;
-}
-
-.user-dropdown a:hover {
-  background: #fff5f5;
-  transform: translateX(2px);
-}
-
-.user-dropdown a:hover strong {
-  color: #c1121f;
-}
-
-
-/* =========================================================
-   ÖZEL MAĞAZA LİNKLERİ
-========================================================= */
-
-.store-menu-link:hover,
-.seller-menu-link:hover {
-  background: #fff8ef !important;
-}
-
-.store-menu-link:hover strong,
-.seller-menu-link:hover strong {
-  color: #e86b00 !important;
-}
-
-.create-store-link:hover {
-  background: #f0fdf4 !important;
-}
-
-.create-store-link:hover strong {
-  color: #15803d !important;
-}
-
-
-/* =========================================================
-   AYRAÇ
-========================================================= */
-
-.dropdown-divider {
-  width: 100%;
-  height: 1px;
-  margin: 6px 0;
-  background: #eeeeee;
-}
-
-
-/* =========================================================
-   ÇIKIŞ
-========================================================= */
-
-.logout-btn {
-  width: 100%;
-  min-height: 53px;
-  padding: 8px 10px;
-  border: none;
-  border-radius: 11px;
-  background: #ffffff;
-  color: #c1121f;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  text-align: left;
-  cursor: pointer;
-  transition:
-    background 0.2s ease,
-    transform 0.2s ease;
-}
-
-.logout-btn > span {
-  width: 35px;
-  height: 35px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 10px;
-  background: #fff1f2;
-  font-size: 17px;
-}
-
-.logout-btn > div {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
+.user-dropdown a strong,
+.store-menu-status strong,
 .logout-btn strong {
   font-size: 13px;
 }
 
+.user-dropdown a small,
+.store-menu-status small,
 .logout-btn small {
+  color: #999;
   font-size: 10px;
-  color: #999999;
 }
 
-.logout-btn:hover {
-  background: #fff5f5;
-  transform: translateX(2px);
+.dropdown-divider {
+  height: 1px;
+  margin: 6px 0;
+  background: #eee;
 }
 
-
-/* =========================================================
-   ALT MENÜ
-========================================================= */
-
-.navbar-menu {
+.logout-btn,
+.store-menu-status {
   width: 100%;
-  max-width: 1750px;
-  margin: 0 auto;
-  padding: 0 28px 14px;
+  min-height: 53px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 11px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 9px;
+  gap: 12px;
+  background: #fff;
+  text-align: left;
 }
 
-.navbar-menu a {
-  min-height: 39px;
-  padding: 0 18px;
+.logout-btn {
+  color: #c1121f;
+  cursor: pointer;
+}
+
+/* =========================================================
+   MİSAFİR
+========================================================= */
+
+.guest-auth-actions {
+  grid-column: span 2;
+  display: flex;
+  gap: 6px;
+}
+
+.guest-auth-btn {
+  min-height: 44px;
+  padding: 0 12px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 7px;
-  border: 1px solid #eeeeee;
+  border: 1px solid #e2dadd;
   border-radius: 10px;
-  background: #f8f8f9;
-  color: #444444;
+  background: #fff;
+  color: #333;
+  font-size: 11px;
+  font-weight: 800;
   text-decoration: none;
-  font-size: 13px;
-  font-weight: 750;
-  white-space: nowrap;
-  transition:
-    background 0.25s ease,
-    color 0.25s ease,
-    border-color 0.25s ease,
-    transform 0.25s ease,
-    box-shadow 0.25s ease;
 }
 
-.navbar-menu a:hover {
-  background: #fff3f4;
-  color: #c1121f;
-  border-color: #ffd9dc;
-  transform: translateY(-2px);
-  box-shadow: 0 5px 13px rgba(193, 18, 31, 0.09);
+.guest-register-btn {
+  background: #c1121f;
+  color: #fff;
 }
-
-.navbar-menu a.active {
-  background: linear-gradient(
-    135deg,
-    #c1121f,
-    #d91e2b
-  );
-  color: #ffffff;
-  border-color: transparent;
-  box-shadow: 0 6px 15px rgba(193, 18, 31, 0.2);
-}
-
-.navbar-menu a.active:hover {
-  color: #ffffff;
-  background: linear-gradient(
-    135deg,
-    #ad101c,
-    #c1121f
-  );
-}
-
 
 /* =========================================================
-   TABLET
+   1366 EKRAN
 ========================================================= */
 
-@media (max-width: 1350px) {
-
+@media (max-width: 1450px) and (min-width: 1121px) {
   .navbar-top {
-    padding-left: 20px;
-    padding-right: 20px;
-    gap: 14px;
+    grid-template-columns: 135px minmax(0, 1fr) 405px;
+    gap: 8px;
+    padding: 12px 14px 6px;
   }
 
-  .navbar-search {
-    max-width: 560px;
-  }
-
-  .navbar-right {
-    gap: 6px;
-  }
-
-  .nav-icon {
-    width: 40px;
-    height: 40px;
-  }
-
-  .user-btn,
-  .login-btn,
-  .admin-btn,
-  .add-btn {
-    padding-left: 11px;
-    padding-right: 11px;
-  }
-
-  .navbar-menu {
-    padding-left: 20px;
-    padding-right: 20px;
-  }
-
-  .navbar-menu a {
-    padding-left: 14px;
-    padding-right: 14px;
-  }
-
-}
-
-
-/* =========================================================
-   TABLET / KÜÇÜK EKRAN
-========================================================= */
-
-@media (max-width: 1100px) {
-
-  .navbar-top {
-    min-height: auto;
-    padding-top: 15px;
-    padding-bottom: 15px;
-    flex-wrap: wrap;
-  }
-
-  .navbar-search {
-    order: 3;
-    flex-basis: 100%;
-    width: 100%;
-    max-width: none;
-  }
-
-  .navbar-right {
-    margin-left: auto;
-  }
-
-  .navbar-menu {
-    justify-content: flex-start;
-    overflow-x: auto;
-    flex-wrap: nowrap;
+  .brand-block {
     padding-top: 2px;
-    padding-bottom: 12px;
-    scrollbar-width: none;
   }
 
-  .navbar-menu::-webkit-scrollbar {
-    display: none;
-  }
-
-}
-
-
-/* =========================================================
-   MOBİL
-========================================================= */
-
-@media (max-width: 768px) {
-
-  .navbar-top {
-    padding: 11px 12px;
-    gap: 10px;
+  .logo-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    font-size: 24px;
   }
 
   .navbar-logo {
     gap: 7px;
   }
 
-  .logo-icon {
-    width: 42px;
-    height: 42px;
-    border-radius: 12px;
-    font-size: 22px;
-  }
-
   .logo-text span {
-    font-size: 14px;
+    font-size: 16px;
   }
 
   .logo-text b {
+    font-size: 25px;
+  }
+
+  .brand-tagline {
+    margin-top: 5px;
+    font-size: 10px;
+  }
+
+  .navbar-feature-showcase,
+  .navbar-tools {
+    height: 146px;
+  }
+
+  .feature-showcase-main {
+    grid-template-columns: 32% 44% 24%;
+    padding: 8px 38px 18px;
+  }
+
+  .feature-visual {
+    height: 112px;
+  }
+
+  .feature-paper {
+    width: 60px;
+    height: 98px;
+    font-size: 29px;
+  }
+
+  .feature-paper-three {
+    font-size: 15px;
+  }
+
+  .feature-copy h2 {
+    font-size: 27px;
+  }
+
+  .feature-copy p {
+    margin: 6px auto 7px;
+    font-size: 10px;
+  }
+
+  .feature-cta {
+    min-width: 145px;
+    height: 32px;
+    font-size: 11px;
+  }
+
+  .feature-perks {
+    gap: 8px;
+  }
+
+  .feature-perks span {
+    font-size: 8px;
+  }
+
+  .feature-arrow {
+    width: 34px;
+    height: 34px;
     font-size: 23px;
+  }
+
+  .feature-arrow-left {
+    left: 9px;
+  }
+
+  .feature-arrow-right {
+    right: 9px;
+  }
+
+  .feature-dots {
+    bottom: 6px;
+    gap: 5px;
+  }
+
+  .feature-dot {
+    width: 7px;
+    height: 7px;
+  }
+
+  .navbar-tools {
+    padding: 6px;
+    gap: 6px;
   }
 
   .navbar-right {
     gap: 5px;
   }
 
-  .guest-auth-actions { gap: 6px; }
-  .guest-auth-btn { min-height: 44px; padding: 0 12px; font-size: 13px; }
-
-  .nav-icon {
-    width: 38px;
-    height: 38px;
-    border-radius: 10px;
-    font-size: 17px;
-  }
-
+  .header-action,
   .user-btn {
-    min-width: 38px;
-    width: 38px;
-    padding: 0;
-    justify-content: center;
-    border-radius: 10px;
+    height: 69px;
+    border-radius: 11px;
   }
 
-  .user-name,
-  .user-arrow {
-    display: none;
-  }
-
+  .header-action > span,
   .user-avatar {
-    width: 26px;
-    height: 26px;
+    width: 28px;
+    height: 28px;
+    font-size: 19px;
   }
 
-  .admin-btn {
-    min-width: 38px;
-    width: 38px;
-    padding: 0;
+  .header-action strong,
+  .user-name {
+    font-size: 9px;
   }
 
-  .admin-btn span {
-    display: none;
-  }
-
-  .login-btn {
-    min-width: 38px;
-    width: 38px;
-    padding: 0;
-  }
-
-  .login-btn span {
-    font-size: 17px;
-  }
-
-  .login-btn {
-    font-size: 0;
-  }
-
-  .add-btn {
-    min-width: 40px;
-    width: 40px;
-    padding: 0;
-    border-radius: 10px;
-  }
-
-  .add-btn strong {
-    display: none;
-  }
-
-  .add-btn span {
-    font-size: 21px;
+  .header-action small,
+  .user-button-copy small {
+    font-size: 7px;
   }
 
   .navbar-search {
-    height: 46px;
-    border-radius: 13px;
+    min-height: 47px;
   }
 
   .search-icon {
     margin-left: 13px;
-    font-size: 16px;
+    font-size: 17px;
   }
 
   .navbar-search input {
-    font-size: 13px;
-    padding-left: 9px;
-    padding-right: 7px;
-  }
-
-  .navbar-search input::placeholder {
-    font-size: 12px;
+    font-size: 10px;
+    padding: 0 9px;
   }
 
   .search-button {
-    min-width: 57px;
-    height: 38px;
-    margin-right: 4px;
-    border-radius: 9px;
-    font-size: 12px;
+    min-width: 76px;
+    font-size: 10px;
   }
 
-  .search-clear {
-    width: 29px;
-    height: 29px;
-    font-size: 19px;
+  .navbar-bottom {
+    padding: 0 14px 6px;
+  }
+
+  .navbar-menu a {
+    min-height: 38px;
+    padding: 0 13px;
+    font-size: 10px;
+  }
+
+  .navbar-slogan {
+    font-size: 13px;
+  }
+}
+
+/* =========================================================
+   TABLET / MOBİL
+========================================================= */
+
+@media (max-width: 1120px) {
+  .navbar {
+    position: relative;
+  }
+
+  .navbar-top {
+    grid-template-columns: 1fr;
+    padding: 10px 12px;
+  }
+
+  .brand-block {
+    align-items: center;
+  }
+
+  .navbar-feature-showcase {
+    height: 168px;
+  }
+
+  .navbar-tools {
+    height: auto;
+  }
+
+  .navbar-right {
+    grid-template-columns: repeat(5, minmax(90px, 1fr));
+    overflow-x: auto;
+  }
+}
+
+@media (max-width: 720px) {
+  .navbar {
+    position: sticky;
+    top: 0;
+  }
+
+  .navbar-top,
+  .navbar-inner-page .navbar-top {
+    display: none;
+  }
+
+  .mobile-navbar-top {
+    min-height: 58px;
+    padding: 8px 10px;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) 40px 40px;
+    align-items: center;
+    gap: 7px;
+    background: #fff;
+  }
+
+  .mobile-navbar-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: #202020;
+    text-decoration: none;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  .mobile-navbar-logo > span {
+    width: 34px;
+    height: 34px;
+    display: grid;
+    place-items: center;
+    border-radius: 9px;
+    background: #c1121f;
+    color: #fff;
+  }
+
+  .mobile-navbar-logo strong span {
+    color: #c1121f;
+  }
+
+  .mobile-navbar-search {
+    height: 40px;
+    min-width: 0;
+    display: flex;
+    border: 1px solid #dedfe3;
+    border-radius: 11px;
+    background: #f7f8fa;
+    overflow: hidden;
+  }
+
+  .mobile-navbar-search input {
+    width: 100%;
+    min-width: 0;
+    padding: 0 9px;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    font-size: 13px;
+  }
+
+  .mobile-navbar-search button,
+  .mobile-navbar-action {
+    width: 40px;
+    height: 40px;
+    display: grid;
+    place-items: center;
+    border: 0;
+    border-radius: 10px;
+    background: #fff;
+    color: #222;
+    text-decoration: none;
+    font-size: 18px;
+  }
+
+  .mobile-navbar-search button {
+    width: 36px;
+    flex: 0 0 36px;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .navbar-bottom,
+  .navbar-inner-page .navbar-bottom {
+    padding: 0 8px 7px;
+    border-top: 1px solid #f0f0f1;
   }
 
   .navbar-menu {
-    gap: 7px;
-    padding: 0 12px 10px;
+    width: 100%;
+    gap: 3px;
+    scroll-snap-type: x proximity;
+    overscroll-behavior-inline: contain;
   }
 
   .navbar-menu a {
     min-height: 36px;
-    padding: 0 13px;
-    border-radius: 9px;
+    padding-inline: 11px;
+    scroll-snap-align: start;
+  }
+
+  .navbar-menu a.active {
+    box-shadow: none;
+  }
+
+  .brand-block {
+    align-items: flex-start;
+  }
+
+  .navbar-feature-showcase {
+    height: 145px;
+  }
+
+  .feature-showcase-main {
+    grid-template-columns: 1fr;
+    padding: 18px 46px 24px;
+  }
+
+  .feature-visual,
+  .feature-perks {
+    display: none;
+  }
+
+  .feature-copy h2 {
+    font-size: 24px;
+    white-space: normal;
+  }
+
+  .feature-copy p {
     font-size: 12px;
+  }
+
+  .feature-cta {
+    min-width: 145px;
+    height: 39px;
+    font-size: 12px;
+  }
+
+  .navbar-right {
+    grid-template-columns: repeat(5, 82px);
+  }
+
+  .header-action,
+  .user-btn {
+    height: 76px;
+  }
+
+  .header-action small,
+  .user-button-copy small {
+    display: none;
+  }
+
+  .navbar-bottom {
+    padding-inline: 10px;
+  }
+
+  .navbar-menu a {
+    min-height: 40px;
+    padding-inline: 12px;
+    font-size: 11px;
+  }
+
+  .navbar-slogan {
+    display: none;
   }
 
   .user-dropdown {
     position: fixed;
-    top: 70px;
+    top: 66px;
     right: 10px;
     width: calc(100vw - 20px);
     max-width: 330px;
   }
-
 }
-
-
-/* =========================================================
-   KÜÇÜK TELEFON
-========================================================= */
-
-@media (max-width: 480px) {
-
-  .navbar-top {
-    padding-left: 9px;
-    padding-right: 9px;
-  }
-
-  .logo-icon {
-    width: 39px;
-    height: 39px;
-    font-size: 20px;
-  }
-
-  .logo-text span {
-    font-size: 13px;
-  }
-
-  .logo-text b {
-    font-size: 21px;
-  }
-
-  .navbar-right {
-    gap: 4px;
-  }
-
-  .navbar-right-guest .nav-icon { display: none; }
-  .guest-auth-actions { gap: 5px; }
-  .guest-auth-btn { min-height: 44px; padding: 0 10px; border-radius: 10px; font-size: 12px; }
-  .guest-login-btn span { display: none; }
-
-  .navbar-top:has(.navbar-right-guest) .logo-text { display: none; }
-
-  .nav-icon {
-    width: 35px;
-    height: 35px;
-    font-size: 15px;
-  }
-
-  .user-btn,
-  .login-btn,
-  .admin-btn,
-  .add-btn {
-    width: 35px;
-    min-width: 35px;
-    height: 35px;
-  }
-
-  .navbar-search {
-    height: 44px;
-  }
-
-  .search-button {
-    min-width: 52px;
-    font-size: 11px;
-  }
-
-  .navbar-menu a {
-    min-height: 34px;
-    padding: 0 11px;
-    font-size: 11px;
-  }
-
-}
-
-
-/* =========================================================
-   HAREKET AZALTMA
-========================================================= */
 
 @media (prefers-reduced-motion: reduce) {
-
   .navbar,
-  .navbar *,
-  .navbar *::before,
-  .navbar *::after {
+  .navbar * {
     transition: none !important;
     animation: none !important;
   }
-
 }
 
-.store-menu-status {
-  min-height: 55px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 8px 10px;
-  color: #777777;
-}
 
-.store-menu-status > span {
-  width: 35px;
-  height: 35px;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 10px;
-  background: #f7f7f8;
-}
+/* =========================================================
+   SCROLL DAVRANIŞI
+   Sayfanın tepesinde tam header; aşağı kaydırınca yalnız
+   ince navigasyon satırı sabit kalır.
+========================================================= */
 
-.store-menu-status > div {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
+@media (min-width: 601px) {
+  .navbar {
+    position: sticky;
+    top: 0;
+  }
 
-.store-menu-status strong { font-size: 13px; }
-.store-menu-status small { font-size: 10px; color: #999999; }
+  .navbar-scrolled .navbar-top {
+    display: none;
+  }
 
-/* Premium marketplace header oranları */
-.navbar { background: rgba(255,255,255,.985); border-bottom-color: #e2e4e8; box-shadow: 0 5px 22px rgba(15,23,42,.07); }
-.navbar-top,
-.navbar-menu { max-width: 1560px; }
-.navbar-top { min-height: 90px; padding: 15px 24px; gap: 22px; }
-.navbar-search { max-width: none; height: 52px; border: 1px solid #d7d9de; border-radius: 13px; background: #f8f9fa; }
-.navbar-search.search-active { background: #fff; border-color: #262626; box-shadow: 0 0 0 3px rgba(23,23,23,.08); }
-.search-button { height: 42px; min-width: 84px; background: linear-gradient(135deg, #c1121f, #e34a20); border-radius: 9px; }
-.search-button:hover { background: linear-gradient(135deg, #a90f1b, #d83e14); }
-.navbar-menu { justify-content: flex-start; padding: 0 24px 13px; gap: 3px; }
-.navbar-menu a { min-height: 38px; padding: 0 15px; border-color: transparent; background: transparent; border-radius: 8px; }
-.navbar-menu a:hover { background: #f3f4f6; border-color: transparent; color: #171717; box-shadow: none; transform: none; }
-.navbar-menu a.active { background: linear-gradient(135deg, #c1121f, #e34a20); box-shadow: 0 5px 14px rgba(193,18,31,.18); }
-.nav-icon { background: #fff; border-color: #e1e3e7; }
-.add-btn { background: linear-gradient(135deg, #e54818, #ff7417); box-shadow: 0 6px 16px rgba(229,72,24,.2); }
-.add-btn:hover { background: linear-gradient(135deg, #cc3910, #ed5d08); }
+  .navbar-scrolled .navbar-bottom {
+    min-height: 54px;
+    padding-top: 7px;
+    padding-bottom: 7px;
+    background: rgba(255, 255, 255, 0.985);
+    border-top: 0;
+    box-shadow: 0 5px 18px rgba(15, 23, 42, 0.08);
+  }
 
-@media (max-width: 1100px) {
-  .navbar-top { padding: 12px 18px; }
-}
-
-@media (max-width: 600px) {
-  .navbar { position: relative; }
-  .navbar-top { min-height: auto; padding: 10px 12px; gap: 8px; }
-  .navbar-search { order: 3; flex-basis: 100%; height: 46px; }
-  .navbar-menu { padding: 0 12px 10px; }
-}
-
-@media (max-width: 430px) {
-  .navbar-right { max-width: calc(100% - 98px); }
-  .guest-auth-btn { padding-inline: 9px; }
-}
-
-@media (max-width: 340px) {
-  .guest-auth-btn { padding-inline: 7px; font-size: 11px; }
-  .add-btn { display: none; }
+  .navbar-scrolled .navbar-menu {
+    padding-top: 0;
+    padding-bottom: 0;
+  }
 }

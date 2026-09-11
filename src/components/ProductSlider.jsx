@@ -1,4 +1,5 @@
-import { useRef, useEffect, useMemo } from "react";
+import { useRef, useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 
 import ProductCard from "./ProductCard";
 import { filterAvailableListings } from "../utils/listingAvailability";
@@ -6,54 +7,40 @@ import { sortListingsByBoost } from "../utils/listingBoost";
 
 import "../styles/components/product-slider.css";
 
-function ProductSlider({ title, ilanlar, sponsoredProductId = "" }) {
+function ProductSlider({ title, ilanlar, sponsoredProductId = "", allTo = "/ilanlar" }) {
 
   const sliderRef = useRef(null);
   const visibleListings = useMemo(() => sortListingsByBoost(filterAvailableListings(ilanlar)), [ilanlar]);
-  const showArrows = visibleListings.length > 6;
-useEffect(() => {
+  const [scrollState, setScrollState] = useState({ canPrev: false, canNext: false });
 
-  const slider = sliderRef.current;
+  useEffect(() => {
+    const slider = sliderRef.current;
+    if (!slider) return undefined;
 
-  if (!slider || visibleListings.length <= 1) return;
-
-  const interval = setInterval(() => {
-
-    const maxScroll =
-      slider.scrollWidth - slider.clientWidth;
-
-    if (slider.scrollLeft >= maxScroll - 10) {
-
-      slider.scrollTo({
-
-        left: 0,
-
-        behavior: "smooth"
-
+    const updateScrollState = () => {
+      const maxScroll = Math.max(0, slider.scrollWidth - slider.clientWidth);
+      setScrollState({
+        canPrev: slider.scrollLeft > 2,
+        canNext: slider.scrollLeft < maxScroll - 2
       });
+    };
 
-    } else {
+    updateScrollState();
+    slider.addEventListener("scroll", updateScrollState, { passive: true });
+    window.addEventListener("resize", updateScrollState);
 
-      slider.scrollBy({
+    return () => {
+      slider.removeEventListener("scroll", updateScrollState);
+      window.removeEventListener("resize", updateScrollState);
+    };
+  }, [visibleListings.length]);
 
-        left: 320,
-
-        behavior: "smooth"
-
-      });
-
-    }
-
-  }, 4000);
-
-  return () => clearInterval(interval);
-
-}, [visibleListings.length]);
+  const showArrows = scrollState.canPrev || scrollState.canNext;
   function next() {
 
-    sliderRef.current.scrollBy({
+    sliderRef.current?.scrollBy({
 
-      left: 1500,
+      left: Math.max(280, sliderRef.current.clientWidth * 0.85),
 
       behavior: "smooth"
 
@@ -63,9 +50,9 @@ useEffect(() => {
 
   function prev() {
 
-    sliderRef.current.scrollBy({
+    sliderRef.current?.scrollBy({
 
-      left: -1500,
+      left: -Math.max(280, sliderRef.current.clientWidth * 0.85),
 
       behavior: "smooth"
 
@@ -97,11 +84,9 @@ useEffect(() => {
 
         </div>
 
-        <button className="all-button">
-
+        <Link className="all-button" to={allTo}>
           Tümünü Gör →
-
-        </button>
+        </Link>
 
       </div>
 
@@ -109,9 +94,13 @@ useEffect(() => {
 
         {showArrows && <button
 
-          className="slider-arrow"
+          className="slider-arrow slider-arrow-prev"
 
           onClick={prev}
+
+          disabled={!scrollState.canPrev}
+
+          aria-label={`${title} önceki ürünler`}
 
         >
 
@@ -122,8 +111,6 @@ useEffect(() => {
         <div
   className="slider-products"
   ref={sliderRef}
-  onMouseEnter={() => sliderRef.current.style.scrollBehavior = "auto"}
-  onMouseLeave={() => sliderRef.current.style.scrollBehavior = "smooth"}
 >
 
           {
@@ -158,9 +145,13 @@ useEffect(() => {
 
         {showArrows && <button
 
-          className="slider-arrow"
+          className="slider-arrow slider-arrow-next"
 
           onClick={next}
+
+          disabled={!scrollState.canNext}
+
+          aria-label={`${title} sonraki ürünler`}
 
         >
 

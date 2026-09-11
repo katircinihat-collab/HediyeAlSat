@@ -94,7 +94,12 @@ function GiftBattle() {
   if (!loading && !battle) return null;
 
   return (
-    <section className="gift-battle" aria-labelledby="gift-battle-title">
+    <section
+      id="hediye-kapismasi"
+      className="gift-battle"
+      aria-labelledby="gift-battle-title"
+      style={{ scrollMarginTop: "70px" }}
+    >
       <header className="gift-battle-heading">
         <span>GÜNÜN KARŞILAŞMASI</span>
         <h2 id="gift-battle-title">⚔️ Hediye Kapışması</h2>

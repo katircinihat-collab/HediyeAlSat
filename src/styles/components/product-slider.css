@@ -67,6 +67,8 @@
 
   cursor: pointer;
 
+  text-decoration: none;
+
   transition: 0.25s;
 }
 
@@ -320,6 +322,16 @@
 
 }
 
+.slider-arrow:disabled {
+  opacity: 0.35;
+  cursor: default;
+  transform: none;
+  background: #fff;
+  color: #777;
+  border-color: #eee;
+  box-shadow: none;
+}
+
 /* Ana sayfaya özel yoğun marketplace vitrini */
 .product-slider-section { width: calc(100% - 48px); max-width: 1560px; box-sizing: border-box; margin: 46px auto; padding: 0; }
 .slider-header { margin-bottom: 15px; padding-bottom: 13px; border-bottom: 1px solid #e5e7eb; }
@@ -338,8 +350,8 @@
   .slider-header h2 { font-size: 19px; }
   .slider-header p { display: none; }
   .all-button { padding: 8px 10px; font-size: 10px; }
-  .slider-products { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; overflow: visible; padding: 2px 0; }
-  .slider-item { width: auto; min-width: 0; }
+  .slider-products { display: flex; gap: 10px; overflow-x: auto; padding: 2px 0 12px; scroll-snap-type: x proximity; overscroll-behavior-inline: contain; }
+  .slider-item { width: min(76vw, 210px); min-width: min(76vw, 210px); flex-basis: min(76vw, 210px); scroll-snap-align: start; }
 }
 
 @media (max-width: 340px) {

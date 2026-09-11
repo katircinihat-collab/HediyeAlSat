@@ -46,6 +46,7 @@ function Home() {
     useSearchParams();
 
 
+
   /*
   ==================================================
   URL'DEN FİLTRELERİ AL
@@ -63,6 +64,7 @@ function Home() {
 
   const ozelGun =
     searchParams.get("ozelGun") || "";
+
 
 
   /*
@@ -102,6 +104,7 @@ function Home() {
     );
 
   }
+
 
 
   /*
@@ -158,6 +161,7 @@ function Home() {
     getir();
 
   }, []);
+
 
 
   /*
@@ -235,6 +239,7 @@ function Home() {
     ));
 
 
+
   /*
   ==================================================
   KONSOL KONTROLÜ
@@ -250,6 +255,7 @@ function Home() {
     "Gösterilecek ilan:",
     filtreli.length
   );
+
 
 
   /*
@@ -273,6 +279,7 @@ function Home() {
         );
 
 
+
   /*
   ==================================================
   EN ÇOK SATANLAR
@@ -290,6 +297,7 @@ function Home() {
         0,
         20
       );
+
 
 
   /*
@@ -319,6 +327,7 @@ function Home() {
       );
 
 
+
   /*
   ==================================================
   PREMIUM MAĞAZALAR
@@ -330,6 +339,7 @@ function Home() {
       (x) =>
         x.premium === true
     );
+
 
 
   /*
@@ -351,6 +361,7 @@ function Home() {
           0,
           20
         );
+
 
 
   /*
@@ -438,12 +449,14 @@ function Home() {
       </section>
 
 
+
       {/* =========================================
           ÖZEL GÜNLER
           Popüler Kategorilerin eski yerine taşındı
       ========================================= */}
 
       <SpecialDays />
+
 
 
       {/* =========================================
@@ -509,6 +522,7 @@ function Home() {
       </section>
 
 
+
       <CategoryBar
         kategori={kategori}
         setKategori={kategoriDegistir}
@@ -519,6 +533,7 @@ function Home() {
       <AdBanner />
 
       <SponsorBanner sponsor={sponsored.middle_banner} />
+
 
 
       <section
@@ -553,6 +568,7 @@ function Home() {
         </article>
 
 
+
         <article
           className="shopping-hub-card shopping-hub-card-design"
         >
@@ -582,15 +598,19 @@ function Home() {
       </section>
 
 
+
       <ProductSlider
         title="🔥 En Çok Satan Hediyeler"
         ilanlar={enCokSatan}
+        allTo="/ilanlar?view=best-sellers"
       />
 
       <ProductSlider
         title="🆕 Yeni Gelen Hediyeler"
         ilanlar={sonEklenen}
+        allTo="/ilanlar?view=new"
       />
+
 
 
       {
@@ -599,8 +619,10 @@ function Home() {
         <ProductSlider
           title="👑 Premium Mağazalar"
           ilanlar={premiumMagazalar}
+          allTo="/ilanlar?view=premium"
         />
       }
+
 
 
       <ProductSlider
@@ -614,7 +636,9 @@ function Home() {
             : gosterEditor
         }
         sponsoredProductId={sponsored.sponsored_product?.product?.id}
+        allTo="/ilanlar?view=editors-choice"
       />
+
 
 
       <FeaturedStores sponsoredStore={sponsored.sponsored_store?.store} />
