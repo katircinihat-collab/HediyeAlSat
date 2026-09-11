@@ -1,628 +1,80 @@
-
-import { useState } from "react";
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { collection, getDocs, limit, query, where } from "firebase/firestore";
 import { Link, useNavigate } from "react-router-dom";
-
 import Navbar from "../components/Navbar";
-import { db, auth } from "../firebase";
-
+import { auth, db } from "../firebase";
+import { sponsorStoreApi } from "../config/sponsorStoreApi";
+import packageConfig from "../../shared/sponsorStorePackages.json";
 import "../styles/pages/sponsor-application.css";
 
-function SponsorApplication() {
+const labels = { REVIEW_PENDING: "İncelemede", REJECTED: "Reddedildi", APPROVED_PAYMENT_PENDING: "Onaylandı / Ödeme Bekleniyor", ACTIVE: "Aktif Sponsor" };
 
-  const navigate = useNavigate();
-
-  const paketler = [
-    {
-      id: "standart",
-      ikon: "⭐",
-      ad: "Standart Sponsor",
-      fiyat: 499,
-      sure: 7,
-      aciklama: "Mağazanız 7 gün boyunca sponsor alanında öne çıkar."
-    },
-    {
-      id: "premium",
-      ikon: "👑",
-      ad: "Premium Sponsor",
-      fiyat: 999,
-      sure: 15,
-      aciklama: "Mağazanız 15 gün boyunca daha görünür şekilde öne çıkar."
-    },
-    {
-      id: "vip",
-      ikon: "💎",
-      ad: "VIP Sponsor",
-      fiyat: 1999,
-      sure: 30,
-      aciklama: "Mağazanız 30 gün boyunca ana sayfada güçlü şekilde öne çıkar."
-    }
-  ];
-
-  const [paket, setPaket] = useState("premium");
-
-  const [form, setForm] = useState({
-    magazaAdi: "",
-    yetkiliAdi: "",
-    telefon: "",
-    webSitesi: "",
-    hakkinda: ""
-  });
-
-  const [gonderiliyor, setGonderiliyor] = useState(false);
-
-  const secilenPaket =
-    paketler.find((x) => x.id === paket) || paketler[1];
-
-  function degistir(e) {
-
-    const { name, value } = e.target;
-
-    setForm((eski) => ({
-      ...eski,
-      [name]: value
-    }));
-
+function applicationStatus(item, now) {
+  if (item.status === "ACTIVE") {
+    const end = new Date(item.sponsorEndDate?.seconds ? item.sponsorEndDate.seconds * 1000 : item.sponsorEndDate).getTime();
+    if (Number.isFinite(end) && end <= now) return "Süresi Doldu";
   }
-
-  async function basvuruGonder(e) {
-
-    e.preventDefault();
-
-    const kullanici = auth.currentUser;
-    if (!kullanici?.email) {
-      alert("Sponsor başvurusu için giriş yapmalısınız.");
-      return;
-    }
-
-    if (
-      !form.magazaAdi.trim() ||
-      !form.yetkiliAdi.trim() ||
-      !form.telefon.trim() ||
-      !form.hakkinda.trim()
-    ) {
-
-      alert("Lütfen yıldızlı (*) alanların tamamını doldurun.");
-
-      return;
-
-    }
-
-    if (form.hakkinda.trim().length < 20) {
-
-      alert(
-        "Mağazanız hakkında en az 20 karakter bilgi yazınız."
-      );
-
-      return;
-
-    }
-
-    if (gonderiliyor) {
-      return;
-    }
-
-    try {
-
-      setGonderiliyor(true);
-
-      const kullaniciId = kullanici.uid;
-      const hesapEmail = kullanici.email;
-
-      const basvuruRef = await addDoc(
-        collection(db, "sponsorBasvurular"),
-        {
-          magazaAdi: form.magazaAdi.trim(),
-
-          yetkiliAdi:
-            form.yetkiliAdi.trim(),
-
-          telefon:
-            form.telefon.trim(),
-
-          email:
-            hesapEmail,
-
-          webSitesi:
-            form.webSitesi.trim(),
-
-          hakkinda:
-            form.hakkinda.trim(),
-
-          kullaniciId,
-
-          paketId:
-            secilenPaket.id,
-
-          paketAdi:
-            secilenPaket.ad,
-
-          paketFiyati:
-            secilenPaket.fiyat,
-
-          sponsorSuresi:
-            secilenPaket.sure,
-
-          durum:
-            "Ödeme Bekliyor",
-
-          odemeDurumu:
-            false,
-
-          odemeTarihi:
-            null,
-
-          basvuruTarihi:
-            serverTimestamp(),
-
-          okunmadi:
-            true
-        }
-      );
-
-      /*
-      ==========================================
-      ÖDEME AŞAMASINA GEÇİŞ
-      ==========================================
-      */
-
-      navigate("/odeme", {
-        state: {
-          sponsorBasvuruId:
-            basvuruRef.id,
-
-          sponsor: true,
-
-          paketId:
-            secilenPaket.id,
-
-          paketAdi:
-            secilenPaket.ad,
-
-          fiyat:
-            secilenPaket.fiyat,
-
-          sure:
-            secilenPaket.sure,
-
-          magazaAdi:
-            form.magazaAdi.trim(),
-
-          yetkiliAdi:
-            form.yetkiliAdi.trim(),
-
-          email:
-            hesapEmail,
-
-          telefon:
-            form.telefon.trim()
-        }
-      });
-
-    } catch (error) {
-
-      console.error(
-        "Sponsor mağaza başvuru hatası:",
-        error
-      );
-
-      alert(
-        "❌ Başvurunuz oluşturulamadı. Lütfen tekrar deneyin."
-      );
-
-    } finally {
-
-      setGonderiliyor(false);
-
-    }
-
-  }
-
-  return (
-
-    <>
-      <Navbar />
-
-      <main className="sponsor-application-page">
-
-        <div className="sponsor-application-container">
-
-          <Link
-            to="/sponsor-magaza"
-            className="sponsor-application-back"
-          >
-            ← Sponsor Mağaza
-          </Link>
-
-
-          {/* HERO */}
-
-          <section className="sponsor-application-hero">
-
-            <div className="sponsor-application-icon">
-              🏪
-            </div>
-
-            <h1>
-              Sponsor Mağaza Başvurusu
-            </h1>
-
-            <p>
-              Mağazanızı HediyeAlSat'ta öne çıkarın.
-              Daha fazla müşteriye ulaşın ve
-              satışlarınızı artırın.
-            </p>
-
-          </section>
-
-
-          {/* AVANTAJLAR */}
-
-          <section className="sponsor-application-benefits">
-
-            <div className="sponsor-benefit">
-
-              <span>⭐</span>
-
-              <div>
-
-                <strong>
-                  Öne Çıkın
-                </strong>
-
-                <p>
-                  Mağazanız ana sayfada daha görünür olsun.
-                </p>
-
-              </div>
-
-            </div>
-
-
-            <div className="sponsor-benefit">
-
-              <span>👥</span>
-
-              <div>
-
-                <strong>
-                  Daha Fazla Müşteri
-                </strong>
-
-                <p>
-                  Ürünlerinizi daha fazla kişiye ulaştırın.
-                </p>
-
-              </div>
-
-            </div>
-
-
-            <div className="sponsor-benefit">
-
-              <span>📈</span>
-
-              <div>
-
-                <strong>
-                  Satışlarınızı Artırın
-                </strong>
-
-                <p>
-                  Sponsor mağaza avantajlarından yararlanın.
-                </p>
-
-              </div>
-
-            </div>
-
-          </section>
-
-
-          {/* PAKETLER */}
-
-          <section className="sponsor-package-section">
-
-            <div className="sponsor-form-title">
-
-              <span>💰</span>
-
-              <div>
-
-                <h2>
-                  Sponsor Paketini Seçin
-                </h2>
-
-                <p>
-                  Mağazanızın ne kadar süre öne
-                  çıkarılacağını seçin.
-                </p>
-
-              </div>
-
-            </div>
-
-
-            <div className="sponsor-package-grid">
-
-              {paketler.map((item) => (
-
-                <button
-                  type="button"
-                  key={item.id}
-                  className={
-                    "sponsor-package-card " +
-                    (paket === item.id
-                      ? "selected"
-                      : "")
-                  }
-                  onClick={() =>
-                    setPaket(item.id)
-                  }
-                >
-
-                  <div className="sponsor-package-icon">
-                    {item.ikon}
-                  </div>
-
-                  <h3>
-                    {item.ad}
-                  </h3>
-
-                  <div className="sponsor-package-price">
-                    {item.fiyat.toLocaleString("tr-TR")} TL
-                  </div>
-
-                  <div className="sponsor-package-duration">
-                    {item.sure} gün
-                  </div>
-
-                  <p>
-                    {item.aciklama}
-                  </p>
-
-                  {paket === item.id && (
-
-                    <div className="sponsor-package-selected">
-                      ✓ Seçildi
-                    </div>
-
-                  )}
-
-                </button>
-
-              ))}
-
-            </div>
-
-          </section>
-
-
-          {/* FORM */}
-
-          <section className="sponsor-application-form-section">
-
-            <div className="sponsor-form-title">
-
-              <span>📝</span>
-
-              <div>
-
-                <h2>
-                  Başvuru Formu
-                </h2>
-
-                <p>
-                  Mağazanız hakkında bilgileri
-                  doldurarak başvurunuzu gönderin.
-                </p>
-
-              </div>
-
-            </div>
-
-
-            <form
-              className="sponsor-application-form"
-              onSubmit={basvuruGonder}
-            >
-
-              <div className="sponsor-form-grid">
-
-
-                <div className="sponsor-form-group">
-
-                  <label>
-                    Mağaza Adı *
-                  </label>
-
-                  <input
-                    type="text"
-                    name="magazaAdi"
-                    value={form.magazaAdi}
-                    onChange={degistir}
-                    placeholder="Örn. Nihat Hediyelik"
-                    maxLength={100}
-                  />
-
-                </div>
-
-
-                <div className="sponsor-form-group">
-
-                  <label>
-                    Yetkili Adı *
-                  </label>
-
-                  <input
-                    type="text"
-                    name="yetkiliAdi"
-                    value={form.yetkiliAdi}
-                    onChange={degistir}
-                    placeholder="Ad Soyad"
-                    maxLength={100}
-                  />
-
-                </div>
-
-
-                <div className="sponsor-form-group">
-
-                  <label>
-                    Telefon *
-                  </label>
-
-                  <input
-                    type="tel"
-                    name="telefon"
-                    value={form.telefon}
-                    onChange={degistir}
-                    placeholder="05XX XXX XX XX"
-                    maxLength={20}
-                  />
-
-                </div>
-
-
-                <div className="sponsor-form-group">
-
-                  <label>
-                    E-posta *
-                  </label>
-
-                  <input
-                    type="email"
-                    name="email"
-                    value={auth.currentUser?.email || ""}
-                    readOnly
-                    placeholder="ornek@mail.com"
-                    maxLength={150}
-                  />
-
-                </div>
-
-
-                <div className="sponsor-form-group sponsor-full">
-
-                  <label>
-                    Web Sitesi
-                  </label>
-
-                  <input
-                    type="url"
-                    name="webSitesi"
-                    value={form.webSitesi}
-                    onChange={degistir}
-                    placeholder="https://..."
-                    maxLength={250}
-                  />
-
-                </div>
-
-
-                <div className="sponsor-form-group sponsor-full">
-
-                  <label>
-                    Mağazanız Hakkında *
-                  </label>
-
-                  <textarea
-                    name="hakkinda"
-                    value={form.hakkinda}
-                    onChange={degistir}
-                    placeholder="Mağazanız, sattığınız ürünler ve neden sponsor mağaza olmak istediğiniz hakkında kısa bilgi..."
-                    maxLength={1000}
-                    rows={7}
-                  />
-
-                  <div className="sponsor-character-count">
-                    {form.hakkinda.length}/1000
-                  </div>
-
-                </div>
-
-              </div>
-
-
-              {/* ÖDEME ÖZETİ */}
-
-              <div className="sponsor-payment-summary">
-
-                <div>
-
-                  <span>
-                    Seçilen Paket
-                  </span>
-
-                  <strong>
-                    {secilenPaket.ikon}{" "}
-                    {secilenPaket.ad}
-                  </strong>
-
-                </div>
-
-
-                <div>
-
-                  <span>
-                    Süre
-                  </span>
-
-                  <strong>
-                    {secilenPaket.sure} gün
-                  </strong>
-
-                </div>
-
-
-                <div>
-
-                  <span>
-                    Ödenecek Tutar
-                  </span>
-
-                  <strong className="sponsor-total-price">
-                    {secilenPaket.fiyat.toLocaleString("tr-TR")} TL
-                  </strong>
-
-                </div>
-
-              </div>
-
-
-              <button
-                type="submit"
-                className="sponsor-application-submit"
-                disabled={gonderiliyor}
-              >
-
-                {gonderiliyor
-                  ? "⏳ Başvurunuz hazırlanıyor..."
-                  : `🚀 Başvur ve Ödemeye Geç — ${secilenPaket.fiyat.toLocaleString("tr-TR")} TL`}
-
-              </button>
-
-
-              <p className="sponsor-application-note">
-
-                Başvurunuz oluşturulduktan sonra
-                ödeme işlemi güvenli ödeme sistemi
-                üzerinden gerçekleştirilecektir.
-
-              </p>
-
-            </form>
-
-          </section>
-
-        </div>
-
-      </main>
-
-    </>
-
-  );
-
+  if (item.paymentStatus === "FAILED") return "Ödeme Başarısız";
+  return labels[item.status] || item.status;
 }
 
+function SponsorApplication() {
+  const navigate = useNavigate();
+  const [store, setStore] = useState(null);
+  const [applications, setApplications] = useState([]);
+  const [form, setForm] = useState({ yetkiliAdi: auth.currentUser?.displayName || "", telefon: "", webSitesi: "", hakkinda: "" });
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [message, setMessage] = useState("");
+  const [openedAt] = useState(() => Date.now());
+
+  const load = useCallback(async () => {
+    const user = auth.currentUser;
+    if (!user) { setLoading(false); return; }
+    try {
+      const [storeSnap, own] = await Promise.all([
+        getDocs(query(collection(db, "magazalar"), where("sahipUid", "==", user.uid), limit(1))),
+        sponsorStoreApi("/applications/mine")
+      ]);
+      let found = storeSnap.docs[0];
+      if (!found && user.email) {
+        const legacy = await getDocs(query(collection(db, "magazalar"), where("sahip", "==", user.email), limit(1)));
+        found = legacy.docs[0];
+      }
+      setStore(found ? { id: found.id, ...found.data() } : null);
+      setApplications(own.applications || []);
+    } catch (error) { setMessage(error.message); }
+    finally { setLoading(false); }
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+  const blocking = useMemo(() => applications.some((item) => ["REVIEW_PENDING", "APPROVED_PAYMENT_PENDING"].includes(item.status) || (item.status === "ACTIVE" && new Date(item.sponsorEndDate?.seconds ? item.sponsorEndDate.seconds * 1000 : item.sponsorEndDate).getTime() > openedAt)), [applications, openedAt]);
+
+  async function submit(event) {
+    event.preventDefault();
+    if (!store || submitting) return;
+    setMessage(""); setSubmitting(true);
+    try {
+      await sponsorStoreApi("/applications", { method: "POST", body: JSON.stringify({ storeId: store.id, ...form }) });
+      setMessage("Başvurunuz incelemeye alındı. Paket seçimi admin onayından sonra yapılacaktır.");
+      await load();
+    } catch (error) { setMessage(error.message); }
+    finally { setSubmitting(false); }
+  }
+
+  function pay(application) {
+    const selected = packageConfig.packages.find((item) => item.id === application.selectedPackageId);
+    if (!selected) return;
+    navigate("/odeme", { state: { sponsor: true, sponsorBasvuruId: application.id, paketId: selected.id, paketAdi: selected.name, fiyat: selected.price, sure: selected.durationDays, magazaAdi: application.magazaAdi, yetkiliAdi: application.yetkiliAdi, email: application.email, telefon: application.telefon } });
+  }
+
+  return <><Navbar /><main className="sponsor-application-page"><div className="sponsor-application-container">
+    <Link to="/sponsor-magaza" className="sponsor-application-back">← Sponsor Mağaza</Link>
+    <section className="sponsor-application-hero"><div className="sponsor-application-icon">🏪</div><h1>Sponsor Mağaza Başvurusu</h1><p>Başvurunuz incelendikten sonra paketiniz admin tarafından belirlenir; ödeme tamamlanmadan sponsor görünümü açılmaz.</p></section>
+    <section className="sponsor-package-section"><div className="sponsor-form-title"><span>✨</span><div><h2>Sponsor Paketleri</h2><p>Paket seçimini başvurunuzu inceleyen ekip yapar.</p></div></div><div className="sponsor-package-grid">{packageConfig.packages.map((item) => <div key={item.id} className={`sponsor-package-card sponsor-tier-${item.id}`}><h3>{item.name}</h3><div className="sponsor-package-price">{item.price.toLocaleString("tr-TR")} TL</div><div className="sponsor-package-duration">{item.durationDays} gün</div></div>)}</div></section>
+    {applications.length > 0 && <section className="sponsor-application-form-section"><div className="sponsor-form-title"><span>📋</span><div><h2>Başvurularım</h2><p>İnceleme ve ödeme durumunu buradan takip edin.</p></div></div><div className="sponsor-status-list">{applications.map((item) => { const selected = packageConfig.packages.find((pkg) => pkg.id === item.selectedPackageId); return <article key={item.id} className="sponsor-status-card"><strong>{item.magazaAdi}</strong><span>{applicationStatus(item, openedAt)}</span>{selected && <p>{selected.name} · {selected.durationDays} gün · {selected.price.toLocaleString("tr-TR")} TL</p>}{item.status === "APPROVED_PAYMENT_PENDING" && <button type="button" onClick={() => pay(item)}>Ödemeyi Tamamla</button>}</article>; })}</div></section>}
+    {loading ? <div className="sponsor-store-info">Başvuru bilgileri yükleniyor…</div> : !auth.currentUser ? <div className="sponsor-store-info">Başvuru için <Link to="/login">giriş yapın</Link>.</div> : !store ? <div className="sponsor-store-info">Sponsor başvurusu için önce kendi mağazanızı oluşturmalısınız.</div> : !blocking && <section className="sponsor-application-form-section"><div className="sponsor-form-title"><span>📝</span><div><h2>{store.magazaAdi || store.adi}</h2><p>Başvurunuz bu mağazaya güvenli biçimde bağlanacaktır.</p></div></div><form className="sponsor-application-form" onSubmit={submit}><div className="sponsor-form-grid"><div className="sponsor-form-group"><label>Yetkili Adı *</label><input value={form.yetkiliAdi} onChange={(e) => setForm({ ...form, yetkiliAdi: e.target.value })} required maxLength={100} /></div><div className="sponsor-form-group"><label>Telefon *</label><input type="tel" value={form.telefon} onChange={(e) => setForm({ ...form, telefon: e.target.value })} required maxLength={30} /></div><div className="sponsor-form-group sponsor-full"><label>Web Sitesi</label><input type="url" value={form.webSitesi} onChange={(e) => setForm({ ...form, webSitesi: e.target.value })} maxLength={250} /></div><div className="sponsor-form-group sponsor-full"><label>Mağazanız Hakkında *</label><textarea value={form.hakkinda} onChange={(e) => setForm({ ...form, hakkinda: e.target.value })} minLength={20} maxLength={1000} rows={6} required /></div></div><button className="sponsor-application-submit" disabled={submitting}>{submitting ? "Gönderiliyor…" : "Başvuruyu İncelemeye Gönder"}</button></form></section>}
+    {message && <div className="sponsor-store-info" role="status">{message}</div>}
+  </div></main></>;
+}
 export default SponsorApplication;

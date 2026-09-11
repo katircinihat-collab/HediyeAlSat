@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../firebase";
 import { Link } from "react-router-dom";
+import { sponsorTierLabel } from "../utils/sponsoredContent";
 
 function FeaturedStores({ sponsoredStore = null }) {
 
@@ -55,12 +56,12 @@ function FeaturedStores({ sponsoredStore = null }) {
 
             to={`/magaza/${store.id}`}
 
-            className={`store-card ${store.id === sponsoredStore?.id ? "store-card--sponsored" : ""}`}
+            className={`store-card ${store.id === sponsoredStore?.id ? `store-card--sponsored store-card--sponsor-${sponsoredStore?.sponsorTier || "default"}` : ""}`}
 
           >
 
             {store.id === sponsoredStore?.id && (
-              <span className="sponsored-label">Sponsorlu</span>
+              <span className="sponsored-label">{sponsorTierLabel(sponsoredStore?.sponsorTier)}</span>
             )}
 
             <img

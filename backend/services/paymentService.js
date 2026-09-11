@@ -20,6 +20,7 @@ const {
     attachMarketplaceSettlement
 } = require("./sellerMarketplaceService");
 const { buildListingBoostPaymentData, prepareListingBoost } = require("./listingBoostService");
+const { prepareSponsorPayment, sponsorPaymentBasket } = require("./sponsorStoreService");
 
 const KOMISYON_ORANI = 0.08;
 
@@ -80,10 +81,10 @@ async function createPayment(data, authenticatedUser, requestContext = {}) {
     let trustedShipping = 0;
     let trustedShippingDetails = [];
     let trustedPaymentItems = [];
-    let trustedBuyer = null;
-    let trustedBuyerPhone = null;
+    let trustedBuyer;
+    let trustedBuyerPhone;
     let stockReservation = null;
-    let trustedPaymentGroup = "PRODUCT";
+    let trustedPaymentGroup;
 
     if (boostOdeme) {
         trustedBoost = await prepareListingBoost({
@@ -117,32 +118,21 @@ async function createPayment(data, authenticatedUser, requestContext = {}) {
             throw new PaymentValidationError("Sponsor başvurusu bulunamadı.", 404, "SPONSOR_APPLICATION_NOT_FOUND");
         }
 
-        const applicationSnapshot = await firestore.collection("sponsorBasvurular").doc(sponsorBasvuruId).get();
-        if (!applicationSnapshot.exists) {
-            throw new PaymentValidationError("Sponsor başvurusu bulunamadı.", 404, "SPONSOR_APPLICATION_NOT_FOUND");
-        }
-        const application = applicationSnapshot.data();
-        if (application.kullaniciId !== authenticatedUser.uid || application.email !== email) {
-            throw new PaymentValidationError("Bu sponsor başvurusu kullanıcı hesabınıza ait değil.", 403, "SPONSOR_APPLICATION_FORBIDDEN");
-        }
-        if (application.odemeDurumu === true) {
-            throw new PaymentValidationError("Bu sponsor başvurusunun ödemesi tamamlanmış.", 409, "SPONSOR_ALREADY_PAID");
-        }
-
-        trustedPrice = Number(application.paketFiyati);
-        if (!Number.isFinite(trustedPrice) || trustedPrice <= 0) {
-            throw new PaymentValidationError("Sponsor paket tutarı geçersiz.");
-        }
+        const trusted = await prepareSponsorPayment({ firestore, applicationId: sponsorBasvuruId, user: authenticatedUser });
+        const application = trusted.application;
+        const selected = trusted.package;
+        const profileSnapshot = await firestore.collection("profiller").doc(authenticatedUser.uid).get();
+        const profile = profileSnapshot.exists ? profileSnapshot.data() : {};
+        trustedBuyerPhone = normalizeIyzicoGsmNumber(profile.telefon || application.telefon);
+        if (!trustedBuyerPhone) throw new PaymentValidationError("Geçerli bir telefon numarası gereklidir.", 409, "BUYER_PHONE_INVALID");
+        const profileCity = String(profile.il || profile.sehir || "").split("/")[0].trim();
+        if (!profileCity) throw new PaymentValidationError("Ödeme için şehir bilgisi gereklidir.", 409, "BUYER_CITY_REQUIRED");
+        trustedBuyer = { phone: profile.telefon || application.telefon, city: profileCity, address: `HediyeAlSat sponsor mağaza hizmeti - ${profileCity}` };
+        trustedPrice = selected.price;
         trustedSiparisIds = [];
-        trustedSponsor = application;
-        trustedBasketItems = [{
-            id: `SPONSOR-${application.paketId}`,
-            name: application.paketAdi,
-            category1: "Sponsor Mağaza",
-            category2: "Reklam",
-            itemType: "VIRTUAL",
-            price: trustedPrice.toFixed(2)
-        }];
+        trustedPaymentGroup = "LISTING";
+        trustedSponsor = { ...application, package: selected, storeId: trusted.storeId };
+        trustedBasketItems = sponsorPaymentBasket(selected);
     } else {
         await releaseExpiredReservations({ firestore, FieldValue });
 
@@ -260,16 +250,21 @@ async function createPayment(data, authenticatedUser, requestContext = {}) {
             sponsorBasvuruId || "",
 
         paketId:
-            trustedSponsor?.paketId || "",
+            trustedSponsor?.package?.id || "",
 
         paketAdi:
-            trustedSponsor?.paketAdi || "",
+            trustedSponsor?.package?.name || "",
 
         sponsorSuresi:
-            Number(trustedSponsor?.sponsorSuresi) || 0,
+            Number(trustedSponsor?.package?.durationDays) || 0,
 
         magazaAdi:
             trustedSponsor?.magazaAdi || "",
+
+        sponsorStoreId: trustedSponsor?.storeId || "",
+        sponsorOwnerUid: trustedSponsor?.ownerUid || trustedSponsor?.kullaniciId || "",
+        sponsorTier: trustedSponsor?.package?.id || "",
+        sponsorPriority: Number(trustedSponsor?.package?.priority) || 0,
 
         telefon:
             trustedSponsor?.telefon || "",
@@ -585,6 +580,8 @@ async function sponsorBasvurusunuGuncelle(
 ==================================================
 */
 
+// Legacy implementation is intentionally unreachable; production routes use securePaymentCallback.
+// eslint-disable-next-line no-unused-vars
 async function paymentCallback(token) {
  if (!iyzipay) {
         throw new Error("Iyzico henüz yapılandırılmadı.");
@@ -956,7 +953,7 @@ async function securePaymentCallback(token) {
             currency: result.currency
         });
 
-        if (!finalized.alreadyFinalized && payment?.kullanici && !payment?.listingBoost) {
+        if (!finalized.alreadyFinalized && payment?.kullanici && !payment?.listingBoost && !payment?.sponsor) {
             await orderService.sepetTemizle(payment.kullanici);
         }
         const redirect = finalized.listingBoost
@@ -969,6 +966,12 @@ async function securePaymentCallback(token) {
                 paymentStatus: error.paymentStatus,
                 callbackStatus: error.code
             });
+            if (payment.sponsor && error.code === "PAYMENT_NOT_SUCCESS" && payment.sponsorBasvuruId) {
+                await firestore.collection("sponsorBasvurular").doc(payment.sponsorBasvuruId).update({
+                    paymentStatus: "FAILED",
+                    updatedAt: FieldValue.serverTimestamp()
+                }).catch(() => undefined);
+            }
         }
         if (payment?.stockReservationId && error.code === "PAYMENT_NOT_SUCCESS") {
             await releaseReservation({
@@ -1010,8 +1013,6 @@ EXPORT
 module.exports = {
 
     createPayment,
-
-    paymentCallback,
 
     securePaymentCallback,
 

@@ -51,3 +51,21 @@ export function isEligibleSponsoredProduct(product) {
 export function isEligibleSponsoredStore(store) {
   return Boolean(store) && store.aktif !== false;
 }
+
+export const SPONSOR_TIER_PRIORITY = Object.freeze({ bronze: 1, gold: 2, diamond: 3 });
+
+export function activeStoreSponsorMap(items, now = Date.now()) {
+  return new Map((items || [])
+    .filter((item) => item.placement === "sponsored_store" && item.storeId && isSponsorActive(item, now))
+    .map((item) => [item.storeId, { ...item, priority: SPONSOR_TIER_PRIORITY[item.tier] || Number(item.priority || 0) }]));
+}
+
+export function sortStoresBySponsor(stores, sponsorMap) {
+  return (stores || []).map((store, index) => ({ store, index }))
+    .sort((a, b) => Number(sponsorMap.get(b.store.id)?.priority || 0) - Number(sponsorMap.get(a.store.id)?.priority || 0) || a.index - b.index)
+    .map(({ store }) => store);
+}
+
+export function sponsorTierLabel(tier) {
+  return tier === "diamond" ? "💎 Elmas Sponsor" : tier === "gold" ? "Altın Sponsor" : tier === "bronze" ? "Bronz Sponsor" : "Sponsorlu";
+}

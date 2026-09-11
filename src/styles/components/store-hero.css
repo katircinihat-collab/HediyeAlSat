@@ -18,3 +18,4 @@
 
 @media (max-width: 700px) { .store-hero { flex-direction: column; gap: 12px; padding: 0 18px 24px; } .store-logo-area { margin-top: -50px; } .store-logo { width: 104px; height: 104px; border-radius: 20px; } .store-main-info { width: 100%; padding-top: 0; } .store-actions, .follow-btn { width: 100%; } }
 @media (max-width: 360px) { .store-showcase-hero { border-radius: 18px; } .store-cover { height: 155px; } .store-logo { width: 88px; height: 88px; } .store-main-info h1 { font-size: 25px; } }
+.store-showcase-hero--bronze{border-color:#b87a56}.store-showcase-hero--gold{border-color:#d5aa32}.store-showcase-hero--diamond{border-color:#77a9c6;box-shadow:0 16px 42px rgba(74,145,184,.18)}.store-hero-sponsor-badge{display:inline-flex;margin-top:7px;padding:6px 10px;border-radius:999px;background:#fff7ed;color:#78502f;font-size:13px;font-weight:800}

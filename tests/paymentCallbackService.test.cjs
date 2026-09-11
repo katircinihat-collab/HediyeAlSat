@@ -182,12 +182,17 @@ test("transaction commit hatası sonrası retry çift finansal etki üretmez", a
 
 test("sponsor callback ikinci kez idempotent kalır", async () => {
     const db = memoryFirestore({
-        "odemeler/conv-1": payment({ sponsor: true, sponsorBasvuruId: "sponsor-1", sponsorSuresi: 7 }),
-        "sponsorBasvurular/sponsor-1": { odemeDurumu: false }
+        "odemeler/conv-1": payment({ sponsor: true, sponsorBasvuruId: "sponsor-1", sponsorStoreId: "store-1", sponsorOwnerUid: "owner-1", sponsorTier: "bronze", paketId: "bronze", sponsorSuresi: 7, toplamTutar: 499 }),
+        "sponsorBasvurular/sponsor-1": { odemeDurumu: false, status: "APPROVED_PAYMENT_PENDING", ownerUid: "owner-1", storeId: "store-1", selectedPackageId: "bronze", selectedPrice: 499 },
+        "magazalar/store-1": { magazaAdi: "Test Mağaza", sahipUid: "owner-1" }
     });
     await finalizePayment({ firestore: db, FieldValue: { serverTimestamp: timestamp }, conversationId: "conv-1", paymentId: "pay-1" });
+    assert.equal(db.data.get("sponsorBasvurular/sponsor-1").status, "ACTIVE");
+    assert.equal(db.data.get("sponsoredContent/sponsor_store_store-1").priority, 1);
+    assert.equal(db.data.get("platformRevenueEvents/sponsor_store_pay-1").amount, 499);
     const again = await finalizePayment({ firestore: db, FieldValue: { serverTimestamp: timestamp }, conversationId: "conv-1", paymentId: "pay-1" });
     assert.equal(again.alreadyFinalized, true);
+    assert.equal([...db.data.keys()].filter((key) => key.startsWith("platformRevenueEvents/")).length, 1);
 });
 
 test("callback transaction güncel stok yetersizse finalize etmez", async () => {

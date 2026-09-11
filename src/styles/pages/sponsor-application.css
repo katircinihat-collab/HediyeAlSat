@@ -601,3 +601,4 @@
   }
 
 }
+.sponsor-status-list{display:grid;gap:12px}.sponsor-status-card{display:grid;gap:8px;padding:16px;border:1px solid #eadfda;border-radius:12px;background:#fff}.sponsor-status-card span{color:#8b4a35;font-weight:700}.sponsor-status-card p{margin:0;color:#555}.sponsor-status-card button{justify-self:start;border:0;border-radius:9px;padding:11px 18px;background:#d94f45;color:#fff;font-weight:700;cursor:pointer}.sponsor-tier-bronze{border-color:#b87a56}.sponsor-tier-gold{border-color:#d5aa32}.sponsor-tier-diamond{border-color:#77a9c6;background:linear-gradient(145deg,#fff,#effaff)}

@@ -7,6 +7,7 @@ const orderStatusController = require("../controllers/orderStatusController");
 const orderClaimController = require("../controllers/orderClaimController");
 const financialReconciliationController = require("../controllers/financialReconciliationController");
 const sellerMarketplaceController = require("../controllers/sellerMarketplaceController");
+const sponsorStoreController = require("../controllers/sponsorStoreController");
 
 const router = express.Router();
 
@@ -31,5 +32,8 @@ router.get("/financial-reconciliations", financialReconciliationController.list)
 router.get("/financial-reconciliations/:id", financialReconciliationController.get);
 router.patch("/financial-reconciliations/:id", financialRateLimit, financialReconciliationController.update);
 router.post("/sellers/:sellerUid/marketplace/onboard", financialRateLimit, sellerMarketplaceController.onboardAsAdmin);
+router.get("/sponsor-applications", sponsorStoreController.adminList);
+router.patch("/sponsor-applications/:id/approve", financialRateLimit, sponsorStoreController.approve);
+router.patch("/sponsor-applications/:id/reject", financialRateLimit, sponsorStoreController.reject);
 
 module.exports = router;

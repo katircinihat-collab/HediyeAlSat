@@ -14,6 +14,7 @@ import { isListingBoostActive, listingBoostEndDate } from "../utils/listingBoost
 import AdminStores from "../components/admin/AdminStores";
 import AdminOrderClaims from "../components/admin/AdminOrderClaims";
 import AdminFinancialReconciliations from "../components/admin/AdminFinancialReconciliations";
+import AdminSponsorApplications from "../components/admin/AdminSponsorApplications";
 
 import "../styles/pages/admin.css";
 function fiyatFormat(fiyat) {
@@ -605,6 +606,8 @@ onStatusChanged={magazaDurumunuGuncelle}
 <AdminOrderClaims />
 
 <AdminFinancialReconciliations />
+
+<AdminSponsorApplications />
 
 <div className="admin-section">
 

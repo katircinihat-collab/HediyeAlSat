@@ -3,7 +3,10 @@ import assert from "node:assert/strict";
 import {
   isEligibleSponsoredProduct,
   isEligibleSponsoredStore,
-  selectSponsoredContent
+  selectSponsoredContent,
+  activeStoreSponsorMap,
+  sortStoresBySponsor,
+  sponsorTierLabel
 } from "../src/utils/sponsoredContent.js";
 
 const now = new Date("2026-09-09T12:00:00Z").getTime();
@@ -56,4 +59,18 @@ test("pasif veya stoksuz fiziksel sponsorlu ürün gösterilmez", () => {
 test("kapalı sponsorlu mağaza gösterilmez", () => {
   assert.equal(isEligibleSponsoredStore({ aktif: false }), false);
   assert.equal(isEligibleSponsoredStore({ aktif: true }), true);
+});
+
+test("sponsor mağazalar diamond, gold, bronze ve normal sırasına girer", () => {
+  const sponsors = activeStoreSponsorMap([
+    item("b", "sponsored_store", { storeId: "bronze", tier: "bronze", endAt: new Date(now + 1000) }),
+    item("d", "sponsored_store", { storeId: "diamond", tier: "diamond", endAt: new Date(now + 1000) }),
+    item("g", "sponsored_store", { storeId: "gold", tier: "gold", endAt: new Date(now + 1000) })
+  ], now);
+  assert.deepEqual(sortStoresBySponsor([{ id: "normal" }, { id: "bronze" }, { id: "diamond" }, { id: "gold" }], sponsors).map((store) => store.id), ["diamond", "gold", "bronze", "normal"]);
+  assert.equal(sponsorTierLabel("diamond"), "💎 Elmas Sponsor");
+});
+
+test("süresi dolmuş sponsor mağaza aktif haritaya girmez", () => {
+  assert.equal(activeStoreSponsorMap([item("x", "sponsored_store", { storeId: "store", tier: "diamond", endAt: new Date(now - 1) })], now).size, 0);
 });

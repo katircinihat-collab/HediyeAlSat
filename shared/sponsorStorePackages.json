@@ -1,0 +1,7 @@
+{
+  "packages": [
+    { "id": "bronze", "name": "Bronz Sponsor", "durationDays": 7, "price": 499, "priority": 1 },
+    { "id": "gold", "name": "Altın Sponsor", "durationDays": 15, "price": 999, "priority": 2 },
+    { "id": "diamond", "name": "Elmas Sponsor", "durationDays": 30, "price": 1999, "priority": 3 }
+  ]
+}

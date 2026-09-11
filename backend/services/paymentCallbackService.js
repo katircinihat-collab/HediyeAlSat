@@ -1,5 +1,6 @@
 const { HOLD_DURATION_MS } = require("./deliveryConfirmationService");
 const { buildListingBoostPeriod, getListingBoostPackage, ownerMatches } = require("./listingBoostService");
+const { getSponsorStorePackage, STATUS, DAY_MS, timestampMillis } = require("./sponsorStoreService");
 
 class PaymentCallbackError extends Error {
     constructor(message, code, status = "FAILED") {
@@ -185,16 +186,54 @@ async function finalizePayment({ firestore, FieldValue, conversationId, paymentI
             const sponsorRef = firestore.collection("sponsorBasvurular").doc(payment.sponsorBasvuruId);
             const sponsorSnapshot = await transaction.get(sponsorRef);
             if (!sponsorSnapshot.exists) throw new PaymentCallbackError("Sponsor başvurusu bulunamadı.", "SPONSOR_NOT_FOUND");
-            const sponsorBaslangic = new Date();
-            const sponsorBitis = new Date(sponsorBaslangic.getTime() + Number(payment.sponsorSuresi || 0) * 86400000);
+            const application = sponsorSnapshot.data();
+            const selected = getSponsorStorePackage(payment.sponsorTier || payment.paketId);
+            const storeId = application.storeId || application.magazaId;
+            if (!selected || application.status !== STATUS.APPROVED_PAYMENT_PENDING
+                || (application.ownerUid || application.kullaniciId) !== payment.sponsorOwnerUid
+                || storeId !== payment.sponsorStoreId
+                || application.selectedPackageId !== selected.id
+                || toKurus(application.selectedPrice) !== toKurus(selected.price)
+                || toKurus(payment.toplamTutar) !== toKurus(selected.price)) {
+                throw new PaymentCallbackError("Sponsor başvurusu ödeme kaydıyla eşleşmiyor.", "SPONSOR_APPLICATION_MISMATCH", "MANUAL_REVIEW");
+            }
+            const storeRef = firestore.collection("magazalar").doc(storeId);
+            const contentRef = firestore.collection("sponsoredContent").doc(`sponsor_store_${storeId}`);
+            const revenueRef = firestore.collection("platformRevenueEvents").doc(`sponsor_store_${paymentId}`);
+            const guardRef = firestore.collection("sponsorStoreGuards").doc(storeId);
+            const [storeSnapshot, contentSnapshot] = await Promise.all([transaction.get(storeRef), transaction.get(contentRef)]);
+            if (!storeSnapshot.exists) throw new PaymentCallbackError("Sponsor mağaza bulunamadı.", "SPONSOR_STORE_NOT_FOUND", "MANUAL_REVIEW");
+            const existingEnd = contentSnapshot.exists ? timestampMillis(contentSnapshot.data().endAt) : timestampMillis(application.sponsorEndDate);
+            const baseStart = existingEnd > finalizedAt.getTime() ? new Date(existingEnd) : finalizedAt;
+            const sponsorBaslangic = finalizedAt;
+            const sponsorBitis = new Date(baseStart.getTime() + selected.durationDays * DAY_MS);
             transaction.update(sponsorRef, {
-                durum: "Ödendi", odemeDurumu: true, paymentStatus: "SUCCESS", paymentId,
-                odemeTarihi: FieldValue.serverTimestamp(), sponsorAktif: true,
-                sponsorBaslangic, sponsorBitis, sponsorPaket: payment.paketAdi || "",
-                sponsorPaketId: payment.paketId || "", sponsorSuresi: Number(payment.sponsorSuresi || 0),
-                sponsorTutar: Number(payment.toplamTutar || 0),
-                guncellenmeTarihi: FieldValue.serverTimestamp()
+                status: STATUS.ACTIVE, durum: STATUS.ACTIVE, odemeDurumu: true, paymentStatus: "PAID", paymentId,
+                odemeTarihi: FieldValue.serverTimestamp(), sponsorActive: true, sponsorAktif: true,
+                sponsorStartDate: sponsorBaslangic, sponsorEndDate: sponsorBitis,
+                sponsorBaslangic, sponsorBitis, sponsorTier: selected.id,
+                sponsorPaket: selected.name, sponsorPaketId: selected.id, sponsorSuresi: selected.durationDays,
+                sponsorTutar: selected.price, paidAmount: selected.price,
+                guncellenmeTarihi: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp()
             });
+            transaction.update(storeRef, {
+                sponsorActive: true, sponsorTier: selected.id, sponsorPriority: selected.priority,
+                sponsorStartDate: sponsorBaslangic, sponsorEndDate: sponsorBitis,
+                sponsorPaymentId: paymentId, sponsorUpdatedAt: FieldValue.serverTimestamp()
+            });
+            transaction.set(contentRef, {
+                type: "store", placement: "sponsored_store", storeId, active: true,
+                tier: selected.id, priority: selected.priority, title: storeSnapshot.data().magazaAdi || storeSnapshot.data().adi || "Sponsor Mağaza",
+                targetUrl: `/magaza/${storeId}`, startAt: sponsorBaslangic, endAt: sponsorBitis,
+                applicationId: payment.sponsorBasvuruId, paymentId, updatedAt: FieldValue.serverTimestamp()
+            }, { merge: true });
+            transaction.set(revenueRef, {
+                type: "sponsor_store", source: "sponsor_store", paymentId, conversationId,
+                applicationId: payment.sponsorBasvuruId, storeId, ownerUid: payment.sponsorOwnerUid,
+                tier: selected.id, packageId: selected.id, amount: selected.price, currency,
+                createdAt: FieldValue.serverTimestamp()
+            });
+            transaction.set(guardRef, { applicationId: payment.sponsorBasvuruId, ownerUid: payment.sponsorOwnerUid, status: STATUS.ACTIVE, sponsorEndDate: sponsorBitis, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
         } else {
             const orderRefs = (payment.siparisIds || []).map((id) => firestore.collection("siparisler").doc(id));
             const orderSnapshots = await Promise.all(orderRefs.map((ref) => transaction.get(ref)));

@@ -24,7 +24,7 @@ async function resolveSponsor(item) {
     if (!snapshot.exists()) return null;
     const store = { id: snapshot.id, ...snapshot.data() };
     if (!isEligibleSponsoredStore(store)) return null;
-    return { ...item, store };
+    return { ...item, store: { ...store, sponsorTier: item.tier, sponsorPriority: item.priority } };
   }
 
   if (!item.imageUrl || !item.targetUrl) return null;

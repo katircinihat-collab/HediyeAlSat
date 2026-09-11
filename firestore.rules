@@ -90,21 +90,6 @@ service cloud.firestore {
         && request.resource.data.odemeDurumu == false;
     }
 
-    function validSponsorPackage() {
-      return (request.resource.data.paketId == "standart"
-          && request.resource.data.paketAdi == "Standart Sponsor"
-          && request.resource.data.paketFiyati == 499
-          && request.resource.data.sponsorSuresi == 7)
-        || (request.resource.data.paketId == "premium"
-          && request.resource.data.paketAdi == "Premium Sponsor"
-          && request.resource.data.paketFiyati == 999
-          && request.resource.data.sponsorSuresi == 15)
-        || (request.resource.data.paketId == "vip"
-          && request.resource.data.paketAdi == "VIP Sponsor"
-          && request.resource.data.paketFiyati == 1999
-          && request.resource.data.sponsorSuresi == 30);
-    }
-
     function emailOwnedCreate() {
       return hasEmail()
         && request.resource.data.kullanici == request.auth.token.email;
@@ -298,10 +283,6 @@ service cloud.firestore {
       allow read, create, update, delete: if false;
     }
 
-    match /platformRevenueEvents/{eventId} {
-      allow read, create, update, delete: if false;
-    }
-
     // Provider identifiers and protected originals are backend-only.
     match /digitalAssets/{assetId} {
       allow read, create, update, delete: if false;
@@ -490,23 +471,17 @@ service cloud.firestore {
 
     match /sponsorBasvurular/{applicationId} {
       allow read: if isAdmin()
-        || (signedIn() && resource.data.kullaniciId == request.auth.uid);
-      allow create: if signedIn()
-        && request.resource.data.keys().hasOnly([
-          "magazaAdi", "yetkiliAdi", "telefon", "email", "webSitesi",
-          "hakkinda", "kullaniciId", "paketId", "paketAdi", "paketFiyati",
-          "sponsorSuresi", "durum", "odemeDurumu", "odemeTarihi",
-          "basvuruTarihi", "okunmadi"
-        ])
-        && request.resource.data.kullaniciId == request.auth.uid
-        && request.resource.data.email == request.auth.token.email
-        && validSponsorPackage()
-        && request.resource.data.durum == "Ödeme Bekliyor"
-        && request.resource.data.odemeDurumu == false
-        && request.resource.data.odemeTarihi == null
-        && request.resource.data.okunmadi == true;
-      allow update: if isAdmin();
-      allow delete: if false;
+        || (signedIn() && (resource.data.ownerUid == request.auth.uid
+          || resource.data.kullaniciId == request.auth.uid));
+      allow create, update, delete: if false;
+    }
+
+    match /sponsorStoreGuards/{storeId} {
+      allow read, create, update, delete: if false;
+    }
+
+    match /platformRevenueEvents/{eventId} {
+      allow read, create, update, delete: if false;
     }
 
     match /sponsoredContent/{sponsorId} {

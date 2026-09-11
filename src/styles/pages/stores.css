@@ -788,3 +788,4 @@
   }
 
 }
+.stores-card--sponsor{position:relative}.stores-card--sponsor-bronze{border-color:#b87a56}.stores-card--sponsor-gold{border-color:#d5aa32;box-shadow:0 8px 24px rgba(213,170,50,.15)}.stores-card--sponsor-diamond{border-color:#77a9c6;background:linear-gradient(145deg,#fff,#f0faff);box-shadow:0 10px 28px rgba(74,145,184,.18)}.stores-sponsor-badge{position:absolute;z-index:2;top:10px;left:10px;padding:5px 9px;border-radius:999px;background:rgba(255,255,255,.94);font-size:.75rem;font-weight:800;color:#555;box-shadow:0 2px 8px rgba(0,0,0,.1)}

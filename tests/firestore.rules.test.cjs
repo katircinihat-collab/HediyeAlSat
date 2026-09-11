@@ -633,7 +633,7 @@ test("32 - legacy client toplamlarıyla sipariş oluşturma kapalıdır", async 
   }));
 });
 
-test("33 - sponsor başvuru e-postası token e-postasıyla aynı olmalıdır", async () => {
+test("33 - sponsor başvurusu ve onay alanları yalnız backend tarafından yazılır", async () => {
   const validApplication = {
     magazaAdi: "Mağaza",
     yetkiliAdi: "Yetkili",
@@ -653,7 +653,7 @@ test("33 - sponsor başvuru e-postası token e-postasıyla aynı olmalıdır", a
     okunmadi: true
   };
 
-  await assertSucceeds(setDoc(
+  await assertFails(setDoc(
     doc(dbFor(ownerAuth), "sponsorBasvurular", "valid-application"),
     validApplication
   ));
@@ -661,6 +661,17 @@ test("33 - sponsor başvuru e-postası token e-postasıyla aynı olmalıdır", a
     doc(dbFor(ownerAuth), "sponsorBasvurular", "spoofed-email-application"),
     { ...validApplication, email: otherAuth.email }
   ));
+});
+
+test("33b - client sponsor state ve sponsoredContent yazamaz", async () => {
+  await assertFails(setDoc(doc(dbFor(ownerAuth), "sponsorBasvurular", "forged"), {
+    ownerUid: ownerAuth.uid, storeId: "store", status: "APPROVED_PAYMENT_PENDING",
+    selectedTier: "diamond", sponsorActive: true, paymentStatus: "PAID"
+  }));
+  await assertFails(setDoc(doc(dbFor(ownerAuth), "sponsoredContent", "free-sponsor"), {
+    placement: "sponsored_store", storeId: "store", tier: "diamond", active: true
+  }));
+  await assertFails(setDoc(doc(dbFor(ownerAuth), "sponsorStoreGuards", "store"), { status: "ACTIVE" }));
 });
 
 test("34 - client tasarimOylari belgesi oluşturamaz", async () => {

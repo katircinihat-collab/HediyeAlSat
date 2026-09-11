@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, limit, query, where } from "firebase/firestore";
 import { Link } from "react-router-dom";
 
 import { db } from "../firebase";
@@ -8,11 +8,13 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
 import "../styles/pages/stores.css";
+import { activeStoreSponsorMap, sortStoresBySponsor, sponsorTierLabel } from "../utils/sponsoredContent";
 
 function Stores() {
   const [stores, setStores] = useState([]);
   const [arama, setArama] = useState("");
   const [yukleniyor, setYukleniyor] = useState(true);
+  const [sponsors, setSponsors] = useState(new Map());
 
   useEffect(() => {
     getirMagazalar();
@@ -22,15 +24,18 @@ function Stores() {
     try {
       setYukleniyor(true);
 
-      const snap = await getDocs(
-        collection(db, "magazalar")
-      );
+      const [snap, sponsorSnap] = await Promise.all([
+        getDocs(collection(db, "magazalar")),
+        getDocs(query(collection(db, "sponsoredContent"), where("active", "==", true), limit(50)))
+      ]);
 
       const liste = snap.docs
         .map((doc) => ({ id: doc.id, ...doc.data() }))
         .filter((store) => store.aktif !== false);
 
-      setStores(liste);
+      const sponsorMap = activeStoreSponsorMap(sponsorSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+      setSponsors(sponsorMap);
+      setStores(sortStoresBySponsor(liste, sponsorMap));
     } catch (error) {
       console.error(
         "Mağazalar alınamadı:",
@@ -170,8 +175,9 @@ function Stores() {
               <Link
                 key={store.id}
                 to={`/magaza/${store.id}`}
-                className="stores-card"
+                className={`stores-card ${sponsors.has(store.id) ? `stores-card--sponsor stores-card--sponsor-${sponsors.get(store.id).tier}` : ""}`}
               >
+                {sponsors.has(store.id) && <span className="stores-sponsor-badge">{sponsorTierLabel(sponsors.get(store.id).tier)}</span>}
 
                 {/* LOGO */}
 

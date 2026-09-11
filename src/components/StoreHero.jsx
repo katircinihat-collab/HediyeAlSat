@@ -1,13 +1,15 @@
 import "../styles/components/store-hero.css";
+import { isSponsorActive, sponsorTierLabel } from "../utils/sponsoredContent";
 
 function StoreHero({ magaza, takipEdiyor, takipEt, takipBirak, ortalamaPuan, oySayisi, ilanSayisi, kategoriler, saticiSeviyesi }) {
   const magazaAdi = magaza.magazaAdi || magaza.adi || "Mağaza";
   const kapak = magaza.kapak || magaza.banner || "";
   const logo = magaza.logo || "";
   const satisEsigi = [500, 100, 50, 10].find((threshold) => Number(saticiSeviyesi?.completedSales || 0) >= threshold);
+  const sponsor = isSponsorActive({ active: magaza.sponsorActive === true, placement: "sponsored_store", startAt: magaza.sponsorStartDate, endAt: magaza.sponsorEndDate, tier: magaza.sponsorTier });
 
   return (
-    <section className="store-showcase-hero">
+    <section className={`store-showcase-hero ${sponsor ? `store-showcase-hero--${magaza.sponsorTier}` : ""}`}>
       <div
         className={kapak ? "store-cover has-image" : "store-cover store-cover-fallback"}
         style={kapak ? { backgroundImage: `url(${kapak})` } : undefined}
@@ -26,6 +28,7 @@ function StoreHero({ magaza, takipEdiyor, takipEt, takipBirak, ortalamaPuan, oyS
 
         <div className="store-main-info">
           <h1>{magazaAdi}</h1>
+          {sponsor && <span className="store-hero-sponsor-badge">{sponsorTierLabel(magaza.sponsorTier)}</span>}
           {magaza.aciklama && <p className="store-hero-description">{magaza.aciklama}</p>}
 
           <div className="store-hero-facts">
