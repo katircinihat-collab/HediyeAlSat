@@ -274,7 +274,11 @@ service cloud.firestore {
             && request.resource.data.hakOnayiSurumu == "digital-rights-v1"
             && request.resource.data.dijitalDosyaDurumu == "bekleniyor"));
 
-      allow update: if isAdmin()
+      allow update: if (isAdmin()
+          && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+            "boostActive", "boostStartAt", "boostEndAt", "boostPackageId",
+            "boostPaymentId", "boostUpdatedAt"
+          ]))
         || (listingOwner() && onlyChanged([
           "baslik", "fiyat", "telefon", "aciklama", "kategori",
           "altKategori", "renk", "marka", "resim", "resimler",
@@ -286,6 +290,16 @@ service cloud.firestore {
             || publicTextIsSafe(request.resource.data.aciklama)));
 
       allow delete: if listingOwner() || isAdmin();
+    }
+
+    // Ücretli öne çıkarma kaydı ve ilan üzerindeki boost alanları yalnız
+    // doğrulanmış ödeme callback'i kullanan Admin SDK tarafından yazılır.
+    match /listingPromotions/{promotionId} {
+      allow read, create, update, delete: if false;
+    }
+
+    match /platformRevenueEvents/{eventId} {
+      allow read, create, update, delete: if false;
     }
 
     // Provider identifiers and protected originals are backend-only.

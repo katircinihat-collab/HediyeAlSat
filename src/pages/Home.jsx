@@ -33,6 +33,7 @@ import GiftBattle from "../components/GiftBattle";
 import DailyQuote from "../components/DailyQuote";
 import SponsorBanner from "../components/SponsorBanner";
 import useSponsoredContent from "../hooks/useSponsoredContent";
+import { sortListingsByBoost } from "../utils/listingBoost";
 
 import "../styles/pages/home.css";
 
@@ -166,7 +167,7 @@ function Home() {
   */
 
   const filtreli =
-    ilanlar.filter(
+    sortListingsByBoost(ilanlar.filter(
       (item) => {
 
         if (
@@ -231,7 +232,7 @@ function Home() {
         );
 
       }
-    );
+    ));
 
 
   /*

@@ -1,5 +1,6 @@
 import "../../styles/pages/seller-products.css";
 import { isListingPublished } from "../../utils/listingAvailability";
+import ListingBoostButton from "../ListingBoostButton";
 
 function SellerProducts({ urunler }) {
 
@@ -149,6 +150,8 @@ function SellerProducts({ urunler }) {
                     </button>
 
                   </div>
+
+                  <ListingBoostButton listing={urun} disabled={!isListingPublished(urun)} />
 
                 </div>
 

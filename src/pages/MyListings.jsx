@@ -13,6 +13,7 @@ import { onAuthStateChanged } from "firebase/auth";
 import { Link } from "react-router-dom";
 import { isA4Listing } from "../data/categories";
 import { isListingPublished } from "../utils/listingAvailability";
+import ListingBoostButton from "../components/ListingBoostButton";
 
 function MyListings() {
   const [ilanlar, setIlanlar] = useState([]);
@@ -30,19 +31,12 @@ function MyListings() {
       try {
         setYukleniyor(true);
 
-        const q = query(
-          collection(db, "ilanlar"),
-          where("sahip", "==", user.email)
-        );
-
-        const snap = await getDocs(q);
-
-        setIlanlar(
-          snap.docs.map((d) => ({
-            id: d.id,
-            ...d.data(),
-          }))
-        );
+        const queries = [query(collection(db, "ilanlar"), where("sahipUid", "==", user.uid))];
+        if (user.email) queries.push(query(collection(db, "ilanlar"), where("sahip", "==", user.email)));
+        const snapshots = await Promise.all(queries.map((ownerQuery) => getDocs(ownerQuery)));
+        const unique = new Map();
+        snapshots.flatMap((snapshot) => snapshot.docs).forEach((item) => unique.set(item.id, { id: item.id, ...item.data() }));
+        setIlanlar([...unique.values()]);
       } catch (error) {
         console.error("İlanlar getirilemedi:", error);
         setIlanlar([]);
@@ -619,6 +613,8 @@ function MyListings() {
                       >
                         🗑️ Sil
                       </button>
+
+                      <ListingBoostButton listing={ilan} disabled={!isListingPublished(ilan)} />
                     </div>
                   </div>
                 </article>

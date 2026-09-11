@@ -1,4 +1,5 @@
 const { HOLD_DURATION_MS } = require("./deliveryConfirmationService");
+const { buildListingBoostPeriod, getListingBoostPackage, ownerMatches } = require("./listingBoostService");
 
 class PaymentCallbackError extends Error {
     constructor(message, code, status = "FAILED") {
@@ -116,7 +117,7 @@ async function finalizePayment({ firestore, FieldValue, conversationId, paymentI
 
         if (payment.paymentStatus === "SUCCESS") {
             if (payment.paymentId !== paymentId) throw new PaymentCallbackError("Ödeme farklı bir kimlikle tamamlanmış.", "PAYMENT_ID_CONFLICT");
-            return { alreadyFinalized: true, sponsor: Boolean(payment.sponsor) };
+            return { alreadyFinalized: true, sponsor: Boolean(payment.sponsor), listingBoost: Boolean(payment.listingBoost), listingId: payment.listingId || null };
         }
 
         const lockSnapshot = await transaction.get(lockRef);
@@ -124,7 +125,63 @@ async function finalizePayment({ firestore, FieldValue, conversationId, paymentI
             throw new PaymentCallbackError("Ödeme kimliği başka bir işlemde kullanılmış.", "PAYMENT_ID_CONFLICT");
         }
 
-        if (payment.sponsor) {
+        if (payment.listingBoost) {
+            const selectedPackage = getListingBoostPackage(payment.boostPackageId);
+            if (selectedPackage.days !== Number(payment.boostDays)
+                || toKurus(selectedPackage.price) !== toKurus(payment.boostPrice ?? payment.toplamTutar)) {
+                throw new PaymentCallbackError("Öne çıkarma paketi doğrulanamadı.", "LISTING_BOOST_PACKAGE_MISMATCH", "MANUAL_REVIEW");
+            }
+            const listingRef = firestore.collection("ilanlar").doc(payment.listingId);
+            const promotionRef = firestore.collection("listingPromotions").doc(paymentId);
+            const revenueRef = firestore.collection("platformRevenueEvents").doc(`listing_boost_${paymentId}`);
+            const [listingSnapshot, promotionSnapshot] = await Promise.all([
+                transaction.get(listingRef),
+                transaction.get(promotionRef)
+            ]);
+            if (!listingSnapshot.exists) {
+                throw new PaymentCallbackError("Öne çıkarılacak ilan bulunamadı.", "LISTING_NOT_FOUND", "MANUAL_REVIEW");
+            }
+            const listing = { id: listingSnapshot.id, ...listingSnapshot.data() };
+            if (!ownerMatches(listing, { uid: payment.listingOwnerUid, email: payment.kullanici })) {
+                throw new PaymentCallbackError("İlan sahipliği ödeme kaydıyla eşleşmiyor.", "LISTING_BOOST_OWNER_MISMATCH", "MANUAL_REVIEW");
+            }
+            if (promotionSnapshot.exists && promotionSnapshot.data().conversationId !== conversationId) {
+                throw new PaymentCallbackError("Öne çıkarma ödemesi daha önce kullanılmış.", "LISTING_BOOST_PAYMENT_CONFLICT", "MANUAL_REVIEW");
+            }
+            const period = buildListingBoostPeriod(listing, selectedPackage, finalizedAt);
+            transaction.update(listingRef, {
+                boostActive: true,
+                boostStartAt: period.benefitStartAt,
+                boostEndAt: period.endAt,
+                boostPackageId: selectedPackage.id,
+                boostPaymentId: paymentId,
+                boostUpdatedAt: FieldValue.serverTimestamp()
+            });
+            transaction.set(promotionRef, {
+                listingId: listing.id,
+                ownerUid: payment.listingOwnerUid,
+                packageId: selectedPackage.id,
+                days: selectedPackage.days,
+                amount: selectedPackage.price,
+                currency,
+                conversationId,
+                paymentId,
+                status: "ACTIVE",
+                purchasedAt: FieldValue.serverTimestamp(),
+                benefitStartAt: period.benefitStartAt,
+                endAt: period.endAt
+            });
+            transaction.set(revenueRef, {
+                type: "LISTING_BOOST",
+                amount: selectedPackage.price,
+                currency,
+                listingId: listing.id,
+                ownerUid: payment.listingOwnerUid,
+                conversationId,
+                paymentId,
+                createdAt: FieldValue.serverTimestamp()
+            });
+        } else if (payment.sponsor) {
             const sponsorRef = firestore.collection("sponsorBasvurular").doc(payment.sponsorBasvuruId);
             const sponsorSnapshot = await transaction.get(sponsorRef);
             if (!sponsorSnapshot.exists) throw new PaymentCallbackError("Sponsor başvurusu bulunamadı.", "SPONSOR_NOT_FOUND");
@@ -274,7 +331,7 @@ async function finalizePayment({ firestore, FieldValue, conversationId, paymentI
             ...(itemTransactions ? { paymentItemTransactions: itemTransactions } : {}),
             guncellenmeTarihi: FieldValue.serverTimestamp()
         });
-        return { alreadyFinalized: false, sponsor: Boolean(payment.sponsor) };
+        return { alreadyFinalized: false, sponsor: Boolean(payment.sponsor), listingBoost: Boolean(payment.listingBoost), listingId: payment.listingId || null };
     });
 }
 

@@ -4,10 +4,11 @@ import { useRef } from "react";
 import { Link } from "react-router-dom";
 import ProductCard from "./ProductCard";
 import { filterAvailableListings } from "../utils/listingAvailability";
+import { sortListingsByBoost } from "../utils/listingBoost";
 
 function FlashSale({ ilanlar = [] }) {
   const trackRef = useRef(null);
-  const visibleListings = filterAvailableListings(ilanlar);
+  const visibleListings = sortListingsByBoost(filterAvailableListings(ilanlar));
 
   function kaydir(direction) {
     trackRef.current?.scrollBy({ left: direction * 260, behavior: "smooth" });

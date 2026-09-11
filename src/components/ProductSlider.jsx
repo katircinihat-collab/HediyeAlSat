@@ -2,13 +2,14 @@ import { useRef, useEffect, useMemo } from "react";
 
 import ProductCard from "./ProductCard";
 import { filterAvailableListings } from "../utils/listingAvailability";
+import { sortListingsByBoost } from "../utils/listingBoost";
 
 import "../styles/components/product-slider.css";
 
 function ProductSlider({ title, ilanlar, sponsoredProductId = "" }) {
 
   const sliderRef = useRef(null);
-  const visibleListings = useMemo(() => filterAvailableListings(ilanlar), [ilanlar]);
+  const visibleListings = useMemo(() => sortListingsByBoost(filterAvailableListings(ilanlar)), [ilanlar]);
   const showArrows = visibleListings.length > 6;
 useEffect(() => {
 

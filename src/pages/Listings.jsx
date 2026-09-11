@@ -15,6 +15,7 @@ import categories, {
 } from "../data/categories";
 import { listingMatchesSearch } from "../utils/search";
 import { isListingPublished } from "../utils/listingAvailability";
+import { sortListingsByBoost } from "../utils/listingBoost";
 
 import "../styles/pages/product.css";
 
@@ -74,7 +75,7 @@ function Listings() {
   ================================================
   */
 
-  const filtrelenmisIlanlar = ilanlar.filter((ilan) => {
+  const filtrelenmisIlanlar = sortListingsByBoost(ilanlar.filter((ilan) => {
 
     if (!isListingPublished(ilan)) return false;
 
@@ -111,7 +112,7 @@ function Listings() {
 
     return true;
 
-  });
+  }));
 
 
   return (

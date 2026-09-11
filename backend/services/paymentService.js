@@ -19,6 +19,7 @@ const {
     resolveSellerSubMerchantKey,
     attachMarketplaceSettlement
 } = require("./sellerMarketplaceService");
+const { buildListingBoostPaymentData, prepareListingBoost } = require("./listingBoostService");
 
 const KOMISYON_ORANI = 0.08;
 
@@ -42,7 +43,10 @@ async function createPayment(data, authenticatedUser, requestContext = {}) {
 
         // SPONSOR ÖDEME BİLGİLERİ
         sponsor = false,
-        sponsorBasvuruId = ""
+        sponsorBasvuruId = "",
+        listingBoost = false,
+        listingId = "",
+        packageId = ""
     } = data;
 
 
@@ -59,6 +63,10 @@ async function createPayment(data, authenticatedUser, requestContext = {}) {
     const sponsorOdeme =
         sponsor === true ||
         Boolean(sponsorBasvuruId);
+    const boostOdeme = listingBoost === true;
+    if (sponsorOdeme && boostOdeme) {
+        throw new PaymentValidationError("Ödeme türü geçersiz.", 400, "PAYMENT_TYPE_INVALID");
+    }
 
     const email = authenticatedUser.email;
     // Ödeme body içindeki identityNumber hiçbir zaman güven kaynağı değildir.
@@ -67,6 +75,7 @@ async function createPayment(data, authenticatedUser, requestContext = {}) {
     let trustedPrice;
     let trustedBasketItems;
     let trustedSponsor = null;
+    let trustedBoost = null;
     let trustedProductTotal = 0;
     let trustedShipping = 0;
     let trustedShippingDetails = [];
@@ -76,7 +85,34 @@ async function createPayment(data, authenticatedUser, requestContext = {}) {
     let stockReservation = null;
     let trustedPaymentGroup = "PRODUCT";
 
-    if (sponsorOdeme) {
+    if (boostOdeme) {
+        trustedBoost = await prepareListingBoost({
+            firestore,
+            listingId,
+            packageId,
+            user: authenticatedUser
+        });
+        const profileSnapshot = await firestore.collection("profiller").doc(authenticatedUser.uid).get();
+        const profile = profileSnapshot.exists ? profileSnapshot.data() : {};
+        trustedBuyerPhone = normalizeIyzicoGsmNumber(profile.telefon);
+        if (!trustedBuyerPhone) {
+            throw new PaymentValidationError("Ödeme için profilinizde geçerli bir telefon numarası bulunmalıdır.", 409, "BUYER_PHONE_INVALID");
+        }
+        const profileCity = String(profile.il || profile.sehir || "").split("/")[0].trim();
+        if (!profileCity) {
+            throw new PaymentValidationError("Ödeme için profilinizde şehir bilgisi bulunmalıdır.", 409, "BUYER_CITY_REQUIRED");
+        }
+        trustedBuyer = {
+            phone: profile.telefon,
+            city: profileCity,
+            address: `HediyeAlSat dijital hizmet - ${profileCity}`
+        };
+        const boostPaymentData = buildListingBoostPaymentData(trustedBoost.listing, trustedBoost.package);
+        trustedPrice = boostPaymentData.price;
+        trustedSiparisIds = [];
+        trustedPaymentGroup = boostPaymentData.paymentGroup;
+        trustedBasketItems = boostPaymentData.basketItems;
+    } else if (sponsorOdeme) {
         if (!sponsorBasvuruId) {
             throw new PaymentValidationError("Sponsor başvurusu bulunamadı.", 404, "SPONSOR_APPLICATION_NOT_FOUND");
         }
@@ -195,7 +231,7 @@ async function createPayment(data, authenticatedUser, requestContext = {}) {
 
         currency: "TRY",
 
-        odemeTipi: sponsorOdeme ? "sponsor" : "siparis",
+        odemeTipi: boostOdeme ? "listing_boost" : sponsorOdeme ? "sponsor" : "siparis",
 
         urunToplami: trustedProductTotal,
 
@@ -210,7 +246,7 @@ async function createPayment(data, authenticatedUser, requestContext = {}) {
         stockReservationExpiresAt: stockReservation?.expiresAt || null,
 
         komisyonOrani:
-            sponsorOdeme
+            sponsorOdeme || boostOdeme
                 ? 0
                 : KOMISYON_ORANI,
 
@@ -236,7 +272,15 @@ async function createPayment(data, authenticatedUser, requestContext = {}) {
             trustedSponsor?.magazaAdi || "",
 
         telefon:
-            trustedSponsor?.telefon || ""
+            trustedSponsor?.telefon || "",
+
+        listingBoost: boostOdeme,
+        listingId: trustedBoost?.listing.id || "",
+        listingOwnerUid: boostOdeme ? authenticatedUser.uid : "",
+        boostPackageId: trustedBoost?.package.id || "",
+        boostPackageTitle: trustedBoost?.package.title || "",
+        boostDays: Number(trustedBoost?.package.days) || 0,
+        boostPrice: Number(trustedBoost?.package.price) || 0
 
     });
 
@@ -259,7 +303,7 @@ async function createPayment(data, authenticatedUser, requestContext = {}) {
     const productionMode = process.env.NODE_ENV === "production";
     const trustedAddress = trustedBuyer?.address || (productionMode ? "" : "Adapazarı");
     const trustedCity = trustedBuyer?.city || (productionMode ? "" : "Sakarya");
-    if (!sponsorOdeme && (!trustedAddress || !trustedCity) && trustedPaymentItems.some((item) => item.itemType === "PHYSICAL")) {
+    if (!sponsorOdeme && !boostOdeme && (!trustedAddress || !trustedCity) && trustedPaymentItems.some((item) => item.itemType === "PHYSICAL")) {
         throw new PaymentValidationError("Fiziksel sipariş için teslimat bilgileri eksik.", 409, "DELIVERY_ADDRESS_MISSING");
     }
 
@@ -900,7 +944,7 @@ async function securePaymentCallback(token) {
         const verified = validateRetrievedPayment(result, payment);
         // Daha önce güvenle tamamlanmış ödemelerin tekrarlanan callback'i yeniden
         // finansal işlem üretmeden finalizePayment'in idempotent yoluna düşer.
-        const itemTransactions = payment?.sponsor || payment?.paymentStatus === "SUCCESS"
+        const itemTransactions = payment?.sponsor || payment?.listingBoost || payment?.paymentStatus === "SUCCESS"
             ? null
             : mapPaymentItemTransactions(result, payment);
         const finalized = await finalizePayment({
@@ -912,10 +956,13 @@ async function securePaymentCallback(token) {
             currency: result.currency
         });
 
-        if (!finalized.alreadyFinalized && payment?.kullanici) {
+        if (!finalized.alreadyFinalized && payment?.kullanici && !payment?.listingBoost) {
             await orderService.sepetTemizle(payment.kullanici);
         }
-        return { success: true, sponsor: finalized.sponsor, redirect: "/payment-success" };
+        const redirect = finalized.listingBoost
+            ? `/payment-success?type=listing-boost&listingId=${encodeURIComponent(finalized.listingId || "")}`
+            : "/payment-success";
+        return { success: true, sponsor: finalized.sponsor, listingBoost: finalized.listingBoost, redirect };
     } catch (error) {
         if (payment && error.paymentStatus) {
             await paymentModel.updatePayment(payment.id, {

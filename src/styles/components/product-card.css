@@ -621,3 +621,15 @@
     height: 100%;
   }
 }
+.paid-boost-badge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 5px 8px;
+  border: 1px solid #f0c765;
+  border-radius: 999px;
+  background: rgba(255, 249, 224, 0.96);
+  color: #76510a;
+  font-size: 9px;
+  font-weight: 800;
+}

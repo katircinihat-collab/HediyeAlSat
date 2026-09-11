@@ -1,6 +1,10 @@
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 
 function PaymentSuccess() {
+
+  const [searchParams] = useSearchParams();
+  const listingBoost = searchParams.get("type") === "listing-boost";
+  const listingId = searchParams.get("listingId") || "";
 
   return (
 
@@ -11,7 +15,7 @@ function PaymentSuccess() {
         <h1>🎉 Ödeme Başarılı</h1>
 
         <p>
-          Siparişiniz başarıyla oluşturuldu.
+          {listingBoost ? "İlanınız başarıyla öne çıkarıldı." : "Siparişiniz başarıyla oluşturuldu."}
         </p>
 
         <div className="success-info">
@@ -19,18 +23,18 @@ function PaymentSuccess() {
           <h3>✅ Ödeme Alındı</h3>
 
           <p>
-            Satıcı siparişinizi hazırlamaya başlayacak.
+            {listingBoost ? "Öne çıkarma süreniz güvenli ödeme onayından sonra başlatıldı." : "Satıcı siparişinizi hazırlamaya başlayacak."}
           </p>
 
         </div>
 
         <div className="success-buttons">
 
-          <Link to="/siparislerim">
+          <Link to={listingBoost ? "/ilanlarim" : "/siparislerim"}>
 
             <button>
 
-              📦 Siparişlerim
+              {listingBoost ? "📦 İlanlarım" : "📦 Siparişlerim"}
 
             </button>
 
@@ -46,11 +50,11 @@ function PaymentSuccess() {
 
           </Link>
 
-          <Link to="/ilanlar">
+          <Link to={listingBoost && listingId ? `/ilan/${listingId}` : "/ilanlar"}>
 
             <button>
 
-              🛍️ Alışverişe Devam Et
+              {listingBoost ? "👁️ İlanı Görüntüle" : "🛍️ Alışverişe Devam Et"}
 
             </button>
 

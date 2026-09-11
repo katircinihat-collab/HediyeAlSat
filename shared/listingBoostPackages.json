@@ -1,0 +1,7 @@
+{
+  "packages": [
+    { "id": "boost_3", "days": 3, "price": 29, "title": "3 Günlük Öne Çıkarma" },
+    { "id": "boost_7", "days": 7, "price": 49, "title": "7 Günlük Öne Çıkarma" },
+    { "id": "boost_30", "days": 30, "price": 99, "title": "30 Günlük Öne Çıkarma" }
+  ]
+}

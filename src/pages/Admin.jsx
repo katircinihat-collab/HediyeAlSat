@@ -10,6 +10,7 @@ import { Link } from "react-router-dom";
 import { adminApi } from "../config/adminApi";
 import { formatListingCategory } from "../data/categories";
 import { isDigitalListing, isListingPublished } from "../utils/listingAvailability";
+import { isListingBoostActive, listingBoostEndDate } from "../utils/listingBoost";
 import AdminStores from "../components/admin/AdminStores";
 import AdminOrderClaims from "../components/admin/AdminOrderClaims";
 import AdminFinancialReconciliations from "../components/admin/AdminFinancialReconciliations";
@@ -699,6 +700,10 @@ alt={ilan.baslik}
     ? `📦 Stok: ${Number(ilan.stok ?? ilan.adet)}`
     : "❌ Stok Tükendi"}
 </div>
+
+{isListingBoostActive(ilan) && <div className="admin-product-stock-status">
+⭐ Ücretli öne çıkarma · {listingBoostEndDate(ilan)?.toLocaleDateString("tr-TR")} tarihine kadar
+</div>}
 
 {!isDigitalListing(ilan) && <div className="admin-stock-editor">
 <input

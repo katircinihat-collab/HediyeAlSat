@@ -26,6 +26,7 @@ import useFavorite from "../hooks/useFavorite";
 import useListingImpression from "../hooks/useListingImpression";
 import { formatImpressionCount } from "../utils/impressions";
 import { isListingPublished } from "../utils/listingAvailability";
+import { isListingBoostActive } from "../utils/listingBoost";
 
 
 function ProductCard({ ilan, cardExtra = null, variant = "" }) {
@@ -395,6 +396,10 @@ function ProductCard({ ilan, cardExtra = null, variant = "" }) {
         {/* ETİKETLER */}
 
         <div className="product-badges">
+
+          {isListingBoostActive(ilan) && (
+            <span className="paid-boost-badge">⭐ Öne Çıkarılmış</span>
+          )}
 
 
           {ilan.trend && (

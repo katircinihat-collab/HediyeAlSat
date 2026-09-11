@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import ProductCard from "./ProductCard";
 import { filterAvailableListings } from "../utils/listingAvailability";
+import { sortListingsByBoost } from "../utils/listingBoost";
 import { categoryDefinitions, getListingMainCategory, getListingSubcategory } from "../data/categories";
 import "../styles/components/store-products.css";
 
@@ -77,7 +78,7 @@ function StoreProducts({
     if (siralama === "fiyat-artan") return [...sonuc].sort((a, b) => fiyatSayisi(a.fiyat) - fiyatSayisi(b.fiyat));
     if (siralama === "fiyat-azalan") return [...sonuc].sort((a, b) => fiyatSayisi(b.fiyat) - fiyatSayisi(a.fiyat));
     if (siralama === "en-yeni") return [...sonuc].sort((a, b) => tarihSayisi(b) - tarihSayisi(a));
-    return sonuc;
+    return sortListingsByBoost(sonuc);
   }, [altKategori, anaKategori, arama, availableListings, siralama]);
 
   function anaKategoriDegistir(value) {

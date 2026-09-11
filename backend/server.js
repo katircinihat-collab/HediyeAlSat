@@ -81,6 +81,8 @@ const listingRoutes =
     require("./routes/listingRoutes");
 const sellerMarketplaceRoutes =
     require("./routes/sellerMarketplaceRoutes");
+const listingBoostRoutes =
+    require("./routes/listingBoostRoutes");
 const { startWalletReleaseJob } =
     require("./jobs/walletReleaseJob");
 
@@ -106,6 +108,7 @@ app.use(
 app.use("/api/user-levels", userLevelRoutes);
 app.use("/api/listings", listingRoutes);
 app.use("/api/seller/marketplace", sellerMarketplaceRoutes);
+app.use("/api/listing-boosts", listingBoostRoutes);
 
 
 // -----------------------------------------------------

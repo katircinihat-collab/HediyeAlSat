@@ -19,6 +19,7 @@ import {
   removeDesignVote
 } from "../services/designVoteApi";
 import { isListingPublished } from "../utils/listingAvailability";
+import { sortListingsByBoost } from "../utils/listingBoost";
 
 function fiyatSayiyaCevir(deger) {
   if (typeof deger === "number") return Number.isFinite(deger) ? deger : null;
@@ -74,7 +75,7 @@ function SpecialListingsPage({ tur }) {
             return fiyat !== null && fiyat >= 0 && fiyat <= 100;
           });
 
-        setIlanlar(liste);
+        setIlanlar(sortListingsByBoost(liste));
       } catch (error) {
         console.error(`${baslik} ilanları alınamadı:`, error);
       } finally {

@@ -908,3 +908,15 @@ test("74 - ilan sahibi impressionCount alanını doğrudan değiştiremez", asyn
     impressionCount: 999999
   }));
 });
+
+test("75 - ilan sahibi veya admin client ücretli boost alanlarını yazamaz", async () => {
+  await assertFails(updateDoc(doc(dbFor(ownerAuth), "ilanlar", "published"), { boostActive: true }));
+  await assertFails(updateDoc(doc(dbFor(adminAuth), "ilanlar", "published"), { boostActive: true }));
+});
+
+test("76 - listing promotion kayıtları bütün client erişimine kapalıdır", async () => {
+  await assertFails(setDoc(doc(dbFor(ownerAuth), "listingPromotions", "fake"), {
+    listingId: "published", ownerUid: ownerAuth.uid, status: "ACTIVE"
+  }));
+  await assertFails(getDoc(doc(dbFor(adminAuth), "listingPromotions", "fake")));
+});
