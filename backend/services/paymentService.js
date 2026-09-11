@@ -23,6 +23,40 @@ const { buildListingBoostPaymentData, prepareListingBoost } = require("./listing
 const { prepareSponsorPayment, sponsorPaymentBasket } = require("./sponsorStoreService");
 
 const KOMISYON_ORANI = 0.08;
+const CALLBACK_RETRIEVE_TIMEOUT_MS = 15000;
+
+function retrieveCheckoutForm(client, token, timeoutMs = CALLBACK_RETRIEVE_TIMEOUT_MS) {
+    return new Promise((resolve, reject) => {
+        let completed = false;
+        const finish = (callback) => (value) => {
+            if (completed) return;
+            completed = true;
+            clearTimeout(timer);
+            callback(value);
+        };
+        const timer = setTimeout(() => {
+            const error = new Error("Ödeme sağlayıcısı doğrulama isteğine zamanında yanıt vermedi.");
+            error.code = "CHECKOUT_RETRIEVE_TIMEOUT";
+            finish(reject)(error);
+        }, timeoutMs);
+        client.checkoutForm.retrieve({ locale: "tr", token }, (error, response) => {
+            if (error) return finish(reject)(error);
+            if (!response) return finish(reject)(new Error("Ödeme sonucu bulunamadı."));
+            return finish(resolve)(response);
+        });
+    });
+}
+
+function scheduleCartCleanup(email, cleanup = orderService.sepetTemizle) {
+    if (!email) return;
+    setImmediate(() => {
+        Promise.resolve(cleanup(email)).catch((error) => {
+            console.error("Ödeme sonrası sepet temizleme tamamlanamadı:", {
+                code: error.code || "CART_CLEANUP_FAILED"
+            });
+        });
+    });
+}
 
 
 /*
@@ -925,14 +959,7 @@ async function paymentCallback(token) {
 
 async function securePaymentCallback(token) {
     if (!iyzipay) throw new Error("Iyzico henüz yapılandırılmadı.");
-
-    const result = await new Promise((resolve, reject) => {
-        iyzipay.checkoutForm.retrieve({ locale: "tr", token }, (error, response) => {
-            if (error) return reject(error);
-            if (!response) return reject(new Error("Ödeme sonucu bulunamadı."));
-            resolve(response);
-        });
-    });
+    const result = await retrieveCheckoutForm(iyzipay, token);
 
     const conversationId = result.conversationId || result.basketId;
     const payment = conversationId ? await paymentModel.getPayment(conversationId) : null;
@@ -954,7 +981,7 @@ async function securePaymentCallback(token) {
         });
 
         if (!finalized.alreadyFinalized && payment?.kullanici && !payment?.listingBoost && !payment?.sponsor) {
-            await orderService.sepetTemizle(payment.kullanici);
+            scheduleCartCleanup(payment.kullanici);
         }
         const redirect = finalized.listingBoost
             ? `/payment-success?type=listing-boost&listingId=${encodeURIComponent(finalized.listingId || "")}`
@@ -1015,6 +1042,10 @@ module.exports = {
     createPayment,
 
     securePaymentCallback,
+
+    retrieveCheckoutForm,
+
+    scheduleCartCleanup,
 
     KOMISYON_ORANI
 

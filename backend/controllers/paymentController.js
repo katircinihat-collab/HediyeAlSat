@@ -53,9 +53,7 @@ exports.paymentCallback = async (
 
     try {
 
-        console.log(
-            "=== CALLBACK GELDİ ==="
-        );
+        console.info("Ödeme callback alındı.", { tokenPresent: Boolean(req.body?.token) });
 
         const token =
             req.body.token;
@@ -63,12 +61,13 @@ exports.paymentCallback = async (
 
         if (!token) {
 
-            console.log(
+            console.info(
                 "Callback token bulunamadı."
             );
 
 
             return res.redirect(
+                303,
 
                 process.env.FRONTEND_URL +
                 "/payment-fail"
@@ -87,13 +86,15 @@ exports.paymentCallback = async (
             );
 
 
-        console.log(
-            "Callback ödeme sonucu:",
-            result
-        );
+        console.info("Ödeme callback tamamlandı.", {
+            sponsor: Boolean(result.sponsor),
+            listingBoost: Boolean(result.listingBoost),
+            redirect: result.redirect || "/payment-fail"
+        });
 
 
         return res.redirect(
+            303,
 
             process.env.FRONTEND_URL +
             (
@@ -107,12 +108,12 @@ exports.paymentCallback = async (
     } catch (err) {
 
         console.error("Callback controller hatası:", {
-            code: err.code || "CALLBACK_FAILED",
-            message: err.message || "Callback tamamlanamadı."
+            code: err.code || "CALLBACK_FAILED"
         });
 
 
         return res.redirect(
+            303,
 
             process.env.FRONTEND_URL +
             "/payment-fail"
