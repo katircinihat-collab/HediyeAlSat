@@ -61,11 +61,8 @@ test("admin sipariş UI timeline, filtre ve işlem gereken kartını gösterir",
   assert.match(adminPage, /<AdminOrders \/>/);
 });
 
-test("sipariş cursor indexi tanımlıdır", () => {
+test("sipariş cursor sorgusu gereksiz composite index üretmez", () => {
   const indexes = JSON.parse(read("firestore.indexes.json"));
   const found = indexes.indexes.find((index) => index.collectionGroup === "siparisler");
-  assert.deepEqual(found.fields, [
-    { fieldPath: "tarih", order: "DESCENDING" },
-    { fieldPath: "__name__", order: "DESCENDING" }
-  ]);
+  assert.equal(found, undefined);
 });
