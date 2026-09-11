@@ -8,7 +8,8 @@ const KPI = [
   ["salesVolume", "Satış hacmi", "💰", true], ["commissionRevenue", "%8 komisyon", "📈", true],
   ["platformServiceRevenue", "Sponsor / boost geliri", "🚀", true], ["pendingSellerAmount", "Bekleyen hakediş", "🏦", true],
   ["openClaims", "Açık itiraz/iade", "⚖️"], ["pendingSponsors", "Sponsor inceleme", "🏪"],
-  ["activeBoosts", "Aktif ücretli boost", "⭐"], ["reconciliationCount", "Mutabakat kaydı", "🔎"]
+  ["activeBoosts", "Aktif ücretli boost", "⭐"], ["reconciliationCount", "Mutabakat kaydı", "🔎"],
+  ["actionRequiredCount", "İşlem gerektiren", "🚨"]
 ];
 
 function money(value) { return `${Number(value || 0).toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺`; }

@@ -1,6 +1,14 @@
 {
   "indexes": [
     {
+      "collectionGroup": "siparisler",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "tarih", "order": "DESCENDING" },
+        { "fieldPath": "__name__", "order": "DESCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "mesajlar",
       "queryScope": "COLLECTION",
       "fields": [

@@ -31,7 +31,7 @@ exports.overview = async (_req, res, next) => {
             count(firestore.collection("sponsorBasvurular").where("status", "==", "REVIEW_PENDING")),
             count(firestore.collection("listingPromotions").where("endAt", ">", admin.firestore.Timestamp.now())),
             count(firestore.collection("odemeler").where("paymentStatus", "==", "WAITING")),
-            count(firestore.collection("financialReconciliations")),
+            count(firestore.collection("financialReconciliations").where("status", "==", "incelemede")),
             sum(firestore.collection("siparisler").where("odemeDurumu", "==", true), "toplam"),
             sum(firestore.collection("bakiyeHareketleri"), "komisyon"),
             sum(firestore.collection("platformRevenueEvents"), "amount"),
@@ -48,6 +48,7 @@ exports.overview = async (_req, res, next) => {
                 totalUsers, totalOrders, paidOrders, totalStores,
                 activeListings, pendingListings, openClaims, pendingSponsors,
                 activeBoosts, waitingPayments, reconciliationCount,
+                actionRequiredCount: waitingPayments + openClaims + reconciliationCount,
                 salesVolume, commissionRevenue, platformServiceRevenue,
                 pendingSellerAmount
             }

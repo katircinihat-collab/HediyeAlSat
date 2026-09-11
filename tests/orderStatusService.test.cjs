@@ -21,7 +21,7 @@ test("kargoya geçerken firma, takip no ve server timestamp yazılır", () => {
 });
 test("client payment alanları update payloadına taşınmaz", () => {
     const update = buildSellerStatusUpdate(paid, { durum: "Hazırlanıyor", paymentId: "fake", odemeDurumu: false, fiyat: 1 }, { serverTimestamp: timestamp });
-    assert.deepEqual(Object.keys(update).sort(), ["durum", "guncellenmeTarihi"]);
+    assert.deepEqual(Object.keys(update).sort(), ["durum", "guncellenmeTarihi", "hazirlanmaTarihi"].sort());
 });
 test("legacy Bekliyor Ödendi olarak normalize edilir", () => assert.equal(validateSellerTransition({ ...paid, durum: "Bekliyor" }, "Hazırlanıyor").current, "Ödendi"));
 test("legacy Kargoya Verildi Kargoda olarak normalize edilir", () => assert.equal(normalizeOrderStatus("Kargoya Verildi"), "Kargoda"));

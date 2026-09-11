@@ -13,6 +13,7 @@ import { Link } from "react-router-dom";
 import { confirmOrderDelivery } from "../services/orderDeliveryApi";
 import OrderClaimForm from "../components/OrderClaimForm";
 import { getDigitalDownload } from "../services/digitalDownloadApi";
+import { payoutDisplay } from "../utils/orderDelivery";
 
 import "../styles/pages/myorders.css";
 
@@ -223,6 +224,14 @@ function MyOrders() {
   </div>
 
   <div className="order-bottom">
+
+    {siparis.urunTipi !== "dijital" && siparis.kargoNo && (
+      <span className="order-claim-message">Kargo: {siparis.kargoFirma || "Kargo firması"} · Takip: {siparis.kargoNo}</span>
+    )}
+
+    {payoutDisplay(siparis) && (
+      <span className="order-claim-message">{payoutDisplay(siparis).label}: {payoutDisplay(siparis).detail}</span>
+    )}
 
     {siparis.urunTipi === "dijital" && siparis.odemeDurumu === true && (
       <button type="button" className="buy-btn" disabled={indirilen === siparis.id} onClick={() => dijitalDosyaIndir(siparis)}>

@@ -9,6 +9,7 @@ const financialReconciliationController = require("../controllers/financialRecon
 const sellerMarketplaceController = require("../controllers/sellerMarketplaceController");
 const sponsorStoreController = require("../controllers/sponsorStoreController");
 const adminOperationsController = require("../controllers/adminOperationsController");
+const adminOrderController = require("../controllers/adminOrderController");
 
 const router = express.Router();
 
@@ -19,6 +20,9 @@ router.get("/overview", adminOperationsController.overview);
 router.get("/users", adminOperationsController.listUsers);
 router.patch("/users/:uid/status", adminOperationsController.updateUserStatus);
 router.get("/audit-logs", adminOperationsController.auditLogs);
+router.get("/orders", adminOrderController.list);
+router.get("/orders/action-required", adminOrderController.actionRequired);
+router.get("/orders/:orderId", adminOrderController.detail);
 router.put("/listings/:id/approve", adminListingController.onayla);
 router.put("/listings/:id/reject", adminListingController.reddet);
 router.patch("/listings/:id/flags", adminListingController.ozellikDegistir);

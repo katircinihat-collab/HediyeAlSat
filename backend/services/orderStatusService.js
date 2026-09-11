@@ -48,6 +48,9 @@ function sellerOwnsOrder(order, user) {
 function buildSellerStatusUpdate(order, body, FieldValue, listing = null) {
     const { requested } = validateSellerTransition(order, body.durum, listing);
     const update = { durum: requested, guncellenmeTarihi: FieldValue.serverTimestamp() };
+    if (requested === ORDER_STATUSES.HAZIRLANIYOR) {
+        update.hazirlanmaTarihi = FieldValue.serverTimestamp();
+    }
     if (requested === ORDER_STATUSES.KARGODA) {
         update.kargoFirma = sanitizeCargoText(body.kargoFirma, "Kargo firması", 80);
         update.kargoNo = sanitizeCargoText(body.kargoNo, "Takip numarası", 120);

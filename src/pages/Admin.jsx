@@ -18,6 +18,7 @@ import AdminOrderClaims from "../components/admin/AdminOrderClaims";
 import AdminFinancialReconciliations from "../components/admin/AdminFinancialReconciliations";
 import AdminSponsorApplications from "../components/admin/AdminSponsorApplications";
 import { AdminAuditLog, AdminOperationsOverview, AdminUsers } from "../components/admin/AdminOperations";
+import AdminOrders, { AdminActionRequired } from "../components/admin/AdminOrders";
 
 import "../styles/pages/admin.css";
 function fiyatFormat(fiyat) {
@@ -57,8 +58,6 @@ function Admin() {
   const [ilanArama, setIlanArama] = useState("");
   const [ilanFiltre, setIlanFiltre] = useState("tumu");
 
-  const [sonSiparisler, setSonSiparisler] = useState([]);
-
   const [bakiyeler, setBakiyeler] = useState([]);
   const [magazalar, setMagazalar] = useState([]);
 
@@ -82,30 +81,6 @@ function Admin() {
 
   }
   async function dashboardGetir() {
-
-    const siparisSnap = await getDocs(
-      query(collection(db, "siparisler"), limit(100))
-    );
-
-    const sonListe = [];
-
-    siparisSnap.forEach((d) => {
-
-      const s = d.data();
-
-      sonListe.push({
-
-        id: d.id,
-
-        ...s
-
-      });
-
-    });
-
-    setSonSiparisler(
-      sonListe.reverse().slice(0, 5)
-    );
 
     const magazaSnap = await getDocs(
       query(collection(db, "magazalar"), limit(100))
@@ -274,110 +249,15 @@ className="admin-action-btn admin-approve"
 <nav className="admin-section-nav" aria-label="Admin bölümleri">
 <a href="#admin-dashboard">Dashboard</a>
 <a href="#admin-users">Kullanıcılar</a>
+<a href="#admin-action-required">İşlem Gerektirenler</a>
 <a href="#admin-orders">Siparişler</a>
 <a href="#admin-listings">İlanlar</a>
 <a href="#admin-audit">Audit Log</a>
 </nav>
 
 <AdminOperationsOverview />
-
-<div className="admin-section" id="admin-orders">
-
-<h2>
-
-🛒 Son Siparişler
-
-</h2>
-
-<table>
-
-<thead>
-
-<tr>
-
-<th>Ürün</th>
-
-<th>Alıcı</th>
-
-<th>Satıcı</th>
-
-<th>Tutar</th>
-
-<th>Durum</th>
-
-</tr>
-
-</thead>
-
-<tbody>
-
-{
-
-sonSiparisler.length===0 ?
-
-<tr>
-
-<td colSpan="5">
-
-Henüz sipariş bulunamadı.
-
-</td>
-
-</tr>
-
-:
-
-sonSiparisler.map((s)=>(
-
-<tr key={s.id}>
-
-<td>{s.ilanBaslik}</td>
-
-<td>{s.alici}</td>
-
-<td>{s.satici}</td>
-
-<td>
-
-{Number(s.toplam).toLocaleString("tr-TR")} ₺
-
-</td>
-
-<td>
-
-{
-
-s.odemeDurumu ?
-
-<span className="status-paid">
-
-✅ Ödendi
-
-</span>
-
-:
-
-<span className="status-wait">
-
-⌛ Bekliyor
-
-</span>
-
-}
-
-</td>
-
-</tr>
-
-))
-
-}
-
-</tbody>
-
-</table>
-
-</div>
+<AdminActionRequired />
+<AdminOrders />
 <div className="admin-section">
 
 <h2>

@@ -140,7 +140,7 @@ return(
 
 <div className="summary-box">
 
-<h2>{siparisler.filter(x=>x.durum==="Kargoya Verildi").length}</h2>
+<h2>{siparisler.filter(x=>x.durum==="Kargoya Verildi"||x.durum==="Kargoda").length}</h2>
 
 <span>🚚 Kargoda</span>
 
@@ -208,7 +208,7 @@ onChange={(e)=>setFiltre(e.target.value)}
 
 <option>Hazırlanıyor</option>
 
-<option>Kargoya Verildi</option>
+<option>Kargoda</option>
 
 <option>Teslim Edildi</option>
 
