@@ -62,15 +62,15 @@ async function adminMiddleware(req, res, next) {
 
     } catch (err) {
 
-        console.log(err);
+        console.error("Admin doğrulama hatası:", {
+            code: err.code || "ADMIN_AUTH_CHECK_FAILED"
+        });
 
         return res.status(500).json({
 
             success: false,
 
-            message: "Admin doğrulama hatası.",
-
-            error: err.message
+            message: "Admin doğrulama hatası."
 
         });
 

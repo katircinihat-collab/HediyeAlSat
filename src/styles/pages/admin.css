@@ -704,3 +704,47 @@ margin:20px 0;
 @media (prefers-reduced-motion: reduce) {
   .admin-auth-spinner { animation-duration: 1.8s; }
 }
+.admin-section-nav {
+  position: sticky;
+  top: 54px;
+  z-index: 20;
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  margin: 18px 0;
+  padding: 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.96);
+}
+
+.admin-section-nav a {
+  flex: 0 0 auto;
+  padding: 8px 12px;
+  border-radius: 8px;
+  color: #374151;
+  background: #f4f5f7;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.admin-listing-tools {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) 220px;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.admin-listing-tools input,
+.admin-listing-tools select {
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid #d9dde5;
+  border-radius: 10px;
+  background: #fff;
+}
+
+@media (max-width: 620px) {
+  .admin-listing-tools { grid-template-columns: 1fr; }
+}

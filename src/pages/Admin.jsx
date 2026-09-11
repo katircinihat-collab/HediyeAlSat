@@ -1,8 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import {
   collection,
-  getDocs
+  getDocs,
+  limit,
+  query
 } from "firebase/firestore";
 
 import { db } from "../firebase";
@@ -15,6 +17,7 @@ import AdminStores from "../components/admin/AdminStores";
 import AdminOrderClaims from "../components/admin/AdminOrderClaims";
 import AdminFinancialReconciliations from "../components/admin/AdminFinancialReconciliations";
 import AdminSponsorApplications from "../components/admin/AdminSponsorApplications";
+import { AdminAuditLog, AdminOperationsOverview, AdminUsers } from "../components/admin/AdminOperations";
 
 import "../styles/pages/admin.css";
 function fiyatFormat(fiyat) {
@@ -51,17 +54,8 @@ function Admin() {
   const [ilanlar, setIlanlar] = useState([]);
   const [stokTaslaklari, setStokTaslaklari] = useState({});
   const [ilanIslemi, setIlanIslemi] = useState("");
-
-  const [toplamSatis, setToplamSatis] = useState(0);
-  const [toplamKomisyon, setToplamKomisyon] = useState(0);
-  const [saticiyaOdenecek, setSaticiyaOdenecek] = useState(0);
-
-  const [toplamSiparis, setToplamSiparis] = useState(0);
-  const [, setOdenenSiparis] = useState(0);
-  const [, setBekleyenSiparis] = useState(0);
-
-  const [toplamMagaza, setToplamMagaza] = useState(0);
-  const [toplamKullanici, setToplamKullanici] = useState(0);
+  const [ilanArama, setIlanArama] = useState("");
+  const [ilanFiltre, setIlanFiltre] = useState("tumu");
 
   const [sonSiparisler, setSonSiparisler] = useState([]);
 
@@ -71,7 +65,7 @@ function Admin() {
   async function getir() {
 
     const snap = await getDocs(
-      collection(db, "ilanlar")
+      query(collection(db, "ilanlar"), limit(200))
     );
 
     setIlanlar(
@@ -90,38 +84,14 @@ function Admin() {
   async function dashboardGetir() {
 
     const siparisSnap = await getDocs(
-      collection(db, "siparisler")
+      query(collection(db, "siparisler"), limit(100))
     );
-
-    let satis = 0;
-    let komisyon = 0;
-    let satici = 0;
-
-    let odenen = 0;
-    let bekleyen = 0;
 
     const sonListe = [];
 
     siparisSnap.forEach((d) => {
 
       const s = d.data();
-
-      if (s.odemeDurumu) {
-
-        const toplamKurus = Math.round(Number(s.toplam || 0) * 100);
-        const komisyonKurusu = Math.round((toplamKurus * 8) / 100);
-
-        satis += toplamKurus / 100;
-        komisyon += komisyonKurusu / 100;
-        satici += (toplamKurus - komisyonKurusu) / 100;
-
-        odenen++;
-
-      } else {
-
-        bekleyen++;
-
-      }
 
       sonListe.push({
 
@@ -133,44 +103,20 @@ function Admin() {
 
     });
 
-    setToplamSatis(satis);
-
-    setToplamKomisyon(komisyon);
-
-    setSaticiyaOdenecek(satici);
-
-    setToplamSiparis(siparisSnap.size);
-
-    setOdenenSiparis(odenen);
-
-    setBekleyenSiparis(bekleyen);
-
     setSonSiparisler(
       sonListe.reverse().slice(0, 5)
     );
 
-    const kullaniciSnap = await getDocs(
-      collection(db, "users")
-    );
-
-    setToplamKullanici(
-      kullaniciSnap.size
-    );
-
     const magazaSnap = await getDocs(
-      collection(db, "magazalar")
+      query(collection(db, "magazalar"), limit(100))
     );
 
     setMagazalar(
       magazaSnap.docs.map((belge) => ({ id: belge.id, ...belge.data() }))
     );
 
-    setToplamMagaza(
-      magazaSnap.size
-    );
-
     const bakiyeSnap = await getDocs(
-      collection(db, "bakiyeHareketleri")
+      query(collection(db, "bakiyeHareketleri"), limit(100))
     );
 
     setBakiyeler(
@@ -218,6 +164,19 @@ function Admin() {
       setIlanIslemi("");
     }
 
+  }
+
+  async function reddet(ilan) {
+    if (!window.confirm(`${ilan.baslik || "İlan"} reddedilsin mi?`)) return;
+    try {
+      setIlanIslemi(ilan.id);
+      await adminApi(`/listings/${ilan.id}/reject`, { method: "PUT" });
+      await getir();
+    } catch (error) {
+      alert(error.message);
+    } finally {
+      setIlanIslemi("");
+    }
   }
 
   async function stokKaydet(ilan) {
@@ -270,6 +229,21 @@ function Admin() {
       onceki.map((magaza) => magaza.id === id ? { ...magaza, aktif } : magaza)
     );
   }
+
+  const gorunenIlanlar = useMemo(() => {
+    const term = ilanArama.trim().toLocaleLowerCase("tr-TR");
+    return ilanlar.filter((ilan) => {
+      const published = isListingPublished(ilan);
+      const statusMatches = ilanFiltre === "tumu"
+        || (ilanFiltre === "yayinda" && published)
+        || (ilanFiltre === "bekleyen" && ilan.onay !== true && ilan.durum !== "Reddedildi")
+        || (ilanFiltre === "kapali" && ilan.onay === true && !published)
+        || (ilanFiltre === "reddedildi" && ilan.durum === "Reddedildi");
+      const searchable = [ilan.id, ilan.baslik, ilan.sahip, ilan.sahipUid, ilan.kategori, ilan.magazaAdi]
+        .join(" ").toLocaleLowerCase("tr-TR");
+      return statusMatches && (!term || searchable.includes(term));
+    });
+  }, [ilanArama, ilanFiltre, ilanlar]);
 return (
 
 <div className="admin-page">
@@ -297,95 +271,17 @@ className="admin-action-btn admin-approve"
 
 </div>
 
-<div className="dashboard-cards">
+<nav className="admin-section-nav" aria-label="Admin bölümleri">
+<a href="#admin-dashboard">Dashboard</a>
+<a href="#admin-users">Kullanıcılar</a>
+<a href="#admin-orders">Siparişler</a>
+<a href="#admin-listings">İlanlar</a>
+<a href="#admin-audit">Audit Log</a>
+</nav>
 
-<div className="dashboard-card dashboard-green">
+<AdminOperationsOverview />
 
-<div className="dashboard-icon">💰</div>
-
-<h2>
-
-{toplamSatis.toLocaleString("tr-TR")} ₺
-
-</h2>
-
-<p>Toplam Satış</p>
-
-</div>
-
-<div className="dashboard-card dashboard-blue">
-
-<div className="dashboard-icon">💵</div>
-
-<h2>
-
-{toplamKomisyon.toLocaleString("tr-TR")} ₺
-
-</h2>
-
-<p>Komisyon</p>
-
-</div>
-
-<div className="dashboard-card dashboard-orange">
-
-<div className="dashboard-icon">🏦</div>
-
-<h2>
-
-{saticiyaOdenecek.toLocaleString("tr-TR")} ₺
-
-</h2>
-
-<p>Satıcıya Ödenecek</p>
-
-</div>
-
-<div className="dashboard-card dashboard-purple">
-
-<div className="dashboard-icon">📦</div>
-
-<h2>
-
-{toplamSiparis}
-
-</h2>
-
-<p>Sipariş</p>
-
-</div>
-
-<div className="dashboard-card dashboard-pink">
-
-<div className="dashboard-icon">🏪</div>
-
-<h2>
-
-{toplamMagaza}
-
-</h2>
-
-<p>Mağaza</p>
-
-</div>
-
-<div className="dashboard-card dashboard-red">
-
-<div className="dashboard-icon">👥</div>
-
-<h2>
-
-{toplamKullanici}
-
-</h2>
-
-<p>Kullanıcı</p>
-
-</div>
-
-</div>
-
-<div className="admin-section">
+<div className="admin-section" id="admin-orders">
 
 <h2>
 
@@ -609,7 +505,9 @@ onStatusChanged={magazaDurumunuGuncelle}
 
 <AdminSponsorApplications />
 
-<div className="admin-section">
+<AdminUsers />
+
+<div className="admin-section" id="admin-listings">
 
 <h2>
 
@@ -617,11 +515,18 @@ onStatusChanged={magazaDurumunuGuncelle}
 
 </h2>
 
+<div className="admin-listing-tools">
+<input value={ilanArama} onChange={(event)=>setIlanArama(event.target.value)} placeholder="İlan, satıcı, kategori veya ID ara" />
+<select value={ilanFiltre} onChange={(event)=>setIlanFiltre(event.target.value)} aria-label="İlan durum filtresi">
+<option value="tumu">Tüm durumlar</option><option value="yayinda">Yayında</option><option value="bekleyen">Onay bekliyor</option><option value="kapali">Yayında değil</option><option value="reddedildi">Reddedildi</option>
+</select>
+</div>
+
 <div className="admin-products">
 
 {
 
-ilanlar.map((ilan)=>(
+gorunenIlanlar.map((ilan)=>(
 
 <div
 
@@ -722,6 +627,8 @@ onChange={(event)=>setStokTaslaklari((onceki)=>({...onceki,[ilan.id]:event.targe
 
 <div className="admin-product-actions">
 
+<Link className="admin-action-btn admin-edit" to={`/ilan/${ilan.id}`}>Detay</Link>
+
 <button
 className="admin-action-btn admin-approve"
 disabled={ilanIslemi===ilan.id}
@@ -729,6 +636,12 @@ onClick={()=>ilan.onay===true ? yayinDurumuDegistir(ilan) : onayla(ilan.id)}
 >
 {isListingPublished(ilan) ? "Yayından Kaldır" : "Yayınla"}
 </button>
+
+{ilan.onay !== true && ilan.durum !== "Reddedildi" && <button
+className="admin-action-btn admin-delete"
+disabled={ilanIslemi===ilan.id}
+onClick={()=>reddet(ilan)}
+>Reddet</button>}
 
 <Link className="admin-action-btn admin-edit" to={`/duzenle/${ilan.id}`}>Düzenle</Link>
 
@@ -898,6 +811,8 @@ b.odemeTarihi.seconds*1000
 </table>
 
 </div>
+
+<AdminAuditLog />
 
 </div>
 

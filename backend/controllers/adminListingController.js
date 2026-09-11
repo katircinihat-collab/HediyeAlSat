@@ -5,6 +5,7 @@ const {
     buildUnpublishedListingState,
     isDigitalListing
 } = require("../utils/listingAvailability");
+const { recordAdminAction } = require("../services/adminAuditService");
 
 const ADMIN_FLAGS = new Set([
     "oneCikan",
@@ -53,6 +54,7 @@ exports.onayla = async (req, res, next) => {
             timestamp: FieldValue.serverTimestamp(),
             adminUid: req.user.uid
         }));
+        await recordAdminAction({ adminUser: req.user, action: "LISTING_APPROVED", targetType: "listing", targetId: req.params.id });
         res.json({ success: true });
     } catch (error) {
         if (error.status) return res.status(error.status).json({ success: false, code: error.code, message: error.message });
@@ -72,6 +74,7 @@ exports.stokGuncelle = async (req, res, next) => {
             adminUid: req.user.uid
         });
         await ref.update(update);
+        await recordAdminAction({ adminUser: req.user, action: "LISTING_STOCK_UPDATED", targetType: "listing", targetId: req.params.id, details: { stock: update.stok } });
         return res.json({ success: true, stok: update.stok });
     } catch (error) {
         if (error.status) return res.status(error.status).json({ success: false, code: error.code, message: error.message });
@@ -98,6 +101,7 @@ exports.yayinDurumuGuncelle = async (req, res, next) => {
             ? buildPublishedListingState({ listing, timestamp, adminUid: req.user.uid })
             : buildUnpublishedListingState({ timestamp, adminUid: req.user.uid });
         await ref.update(update);
+        await recordAdminAction({ adminUser: req.user, action: req.body.published ? "LISTING_PUBLISHED" : "LISTING_UNPUBLISHED", targetType: "listing", targetId: req.params.id });
         return res.json({ success: true, published: req.body.published });
     } catch (error) {
         if (error.status) return res.status(error.status).json({ success: false, code: error.code, message: error.message });
@@ -118,6 +122,7 @@ exports.reddet = async (req, res, next) => {
             durumGuncellemeTarihi: FieldValue.serverTimestamp(),
             durumGuncelleyenUid: req.user.uid
         });
+        await recordAdminAction({ adminUser: req.user, action: "LISTING_REJECTED", targetType: "listing", targetId: req.params.id });
         res.json({ success: true });
     } catch (error) {
         next(error);
@@ -139,6 +144,7 @@ exports.ozellikDegistir = async (req, res, next) => {
         if (!ref) return;
 
         await ref.update({ [alan]: deger });
+        await recordAdminAction({ adminUser: req.user, action: "LISTING_FLAG_UPDATED", targetType: "listing", targetId: req.params.id, details: { field: alan, enabled: deger } });
         res.json({ success: true });
     } catch (error) {
         next(error);
@@ -151,6 +157,7 @@ exports.sil = async (req, res, next) => {
         if (!ref) return;
 
         await ref.delete();
+        await recordAdminAction({ adminUser: req.user, action: "LISTING_DELETED", targetType: "listing", targetId: req.params.id });
         res.json({ success: true });
     } catch (error) {
         next(error);
@@ -184,6 +191,7 @@ exports.magazaDurumuGuncelle = async (req, res, next) => {
             durumGuncellemeTarihi: FieldValue.serverTimestamp(),
             durumGuncelleyen: req.user.email || req.user.uid
         });
+        await recordAdminAction({ adminUser: req.user, action: aktif ? "STORE_ENABLED" : "STORE_DISABLED", targetType: "store", targetId: storeId });
 
         return res.json({
             success: true,

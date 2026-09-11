@@ -1,5 +1,6 @@
 const { firestore, FieldValue } = require("../config/firebase");
 const service = require("../services/sponsorStoreService");
+const { recordAdminAction } = require("../services/adminAuditService");
 
 function fail(res, error) {
     return res.status(error.status || 500).json({ success: false, code: error.code || "SPONSOR_STORE_ERROR", message: error.status ? error.message : "İşlem tamamlanamadı." });
@@ -18,10 +19,10 @@ exports.adminList = async (_req, res) => {
     catch (error) { return fail(res, error); }
 };
 exports.approve = async (req, res) => {
-    try { return res.json({ success: true, result: await service.approveApplication({ firestore, FieldValue, applicationId: req.params.id, packageId: req.body?.packageId, adminUser: req.user }) }); }
+    try { const result = await service.approveApplication({ firestore, FieldValue, applicationId: req.params.id, packageId: req.body?.packageId, adminUser: req.user }); await recordAdminAction({ adminUser: req.user, action: "SPONSOR_APPLICATION_APPROVED", targetType: "sponsorApplication", targetId: req.params.id, details: { packageId: req.body?.packageId } }); return res.json({ success: true, result }); }
     catch (error) { return fail(res, error); }
 };
 exports.reject = async (req, res) => {
-    try { return res.json({ success: true, result: await service.rejectApplication({ firestore, FieldValue, applicationId: req.params.id, adminUser: req.user }) }); }
+    try { const result = await service.rejectApplication({ firestore, FieldValue, applicationId: req.params.id, adminUser: req.user }); await recordAdminAction({ adminUser: req.user, action: "SPONSOR_APPLICATION_REJECTED", targetType: "sponsorApplication", targetId: req.params.id }); return res.json({ success: true, result }); }
     catch (error) { return fail(res, error); }
 };
