@@ -17,6 +17,12 @@ test("mobil header logo, arama, sepet ve hesap aksiyonlarını birlikte sunar", 
   assert.match(navbarCss, /@media \(max-width: 720px\)[\s\S]*\.mobile-navbar-top\s*\{[\s\S]*display: grid/);
 });
 
+test("mobil admin erişimi mevcut admin kontrolünü kullanır ve normal kullanıcıya açılmaz", () => {
+  assert.match(navbar, /\{user\?\.email === ADMIN_EMAIL && \([\s\S]*to="\/admin" className="mobile-admin-link"/);
+  assert.equal((navbar.match(/const ADMIN_EMAIL/g) || []).length, 1);
+  assert.match(navbarCss, /\.mobile-admin-link\s*\{[\s\S]*grid-column: 1 \/ -1/);
+});
+
 test("büyük vitrin iç sayfalarda gizlenir ve mobil kategori menüsü yatay kayar", () => {
   assert.match(navbar, /isHome \? "navbar-home" : "navbar-inner-page"/);
   assert.match(navbarCss, /\.navbar-inner-page \.navbar-top\s*\{\s*display: none/);

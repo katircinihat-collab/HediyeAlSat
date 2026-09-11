@@ -598,6 +598,14 @@ function Navbar() {
         >
           👤
         </Link>
+
+        {user?.email === ADMIN_EMAIL && (
+          <Link to="/admin" className="mobile-admin-link">
+            <span aria-hidden="true">👑</span>
+            <strong>Admin</strong>
+            <small>Yönetim</small>
+          </Link>
+        )}
       </div>
 
       <div className="navbar-bottom">
