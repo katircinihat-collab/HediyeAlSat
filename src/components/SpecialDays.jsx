@@ -52,7 +52,7 @@ function SpecialDays() {
 
   return (
 
-    <section className="special-days">
+    <section id="ozel-gunler" className="special-days">
 
       <div className="special-days-header">
 

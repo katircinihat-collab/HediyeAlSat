@@ -231,6 +231,14 @@ function Navbar() {
     setMenuAcik(false);
   }
 
+  function ozelGunlereGit(e) {
+    if (!isHome) return;
+    const target = document.getElementById("ozel-gunler");
+    if (!target) return;
+    e.preventDefault();
+    target.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
   function kullaniciAdi() {
     if (!user?.email) return "Hesabım";
     return user.email.split("@")[0];
@@ -637,6 +645,10 @@ function Navbar() {
           <NavLink to="/hediye-fikirleri">
             💡 <span>Hediye Fikirleri</span>
           </NavLink>
+
+          <Link to="/#ozel-gunler" onClick={ozelGunlereGit}>
+            🎁 <span>Kime Hediye Arıyorsun?</span>
+          </Link>
         </nav>
 
         <div className="navbar-slogan" aria-hidden="true">

@@ -9,6 +9,8 @@ const sliderCss = readFileSync("src/styles/components/product-slider.css", "utf8
 const home = readFileSync("src/pages/Home.jsx", "utf8");
 const homeDiscovery = readFileSync("src/components/HomeDiscovery.jsx", "utf8");
 const listings = readFileSync("src/pages/Listings.jsx", "utf8");
+const specialDays = readFileSync("src/components/SpecialDays.jsx", "utf8");
+const specialDaysCss = readFileSync("src/styles/components/special-days.css", "utf8");
 
 test("mobil header logo, arama, sepet ve hesap aksiyonlarını birlikte sunar", () => {
   assert.match(navbar, /className="mobile-navbar-top"/);
@@ -28,6 +30,13 @@ test("büyük vitrin iç sayfalarda gizlenir ve mobil kategori menüsü yatay ka
   assert.match(navbar, /isHome \? "navbar-home" : "navbar-inner-page"/);
   assert.match(navbarCss, /\.navbar-inner-page \.navbar-top\s*\{\s*display: none/);
   assert.match(navbarCss, /\.navbar-menu\s*\{[\s\S]*overflow-x: auto/);
+});
+
+test("hediye fikirlerinin sağındaki kısayol mevcut Özel Günler bölümüne gider", () => {
+  assert.match(navbar, /<NavLink to="\/hediye-fikirleri">[\s\S]*Hediye Fikirleri[\s\S]*<Link to="\/#ozel-gunler" onClick=\{ozelGunlereGit\}>[\s\S]*Kime Hediye Arıyorsun\?/);
+  assert.match(navbar, /target\.scrollIntoView\(\{ behavior: "smooth", block: "start" \}\)/);
+  assert.match(specialDays, /<section id="ozel-gunler" className="special-days">/);
+  assert.match(specialDaysCss, /\.special-days\s*\{[^}]*scroll-margin-top: 150px/);
 });
 
 test("ortak ürün sliderı sınır durumlu oklar ve mobil swipe kullanır", () => {
