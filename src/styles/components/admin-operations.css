@@ -18,9 +18,9 @@
 .admin-dashboard-grid { display:grid; grid-template-columns:1.4fr 1fr; gap:14px; }
 .admin-dashboard-grid > article { border:1px solid #e4e8ef; border-radius:14px; padding:18px; background:#fff; }
 .admin-dashboard-grid h3 { margin:0 0 14px; }.admin-dashboard-grid > article > small { display:block; color:#697386; margin-top:12px; }
-.admin-health-list { display:grid; gap:9px; }.admin-health-list > div { display:grid; grid-template-columns:12px 1fr auto; gap:9px; align-items:center; }
+.admin-health-list { display:grid; gap:9px; }.admin-health-list > div { display:grid; grid-template-columns:1fr auto; gap:12px; align-items:center; padding:9px 0; border-bottom:1px solid #eef0f4; }
 .admin-health-list i { width:10px; height:10px; border-radius:50%; background:#d97706; }.admin-health-list i.healthy { background:#16834b; }.admin-health-list i.critical { background:#c62828; }
-.admin-health-list strong { font-size:13px; }.admin-dashboard-grid dl { display:grid; gap:10px; margin:0; }.admin-dashboard-grid dl div { display:flex; justify-content:space-between; gap:16px; padding-bottom:9px; border-bottom:1px solid #eef0f4; }.admin-dashboard-grid dt { color:#596579; }.admin-dashboard-grid dd { margin:0; font-weight:700; }
+.admin-health-list strong { font-size:13px; }.admin-health-list strong.healthy{color:#16834b}.admin-health-list strong.warning{color:#b45309}.admin-health-list strong.critical{color:#b42318}.admin-dashboard-grid dl { display:grid; gap:10px; margin:0; }.admin-dashboard-grid dl div { display:flex; justify-content:space-between; gap:16px; padding-bottom:9px; border-bottom:1px solid #eef0f4; }.admin-dashboard-grid dt { color:#596579; }.admin-dashboard-grid dd { margin:0; font-weight:700; }
 .admin-table-wrap { width:100%; overflow:auto; }
 .admin-table-wrap table { min-width:780px; }
 .admin-table-wrap button, .admin-load-more { min-height:36px; padding:7px 12px; border:1px solid #ccd2dc; border-radius:8px; background:#fff; cursor:pointer; }

@@ -42,10 +42,12 @@ test("kritik ilan mağaza ve sponsor işlemleri güvenli audit izi üretir", () 
   assert.match(rules, /match \/adminAuditLogs\/\{logId\}[\s\S]*allow read, create, update, delete: if false/);
 });
 
-test("dashboard sahte KPI üretmeden authoritative koleksiyonları aggregate eder", () => {
-  for (const collection of ["siparisler", "platformRevenueEvents", "wallets", "orderClaims", "sponsorBasvurular", "listingPromotions", "odemeler"]) {
+test("dashboard yalnız günlük özet ve aktif exception kaynaklarını okur", () => {
+  for (const collection of ["siparisler", "orderClaims", "adminOperationTasks", "systemMaintenance"]) {
     assert.match(controller, new RegExp(`collection\\("${collection}"\\)`));
   }
-  assert.match(controller, /AggregateField\.sum/);
-  assert.match(controller, /isListingPublished/);
+  assert.match(controller, /Promise\.allSettled/);
+  assert.match(controller, /salesAmount/);
+  assert.match(controller, /deliveredOrders/);
+  assert.doesNotMatch(controller, /collection\("wallets"\)/);
 });

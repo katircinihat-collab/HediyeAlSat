@@ -718,7 +718,8 @@ margin:20px 0;
   background: rgba(255, 255, 255, 0.96);
 }
 
-.admin-section-nav a {
+.admin-section-nav a,
+.admin-section-nav button {
   flex: 0 0 auto;
   padding: 8px 12px;
   border-radius: 8px;
@@ -727,7 +728,26 @@ margin:20px 0;
   text-decoration: none;
   font-size: 13px;
   font-weight: 700;
+  border: 0;
+  cursor: pointer;
 }
+
+.admin-section-nav button.active { background:#991b37; color:#fff; }
+.admin-finance-split { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin-bottom:20px; }
+.admin-finance-split article { padding:20px; border:1px solid #e4e7ec; border-radius:16px; background:#fff; }
+.admin-finance-split h2 { margin:0 0 8px; font-size:19px; }
+.admin-finance-split p { margin:0; color:#667085; line-height:1.6; }
+.admin-dashboard-unavailable details { margin-top:12px; color:#667085; }
+
+@media (max-width:700px) { .admin-finance-split { grid-template-columns:1fr; } }
+.admin-exception-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+.admin-exception-grid article { padding:18px; border:1px solid #e4e7ec; border-radius:14px; background:#fff; }
+.admin-exception-grid header { display:flex; align-items:center; gap:9px; }
+.admin-exception-grid h3 { margin:0; font-size:18px; }
+.admin-exception-grid p { margin:10px 0; color:#475467; }
+.admin-exception-grid button,.admin-exception-grid a { display:inline-flex; min-height:40px; align-items:center; justify-content:center; padding:0 14px; border:0; border-radius:9px; background:#8f1834; color:#fff; text-decoration:none; font-weight:700; cursor:pointer; }
+.admin-exception-grid details { margin-top:12px; color:#667085; }
+@media (max-width:760px) { .admin-exception-grid { grid-template-columns:1fr; } }
 
 .admin-listing-tools {
   display: grid;

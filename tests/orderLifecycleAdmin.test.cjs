@@ -57,7 +57,7 @@ test("admin sipariş UI timeline, filtre ve işlem gereken kartını gösterir",
   assert.match(ui, /İşlem Gerektirenler/);
   assert.match(ui, /admin-order-timeline/);
   assert.match(ui, /Sonraki siparişleri yükle/);
-  assert.match(adminPage, /<AdminActionRequired \/>/);
+  assert.match(adminPage, /<AdminExceptions \/>/);
   assert.match(adminPage, /<AdminOrders \/>/);
 });
 

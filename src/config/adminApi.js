@@ -18,7 +18,9 @@ export async function adminApi(path, options = {}) {
   const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    throw new Error(data.message || "Admin işlemi başarısız oldu.");
+    const error = new Error(data.message || data.error || "Admin işlemi başarısız oldu.");
+    error.code = data.code || `HTTP_${response.status}`;
+    throw error;
   }
 
   return data;

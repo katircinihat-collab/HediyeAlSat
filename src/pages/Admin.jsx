@@ -18,7 +18,9 @@ import AdminOrderClaims from "../components/admin/AdminOrderClaims";
 import AdminFinancialReconciliations from "../components/admin/AdminFinancialReconciliations";
 import AdminSponsorApplications from "../components/admin/AdminSponsorApplications";
 import { AdminAuditLog, AdminOperationsOverview, AdminUsers } from "../components/admin/AdminOperations";
-import AdminOrders, { AdminActionRequired } from "../components/admin/AdminOrders";
+import AdminOrders from "../components/admin/AdminOrders";
+import AdminArchive from "../components/admin/AdminArchive";
+import AdminExceptions from "../components/admin/AdminExceptions";
 
 import "../styles/pages/admin.css";
 function fiyatFormat(fiyat) {
@@ -52,6 +54,8 @@ function fiyatFormat(fiyat) {
 }
 function Admin() {
 
+  const [activeSection, setActiveSection] = useState("dashboard");
+
   const [ilanlar, setIlanlar] = useState([]);
   const [stokTaslaklari, setStokTaslaklari] = useState({});
   const [ilanIslemi, setIlanIslemi] = useState("");
@@ -80,7 +84,7 @@ function Admin() {
     );
 
   }
-  async function dashboardGetir() {
+  async function magazalariGetir() {
 
     const magazaSnap = await getDocs(
       query(collection(db, "magazalar"), limit(100))
@@ -90,6 +94,9 @@ function Admin() {
       magazaSnap.docs.map((belge) => ({ id: belge.id, ...belge.data() }))
     );
 
+  }
+
+  async function bakiyeleriGetir() {
     const bakiyeSnap = await getDocs(
       query(collection(db, "bakiyeHareketleri"), limit(100))
     );
@@ -109,12 +116,12 @@ function Admin() {
   }
 
   useEffect(() => {
-
-    getir();
-
-    dashboardGetir();
-
-  }, []);
+    if (activeSection === "listings") {
+      getir().catch(() => setIlanlar([]));
+      magazalariGetir().catch(() => setMagazalar([]));
+    }
+    if (activeSection === "finance") bakiyeleriGetir().catch(() => setBakiyeler([]));
+  }, [activeSection]);
 
   async function ozellikDegistir(id, alan, deger){
 
@@ -195,7 +202,7 @@ function Admin() {
 
     getir();
 
-    dashboardGetir();
+    magazalariGetir();
 
   }
 
@@ -235,7 +242,7 @@ HediyeAlSat Yönetim Merkezi
 
 </p>
 
-<div className="admin-top-buttons">
+{activeSection === "finance" && <div className="admin-top-buttons">
 
 <Link
 to="/admin/withdraw"
@@ -244,21 +251,17 @@ className="admin-action-btn admin-approve"
 💸 Para Çekme Talepleri
 </Link>
 
-</div>
+</div>}
 
 <nav className="admin-section-nav" aria-label="Admin bölümleri">
-<a href="#admin-dashboard">Dashboard</a>
-<a href="#admin-users">Kullanıcılar</a>
-<a href="#admin-action-required">İşlem Gerektirenler</a>
-<a href="#admin-orders">Siparişler</a>
-<a href="#admin-listings">İlanlar</a>
-<a href="#admin-audit">Audit Log</a>
+{[["dashboard","Dashboard"],["actions","İşlem Gerektirenler"],["orders","Siparişler"],["users","Kullanıcılar"],["listings","İlanlar"],["finance","Finans"],["archive","Arşiv"]].map(([key,label]) => <button type="button" key={key} className={activeSection === key ? "active" : ""} onClick={() => setActiveSection(key)}>{label}</button>)}
 </nav>
 
-<AdminOperationsOverview />
-<AdminActionRequired />
-<AdminOrders />
-<div className="admin-section">
+{activeSection === "dashboard" && <AdminOperationsOverview />}
+{activeSection === "actions" && <><AdminExceptions /><AdminOrderClaims /></>}
+{activeSection === "orders" && <AdminOrders />}
+{activeSection === "finance" && <div className="admin-finance-split"><article><h2>Marketplace Settlement</h2><p>Marketplace satıcı kazançları iyzico settlement akışında izlenir. Bu bölümden manuel ödeme başlatılmaz.</p></article><article><h2>Legacy / İç Bakiye</h2><p>Eski iç bakiye ve para çekme kayıtları ayrı muhasebe alanıdır.</p></article></div>}
+{activeSection === "finance" && <div className="admin-section">
 
 <h2>
 
@@ -372,22 +375,20 @@ b.durum==="Bekliyor"
 
 </table>
 
-</div>
+</div>}
 
-<AdminStores
+{activeSection === "listings" && <AdminStores
 magazalar={magazalar}
 onStatusChanged={magazaDurumunuGuncelle}
-/>
+/>}
 
-<AdminOrderClaims />
+{activeSection === "finance" && <AdminFinancialReconciliations />}
 
-<AdminFinancialReconciliations />
+{activeSection === "listings" && <AdminSponsorApplications />}
 
-<AdminSponsorApplications />
+{activeSection === "users" && <AdminUsers />}
 
-<AdminUsers />
-
-<div className="admin-section" id="admin-listings">
+{activeSection === "listings" && <div className="admin-section" id="admin-listings">
 
 <h2>
 
@@ -582,9 +583,9 @@ onClick={()=>sil(ilan.id)}
 
 </div>
 
-</div>
+</div>}
 
-<div className="admin-section">
+{activeSection === "finance" && <div className="admin-section">
 
 <h2>
 
@@ -690,9 +691,9 @@ b.odemeTarihi.seconds*1000
 
 </table>
 
-</div>
+</div>}
 
-<AdminAuditLog />
+{activeSection === "archive" && <><AdminArchive /><AdminAuditLog /></>}
 
 </div>
 
