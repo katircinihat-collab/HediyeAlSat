@@ -5,6 +5,7 @@ const fs = require("node:fs");
 const model = fs.readFileSync("backend/models/walletModel.js", "utf8");
 const controller = fs.readFileSync("backend/controllers/walletController.js", "utf8");
 const routes = fs.readFileSync("backend/routes/withdrawRoutes.js", "utf8");
+const walletRoutes = fs.readFileSync("backend/routes/walletRoutes.js", "utf8");
 const adminUi = fs.readFileSync("src/pages/AdminWithdraw.jsx", "utf8");
 const rules = fs.readFileSync("firestore.rules", "utf8");
 
@@ -32,6 +33,8 @@ test("backend sahiplik minimum ve çekilebilir bakiye limitlerini transaction i�
 test("admin ödeme veya onay endpointi yoktur; yalnız gerekçeli iptal endpointi vardır", () => {
   assert.doesNotMatch(routes, /approve\/:id/);
   assert.match(routes, /cancel\/:id/);
+  assert.doesNotMatch(walletRoutes, /approve\/:id|walletController\.onayla/);
+  assert.match(walletRoutes, /admin\/withdraw\/cancel\/:id/);
   assert.doesNotMatch(adminUi, /Manuel Transferi Doğrula|\/approve\//);
   assert.match(adminUi, /İptal \/ Bloke Et/);
   assert.match(controller, /WITHDRAWAL_CANCELLED/);

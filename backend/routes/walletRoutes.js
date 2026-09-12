@@ -77,26 +77,12 @@ router.get(
 
 
 // =====================================================
-// ADMIN - PARA ÇEKME ONAYLA
-// PUT /api/wallet/admin/withdraw/approve/:id
+// ADMIN - PARA ÇEKME TALEBİNİ İPTAL ET / BLOKE ET
+// PUT /api/wallet/admin/withdraw/cancel/:id
 // =====================================================
 
 router.put(
-    "/admin/withdraw/approve/:id",
-    authMiddleware,
-    adminMiddleware,
-    financialRateLimit,
-    walletController.onayla
-);
-
-
-// =====================================================
-// ADMIN - PARA ÇEKME REDDET
-// PUT /api/wallet/admin/withdraw/reject/:id
-// =====================================================
-
-router.put(
-    "/admin/withdraw/reject/:id",
+    "/admin/withdraw/cancel/:id",
     authMiddleware,
     adminMiddleware,
     financialRateLimit,
