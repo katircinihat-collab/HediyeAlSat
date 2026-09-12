@@ -2,17 +2,16 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
 import ProductCard from "./ProductCard";
-import { getTopDesigns } from "../services/designVoteApi";
 import {
   getActiveBoostListings,
-  getAvailableRankedDesigns,
-  getNewestDesigns
+  getNewestProducts,
+  getTopProducts
 } from "../utils/homeDiscovery";
 import { isListingPublished } from "../utils/listingAvailability";
 
 import "../styles/components/home-discovery.css";
 
-function DiscoveryRail({ title, eyebrow, description, children, itemCount, ranked = false }) {
+function DiscoveryRail({ title, eyebrow, description, children, itemCount }) {
   const railRef = useRef(null);
   const [scroll, setScroll] = useState({ previous: false, next: false });
 
@@ -38,16 +37,19 @@ function DiscoveryRail({ title, eyebrow, description, children, itemCount, ranke
   });
 
   return (
-    <section className={`discovery-section${ranked ? " discovery-section-ranked" : ""}`}>
+    <section className="discovery-section discovery-section-ranked">
       <header className="discovery-heading">
         <div>
           <span>{eyebrow}</span>
           <h2>{title}</h2>
           <p>{description}</p>
         </div>
-        <div className="discovery-controls" aria-label={`${title} gezinme kontrolleri`}>
-          <button type="button" onClick={() => move(-1)} disabled={!scroll.previous} aria-label={`${title} önceki`}>←</button>
-          <button type="button" onClick={() => move(1)} disabled={!scroll.next} aria-label={`${title} sonraki`}>→</button>
+        <div className="discovery-heading-actions">
+          <Link to="/ilanlar">Tümünü Gör →</Link>
+          <div className="discovery-controls" aria-label={`${title} gezinme kontrolleri`}>
+            <button type="button" onClick={() => move(-1)} disabled={!scroll.previous} aria-label={`${title} önceki`}>←</button>
+            <button type="button" onClick={() => move(1)} disabled={!scroll.next} aria-label={`${title} sonraki`}>→</button>
+          </div>
         </div>
       </header>
       <div className="discovery-rail" ref={railRef}>{children}</div>
@@ -60,32 +62,66 @@ function DiscoverySkeleton() {
 }
 
 function HomeDiscovery({ listings, loading = false, sponsoredProduct = null }) {
-  const [rankedDesigns, setRankedDesigns] = useState([]);
-  const [rankingLoading, setRankingLoading] = useState(true);
-
-  useEffect(() => {
-    let active = true;
-    getTopDesigns(10)
-      .then((data) => { if (active) setRankedDesigns(data.designs || []); })
-      .catch(() => { if (active) setRankedDesigns([]); })
-      .finally(() => { if (active) setRankingLoading(false); });
-    return () => { active = false; };
-  }, []);
-
+  const [featuredIndex, setFeaturedIndex] = useState(0);
+  const [featuredPaused, setFeaturedPaused] = useState(false);
   const boosted = useMemo(() => getActiveBoostListings(listings), [listings]);
-  const newest = useMemo(() => getNewestDesigns(listings), [listings]);
-  const top = useMemo(() => getAvailableRankedDesigns(rankedDesigns, listings), [rankedDesigns, listings]);
+  const top = useMemo(() => getTopProducts(listings), [listings]);
+  const newest = useMemo(() => getNewestProducts(listings), [listings]);
   const visibleSponsoredProduct = useMemo(
     () => (sponsoredProduct && isListingPublished(sponsoredProduct) ? sponsoredProduct : null),
     [sponsoredProduct]
   );
 
+  useEffect(() => {
+    if (boosted.length < 2 || featuredPaused) return undefined;
+    const timer = window.setInterval(
+      () => setFeaturedIndex((current) => (current + 1) % boosted.length),
+      6000
+    );
+    return () => window.clearInterval(timer);
+  }, [boosted.length, featuredPaused]);
+
+  useEffect(() => {
+    if (featuredIndex >= boosted.length) setFeaturedIndex(0);
+  }, [boosted.length, featuredIndex]);
+
+  const moveFeatured = (direction) => {
+    setFeaturedIndex((current) => (current + direction + boosted.length) % boosted.length);
+  };
+
   return (
     <div className="home-discovery" aria-label="HediyeAlSat keşif vitrini">
-      {loading ? <DiscoverySkeleton /> : boosted.length > 0 && (
-        <DiscoveryRail title="⭐ Öne Çıkan İlanlar" eyebrow="SEÇKİN VİTRİN" description="Sınırlı süre öne çıkan, keşfetmeye değer ilanlar" itemCount={boosted.length}>
-          {boosted.map((listing) => <div className="discovery-product" key={listing.id}><ProductCard ilan={listing} variant="home" cardExtra={<span className="discovery-boost-badge">Öne Çıkan</span>} /></div>)}
-        </DiscoveryRail>
+      {loading && <DiscoverySkeleton />}
+
+      {!loading && boosted.length > 0 && (
+        <section
+          className="discovery-featured"
+          aria-labelledby="discovery-featured-title"
+          onMouseEnter={() => setFeaturedPaused(true)}
+          onMouseLeave={() => setFeaturedPaused(false)}
+          onFocusCapture={() => setFeaturedPaused(true)}
+          onBlurCapture={() => setFeaturedPaused(false)}
+        >
+          <header>
+            <span>PREMİUM VİTRİN</span>
+            <h2 id="discovery-featured-title">⭐ Öne Çıkan İlanlar</h2>
+          </header>
+          <div className="discovery-featured-stage">
+            <ProductCard
+              key={boosted[featuredIndex].id}
+              ilan={boosted[featuredIndex]}
+              variant="discovery-hero"
+              cardExtra={<span className="discovery-featured-cta">Ürünü Gör →</span>}
+            />
+            {boosted.length > 1 && (
+              <div className="discovery-featured-controls" aria-label="Öne çıkan ilan gezinme kontrolleri">
+                <button type="button" onClick={() => moveFeatured(-1)} aria-label="Önceki öne çıkan ilan">←</button>
+                <span>{featuredIndex + 1} / {boosted.length}</span>
+                <button type="button" onClick={() => moveFeatured(1)} aria-label="Sonraki öne çıkan ilan">→</button>
+              </div>
+            )}
+          </div>
+        </section>
       )}
 
       {!loading && visibleSponsoredProduct && (
@@ -99,27 +135,27 @@ function HomeDiscovery({ listings, loading = false, sponsoredProduct = null }) {
         </aside>
       )}
 
-      {rankingLoading ? <DiscoverySkeleton /> : top.length > 0 && (
-        <DiscoveryRail title="🔥 Bugünün Top 10 Tasarımı" eyebrow="TOP 10" description="Topluluğun oylarıyla öne çıkan dijital tasarımlar" itemCount={top.length} ranked>
-          {top.map((design) => (
-            <article className="discovery-ranked-card" key={design.id}>
-              <span className="discovery-rank-number" aria-label={`${design.sira}. sıra`}>{design.sira}</span>
-              <Link to={`/ilan/${design.id}`} className="discovery-ranked-preview">
-                {design.resim ? <img src={design.resim} alt={design.baslik || "Tasarım"} loading="lazy" /> : <span>🎨</span>}
-                <div><strong>{design.baslik || "İsimsiz tasarım"}</strong><small>{Number(design.oySayisi || 0)} oy</small></div>
-              </Link>
+      {!loading && top.length > 0 && (
+        <DiscoveryRail title="🔥 Bugünün Top 10 Ürünü" eyebrow="ÇOK SEVİLENLER" description="En çok görüntülenen popüler ürünler" itemCount={top.length}>
+          {top.map((listing, index) => (
+            <article className="discovery-ranked-card" key={listing.id}>
+              <span className="discovery-rank-number" aria-label={`${index + 1}. sıra`}>{index + 1}</span>
+              <div className="discovery-ranked-product"><ProductCard ilan={listing} variant="home" /></div>
             </article>
           ))}
         </DiscoveryRail>
       )}
 
       {!loading && newest.length > 0 && (
-        <DiscoveryRail title="✨ Yeni 10 Tasarım" eyebrow="YENİ KEŞİFLER" description="A4 Tasarım pazarına en son eklenen çalışmalar" itemCount={newest.length}>
-          {newest.map((listing) => <div className="discovery-product" key={listing.id}><ProductCard ilan={listing} variant="home" /></div>)}
+        <DiscoveryRail title="✨ Yeni Gelen 10 Ürün" eyebrow="TAZE KEŞİFLER" description="HediyeAlSat'a en son eklenen ürünler" itemCount={newest.length}>
+          {newest.map((listing, index) => (
+            <article className="discovery-ranked-card" key={listing.id}>
+              <span className="discovery-rank-number" aria-label={`${index + 1}. sıra`}>{index + 1}</span>
+              <div className="discovery-ranked-product"><ProductCard ilan={listing} variant="home" /></div>
+            </article>
+          ))}
         </DiscoveryRail>
       )}
-
-      <div className="discovery-all-listings"><Link to="/ilanlar">Tüm İlanları Gör <span>→</span></Link></div>
     </div>
   );
 }

@@ -42,7 +42,7 @@ test("ortak ürün sliderı sınır durumlu oklar ve mobil swipe kullanır", () 
 
 test("ana sayfa keşif vitrini mevcut ilanlar routeuna gider ve ilanlar eski filtreleri desteklemeyi sürdürür", () => {
   assert.match(home, /<HomeDiscovery/);
-  assert.match(homeDiscovery, /<Link to="\/ilanlar">Tüm İlanları Gör/);
+  assert.match(homeDiscovery, /<Link to="\/ilanlar">Tümünü Gör →<\/Link>/);
   assert.match(listings, /searchParams\.get\("view"\)/);
   assert.match(listings, /view === "best-sellers"/);
   assert.match(listings, /view === "new"/);
