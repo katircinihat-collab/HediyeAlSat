@@ -641,7 +641,7 @@ function WithdrawRequest() {
                     <div className="withdraw-history-row" key={talep.id}>
                         <span>₺{paraFormatla(talep.tutar)}</span>
                         <span>{talep.ibanMasked || "Banka hesabı"}</span>
-                        <strong>{talep.durum || "BEKLIYOR"}</strong>
+                        <strong>{talep.durum === "PROCESSING" ? "İşleniyor" : talep.durum === "IPTAL_EDILDI" ? "İptal Edildi" : (talep.durum || "İşleniyor")}</strong>
                     </div>
                 ))}
             </div>

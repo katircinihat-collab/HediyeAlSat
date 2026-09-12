@@ -806,6 +806,16 @@ test("58 - withdrawal finalization audit kaydı client ve admin client erişimin
   await assertFails(deleteDoc(adminRef));
 });
 
+test("58b - withdrawal request yarış kilidi client ve admin client erişimine kapalıdır", async () => {
+  const ownerRef = doc(dbFor(ownerAuth), "withdrawalRequestGuards", ownerAuth.uid);
+  const adminRef = doc(dbFor(adminAuth), "withdrawalRequestGuards", ownerAuth.uid);
+  await assertFails(getDoc(ownerRef));
+  await assertFails(getDoc(adminRef));
+  await assertFails(setDoc(ownerRef, { active: false }));
+  await assertFails(updateDoc(adminRef, { active: false }));
+  await assertFails(deleteDoc(adminRef));
+});
+
 test("59 - buyer identity kayıtları client ve admin client erişimine tamamen kapalıdır", async () => {
   const ownerRef = doc(dbFor(ownerAuth), "buyerIdentities", ownerAuth.uid);
   const adminRef = doc(dbFor(adminAuth), "buyerIdentities", ownerAuth.uid);

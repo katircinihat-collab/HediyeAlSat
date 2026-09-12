@@ -563,7 +563,7 @@ function Wallet() {
                                             "ODENDI"
                                                 ? "ready"
                                                 : talep.durum ===
-                                                  "REDDEDILDI"
+                                                  "REDDEDILDI" || talep.durum === "IPTAL_EDILDI"
                                                 ? "danger"
                                                 : "waiting"
                                         }
@@ -572,8 +572,10 @@ function Wallet() {
                                         "ODENDI"
                                             ? "Ödendi"
                                             : talep.durum ===
-                                              "REDDEDILDI"
-                                            ? "Reddedildi"
+                                              "REDDEDILDI" || talep.durum === "IPTAL_EDILDI"
+                                            ? "İptal Edildi"
+                                            : talep.durum === "PROCESSING"
+                                            ? "İşleniyor"
                                             : "Bekliyor"}
                                     </span>
 

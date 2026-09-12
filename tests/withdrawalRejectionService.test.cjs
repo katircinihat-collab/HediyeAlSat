@@ -24,9 +24,10 @@ function loadService(reconciliations) {
 
 function memoryFirestore(overrides = {}) {
   const data = new Map([
-    ["paraCekmeTalepleri/w-1", { email: "seller@example.com", tutar: 100, durum: "BEKLIYOR", ...overrides.withdrawal }],
+    ["paraCekmeTalepleri/w-1", { email: "seller@example.com", ownerUid: "seller-uid", tutar: 100, durum: "PROCESSING", ...overrides.withdrawal }],
     ["wallets/seller@example.com", { balance: 40, withdrawalPending: 100, paid: 20, ...overrides.wallet }]
   ]);
+  data.set("withdrawalRequestGuards/seller-uid", { active: true, withdrawalId: "w-1", status: "PROCESSING" });
   if (overrides.finalization) data.set("withdrawalFinalizations/w-1", overrides.finalization);
   const ref = (value) => ({ path: value, id: value.split("/").at(-1) });
   const snapshot = (value) => ({ exists: value !== undefined, data: () => value });
@@ -65,19 +66,19 @@ function setup(overrides = {}) {
   return { firestore, reconciliations, service, reject };
 }
 
-test("normal red trusted tutarı balance değerine geri ekler", async () => {
+test("admin iptali trusted tutarı balance değerine geri ekler", async () => {
   const { firestore, reject } = setup();
   await reject({ neden: "Red", amount: 1 });
   assert.equal(firestore.data.get("wallets/seller@example.com").balance, 140);
 });
 
-test("normal red withdrawalPending değerini trusted tutar kadar azaltır", async () => {
+test("admin iptali withdrawalPending değerini trusted tutar kadar azaltır", async () => {
   const { firestore, reject } = setup({ wallet: { withdrawalPending: 150 } });
   await reject();
   assert.equal(firestore.data.get("wallets/seller@example.com").withdrawalPending, 50);
 });
 
-test("duplicate red ikinci finansal etki veya audit oluşturmaz", async () => {
+test("duplicate iptal ikinci finansal etki veya audit oluşturmaz", async () => {
   const { firestore, reject } = setup();
   await reject();
   const second = await reject();
@@ -91,7 +92,7 @@ test("yetersiz withdrawalPending hiçbir bakiye veya talep durumu değiştirmez"
   await assert.rejects(reject(), (error) => error.code === "WITHDRAWAL_PENDING_INSUFFICIENT");
   assert.equal(firestore.data.get("wallets/seller@example.com").balance, 40);
   assert.equal(firestore.data.get("wallets/seller@example.com").withdrawalPending, 99);
-  assert.equal(firestore.data.get("paraCekmeTalepleri/w-1").durum, "BEKLIYOR");
+  assert.equal(firestore.data.get("paraCekmeTalepleri/w-1").durum, "PROCESSING");
 });
 
 test("yetersiz durumda deterministik reconciliation yalnız bir kayıt üretir", async () => {
@@ -111,13 +112,13 @@ test("client sahte amount seller ve email alanları dikkate alınmaz", async () 
 });
 
 test("transaction yarışında yalnız mevcut finalization kazanır", async () => {
-  const { firestore, reject } = setup({ finalization: { status: "REDDEDILDI" } });
+  const { firestore, reject } = setup({ finalization: { status: "IPTAL_EDILDI" } });
   const result = await reject();
   assert.equal(result.idempotent, true);
   assert.equal(firestore.data.get("wallets/seller@example.com").balance, 40);
 });
 
-test("başarılı red negatif balance veya pending oluşturmaz ve admin auditini yazar", async () => {
+test("başarılı iptal negatif balance veya pending oluşturmaz ve admin auditini yazar", async () => {
   const { firestore, reject } = setup({ wallet: { balance: 0, withdrawalPending: 100 } });
   await reject();
   const wallet = firestore.data.get("wallets/seller@example.com");
@@ -126,5 +127,11 @@ test("başarılı red negatif balance veya pending oluşturmaz ve admin auditini
   assert.equal(wallet.withdrawalPending, 0);
   assert.equal(audit.adminUid, "admin-uid");
   assert.ok(audit.idempotencyKey);
-  assert.equal(firestore.data.get("paraCekmeTalepleri/w-1").durum, "REDDEDILDI");
+  assert.equal(firestore.data.get("paraCekmeTalepleri/w-1").durum, "IPTAL_EDILDI");
+  assert.equal(firestore.data.get("withdrawalRequestGuards/seller-uid").active, false);
+});
+
+test("iptal veya bloke gerekçesi zorunludur", async () => {
+  const { reject } = setup();
+  await assert.rejects(reject({ neden: "" }), (error) => error.code === "WITHDRAWAL_REASON_REQUIRED");
 });

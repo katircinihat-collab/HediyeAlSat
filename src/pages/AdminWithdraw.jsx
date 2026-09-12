@@ -170,106 +170,11 @@ function AdminWithdraw() {
 
     /*
     ==================================================
-    ÖDENDİ YAP
+    İPTAL / BLOKE ET
     ==================================================
     */
 
-    async function odendiYap(talepId) {
-        if (!talepId) {
-            setHata(
-                "Talep ID bulunamadı."
-            );
-
-            return;
-        }
-
-        const providerReference = window.prompt(
-            "Banka transferi tamamlandıysa dekont/işlem referansını girin:"
-        );
-
-        if (providerReference === null) return;
-
-        const note = window.prompt(
-            "Operasyon notu (isteğe bağlı):",
-            ""
-        );
-
-        if (note === null) return;
-
-        const onay = window.confirm(
-            "Bu işlem para göndermez. Banka transferini gerçekten yaptığınızı ve referansı doğruladığınızı onaylıyor musunuz?"
-        );
-
-        if (!onay) {
-            return;
-        }
-
-        setIslemLoading(true);
-        setMesaj("");
-        setHata("");
-
-        try {
-            const token =
-                await tokenGetir();
-
-            const response =
-                await fetch(
-                    apiUrl(`/api/withdraw/approve/${talepId}`),
-                    {
-                        method: "PUT",
-
-                        headers: {
-                            "Content-Type":
-                                "application/json",
-
-                            Authorization:
-                                `Bearer ${token}`
-                        },
-
-                        body: JSON.stringify({
-                            providerReference,
-                            note
-                        })
-                    }
-                );
-
-            const data =
-                await response.json();
-
-            if (!response.ok) {
-                throw new Error(
-                    data.error ||
-                    "Ödeme işlemi başarısız."
-                );
-            }
-
-            setMesaj(
-                "✅ Manuel banka transferi doğrulandı ve muhasebe kaydı güvenle finalize edildi."
-            );
-
-            await talepleriGetir();
-        } catch (error) {
-            console.error(
-                "Ödeme işlemi:",
-                error
-            );
-
-            setHata(
-                "❌ " +
-                error.message
-            );
-        } finally {
-            setIslemLoading(false);
-        }
-    }
-
-    /*
-    ==================================================
-    REDDET
-    ==================================================
-    */
-
-    async function reddet(talepId) {
+    async function iptalEt(talepId) {
         if (!talepId) {
             setHata(
                 "Talep ID bulunamadı."
@@ -279,11 +184,16 @@ function AdminWithdraw() {
         }
 
         const aciklamaMetni =
-            aciklama[talepId] || "";
+            (aciklama[talepId] || "").trim();
+
+        if (aciklamaMetni.length < 3) {
+            setHata("İptal / bloke gerekçesi zorunludur.");
+            return;
+        }
 
         const onay =
             window.confirm(
-                "Bu para çekme talebini reddetmek istediğinize emin misiniz?"
+                "Bu para çekme talebini iptal edip ayrılan tutarı satıcının çekilebilir bakiyesine iade etmek istediğinize emin misiniz?"
             );
 
         if (!onay) {
@@ -300,7 +210,7 @@ function AdminWithdraw() {
 
             const response =
                 await fetch(
-                    apiUrl(`/api/withdraw/reject/${talepId}`),
+                    apiUrl(`/api/withdraw/cancel/${talepId}`),
                     {
                         method: "PUT",
 
@@ -326,12 +236,12 @@ function AdminWithdraw() {
             if (!response.ok) {
                 throw new Error(
                     data.error ||
-                    "Reddetme işlemi başarısız."
+                    "İptal işlemi başarısız."
                 );
             }
 
             setMesaj(
-                "✅ Para çekme talebi reddedildi. Tutar satıcı bakiyesine iade edildi."
+                "✅ Para çekme talebi iptal edildi. Ayrılan tutar satıcının çekilebilir bakiyesine iade edildi."
             );
 
             setAciklama(
@@ -349,7 +259,7 @@ function AdminWithdraw() {
             await talepleriGetir();
         } catch (error) {
             console.error(
-                "Reddetme işlemi:",
+                "İptal işlemi:",
                 error
             );
 
@@ -395,12 +305,14 @@ function AdminWithdraw() {
                 return "#d97706";
 
             case "işlemde":
+            case "processing":
                 return "#2563eb";
 
             case "ödendi":
                 return "#16803c";
 
             case "reddedildi":
+            case "iptal_edildi":
                 return "#dc2626";
 
             default:
@@ -446,9 +358,7 @@ function AdminWithdraw() {
                             marginTop: "8px"
                         }}
                     >
-                        Satıcıların para çekme
-                        taleplerini buradan
-                        yönetebilirsiniz.
+                        Talepler otomatik işleme alınır. Yalnız riskli bir talebi gerekçeyle iptal edebilir veya bloke edebilirsiniz.
                     </p>
                 </div>
 
@@ -582,7 +492,7 @@ function AdminWithdraw() {
                             const durum =
                                 talep.durum ||
                                 "Bekliyor";
-                            const bekliyor = durum === "BEKLIYOR" || durum === "Bekliyor";
+                            const islemde = ["BEKLIYOR", "Bekliyor", "PROCESSING"].includes(durum);
 
                             return (
                                 <div
@@ -777,7 +687,7 @@ function AdminWithdraw() {
                                                     "600"
                                             }}
                                         >
-                                            Red açıklaması
+                                            İptal / bloke gerekçesi
                                         </label>
 
                                         <textarea
@@ -796,7 +706,7 @@ function AdminWithdraw() {
                                                         .value
                                                 )
                                             }
-                                            placeholder="Talep reddedilecekse açıklama yazabilirsiniz..."
+                                            placeholder="İptal veya bloke gerekçesini yazın (zorunlu)..."
                                             rows={3}
                                             style={{
                                                 width:
@@ -829,53 +739,12 @@ function AdminWithdraw() {
                                     >
                                         <button
                                             onClick={() =>
-                                                odendiYap(
+                                                iptalEt(
                                                     talepId
                                                 )
                                             }
                                             disabled={
-                                                islemLoading || !bekliyor
-                                            }
-                                            style={{
-                                                flex:
-                                                    "1",
-                                                minWidth:
-                                                    "180px",
-                                                padding:
-                                                    "12px 18px",
-                                                border:
-                                                    "none",
-                                                borderRadius:
-                                                    "8px",
-                                                background:
-                                                    bekliyor
-                                                        ? "#16803c"
-                                                        : "#9ca3af",
-                                                color:
-                                                    "#fff",
-                                                fontWeight:
-                                                    "700",
-                                                cursor:
-                                                    bekliyor
-                                                        ? "pointer"
-                                                        : "not-allowed"
-                                            }}
-                                        >
-                                            {islemLoading
-                                                ? "⏳ İşleniyor..."
-                                                : bekliyor
-                                                ? "🏦 Manuel Transferi Doğrula"
-                                                : "İşlem Tamamlandı"}
-                                        </button>
-
-                                        <button
-                                            onClick={() =>
-                                                reddet(
-                                                    talepId
-                                                )
-                                            }
-                                            disabled={
-                                                islemLoading || !bekliyor
+                                                islemLoading || !islemde
                                             }
                                             style={{
                                                 flex:
@@ -898,7 +767,7 @@ function AdminWithdraw() {
                                                     "pointer"
                                             }}
                                         >
-                                            ❌ Reddet
+                                            ⛔ İptal / Bloke Et
                                         </button>
                                     </div>
                                 </div>

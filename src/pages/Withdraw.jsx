@@ -417,9 +417,9 @@ function Withdraw() {
 
               <div>
 
-                {talep.durum === "Bekliyor" && (
+                {["Bekliyor", "BEKLIYOR", "PROCESSING"].includes(talep.durum) && (
                   <span>
-                    ⏳ Bekliyor
+                    ⏳ İşleniyor
                   </span>
                 )}
 
@@ -429,9 +429,9 @@ function Withdraw() {
                   </span>
                 )}
 
-                {talep.durum === "Reddedildi" && (
+                {["Reddedildi", "REDDEDILDI", "IPTAL_EDILDI"].includes(talep.durum) && (
                   <span>
-                    ❌ Reddedildi
+                    ❌ İptal Edildi
                   </span>
                 )}
 

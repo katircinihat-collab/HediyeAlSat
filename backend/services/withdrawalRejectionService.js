@@ -1,7 +1,7 @@
 const crypto = require("crypto");
 const { recordFinancialReconciliation } = require("./financialReconciliationService");
 
-const REJECTED_STATUS = "REDDEDILDI";
+const REJECTED_STATUS = "IPTAL_EDILDI";
 
 class WithdrawalRejectionError extends Error {
     constructor(message, status = 400, code = "WITHDRAWAL_REJECTION_FAILED") {
@@ -31,9 +31,10 @@ function idempotencyKey(withdrawalId) {
 
 async function rejectWithdrawal({ firestore, FieldValue, withdrawalId, admin, body = {}, now = () => new Date() }) {
     const id = clean(withdrawalId, 200);
-    const reason = clean(body.reason ?? body.neden, 1000) || "Belirtilmedi";
+    const reason = clean(body.reason ?? body.neden, 1000);
     if (!id) throw new WithdrawalRejectionError("Para çekme talebi ID gerekli.", 400, "WITHDRAWAL_ID_REQUIRED");
     if (!admin?.uid && !admin?.email) throw new WithdrawalRejectionError("Admin kimliği doğrulanamadı.", 403, "ADMIN_REQUIRED");
+    if (reason.length < 3) throw new WithdrawalRejectionError("İptal veya bloke gerekçesi zorunludur.", 400, "WITHDRAWAL_REASON_REQUIRED");
 
     const withdrawalRef = firestore.collection("paraCekmeTalepleri").doc(id);
     const finalizationRef = firestore.collection("withdrawalFinalizations").doc(id);
@@ -57,7 +58,7 @@ async function rejectWithdrawal({ firestore, FieldValue, withdrawalId, admin, bo
             if (withdrawal.durum === REJECTED_STATUS) {
                 return { idempotent: true, status: REJECTED_STATUS, withdrawalId: id };
             }
-            if (withdrawal.durum !== "BEKLIYOR") throw new WithdrawalRejectionError("Talep reddetme için uygun değil.", 409, "WITHDRAWAL_NOT_PENDING");
+            if (!["BEKLIYOR", "PROCESSING"].includes(withdrawal.durum)) throw new WithdrawalRejectionError("Talep iptal için uygun değil.", 409, "WITHDRAWAL_NOT_PROCESSING");
 
             const seller = clean(withdrawal.email, 320);
             const amountKurus = toKurus(withdrawal.tutar);
@@ -82,6 +83,10 @@ async function rejectWithdrawal({ firestore, FieldValue, withdrawalId, admin, bo
             const amount = Number((amountKurus / 100).toFixed(2));
             const newBalance = Number(((balanceKurus + amountKurus) / 100).toFixed(2));
             const newPending = Number(((pendingKurus - amountKurus) / 100).toFixed(2));
+            const guardRef = withdrawal.ownerUid
+                ? firestore.collection("withdrawalRequestGuards").doc(withdrawal.ownerUid)
+                : null;
+            const guardSnapshot = guardRef ? await tx.get(guardRef) : null;
 
             tx.update(walletRef, {
                 balance: newBalance,
@@ -90,12 +95,20 @@ async function rejectWithdrawal({ firestore, FieldValue, withdrawalId, admin, bo
             });
             tx.update(withdrawalRef, {
                 durum: REJECTED_STATUS,
+                payoutStatus: "CANCELLED",
                 neden: reason,
-                reddedilmeTarihi: timestamp,
-                reddedenUid: admin.uid || null,
-                reddedenEmail: clean(admin.email, 320) || null,
+                iptalTarihi: timestamp,
+                iptalEdenUid: admin.uid || null,
+                iptalEdenEmail: clean(admin.email, 320) || null,
                 guncellenmeTarihi: timestamp
             });
+            if (guardRef && guardSnapshot?.exists && guardSnapshot.data()?.withdrawalId === id) {
+                tx.update(guardRef, {
+                    active: false,
+                    status: "CANCELLED",
+                    updatedAt: timestamp
+                });
+            }
             tx.create(finalizationRef, {
                 withdrawalId: id,
                 seller,

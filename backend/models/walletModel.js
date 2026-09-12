@@ -655,6 +655,10 @@ async function paraCekmeTalebiOlustur(
 
     }
 
+    if (miktar < 50) {
+        throw new Error("Minimum para çekme tutarı 50 TL'dir.");
+    }
+
 
     const sonuc =
         await firestore.runTransaction(
@@ -704,6 +708,9 @@ async function paraCekmeTalebiOlustur(
 
 
                 const ownerUid = options.ownerUid || null;
+                if (!ownerUid) {
+                    throw new Error("Kullanıcı sahipliği doğrulanamadı.");
+                }
                 const rawKey = String(options.idempotencyKey || "").trim();
                 const safeKey = /^[A-Za-z0-9_-]{8,128}$/.test(rawKey) ? rawKey : "";
                 const withdrawalId = safeKey
@@ -719,6 +726,30 @@ async function paraCekmeTalebiOlustur(
                         const existingData = existing.data();
                         return { id: withdrawalReference.id, tutar: Number(existingData.tutar || 0), idempotent: true };
                     }
+                }
+
+                const ownerRequestsSnapshot = await transaction.get(
+                    firestore.collection("paraCekmeTalepleri")
+                        .where("ownerUid", "==", ownerUid)
+                        .limit(20)
+                );
+                const legacyRequestsSnapshot = await transaction.get(
+                    firestore.collection("paraCekmeTalepleri")
+                        .where("email", "==", email)
+                        .limit(20)
+                );
+                const hasActiveRequest = [...ownerRequestsSnapshot.docs, ...legacyRequestsSnapshot.docs]
+                    .some((doc) => ["BEKLIYOR", "PROCESSING"].includes(doc.data()?.durum));
+                if (hasActiveRequest) {
+                    throw new Error("Devam eden bir para çekme talebiniz bulunuyor.");
+                }
+
+                const guardReference = firestore
+                    .collection("withdrawalRequestGuards")
+                    .doc(ownerUid);
+                const guardSnapshot = await transaction.get(guardReference);
+                if (guardSnapshot.exists && guardSnapshot.data()?.active === true) {
+                    throw new Error("Devam eden bir para çekme talebiniz bulunuyor.");
                 }
 
 
@@ -780,7 +811,10 @@ async function paraCekmeTalebiOlustur(
                         bankaAdiSnapshot: bankaAdi || "",
                         ...(safeKey ? { idempotencyKey: safeKey } : {}),
 
-                        durum: "BEKLIYOR",
+                        durum: "PROCESSING",
+                        payoutStatus: "PROCESSING",
+                        payoutProvider: null,
+                        processingAt: FieldValue.serverTimestamp(),
 
                         tarih:
                             FieldValue.serverTimestamp(),
@@ -791,6 +825,14 @@ async function paraCekmeTalebiOlustur(
                     }
 
                 );
+
+                transaction.set(guardReference, {
+                    ownerUid,
+                    withdrawalId: withdrawalReference.id,
+                    active: true,
+                    status: "PROCESSING",
+                    updatedAt: FieldValue.serverTimestamp()
+                });
 
 
                 /*
@@ -813,7 +855,7 @@ async function paraCekmeTalebiOlustur(
 
                         tip: "Para Çekme",
 
-                        durum: "Bekliyor",
+                        durum: "İşleniyor",
 
                         toplamTutar: miktar,
 

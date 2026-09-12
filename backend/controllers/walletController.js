@@ -1,8 +1,8 @@
 const walletService =
     require("../services/walletService");
 const { firestore, FieldValue } = require("../config/firebase");
-const { finalizeManualWithdrawal, WithdrawalFinalizationError } = require("../services/withdrawalFinalizationService");
 const { rejectWithdrawal, WithdrawalRejectionError } = require("../services/withdrawalRejectionService");
+const { recordAdminAction } = require("../services/adminAuditService");
 const { maskIban } = require("../utils/iban");
 
 
@@ -197,7 +197,7 @@ exports.paraCek = async (req, res) => {
             success: true,
 
             message:
-                "Para çekme talebiniz oluşturuldu.",
+                "Para çekme talebiniz otomatik olarak işleme alındı.",
 
             sonuc
 
@@ -324,7 +324,9 @@ exports.adminTalepler = async (
 
             talepler: talepler.map((talep) => ({
                 ...talep,
-                ibanMasked: maskIban(talep.ibanSnapshot || talep.iban)
+                ibanMasked: maskIban(talep.ibanSnapshot || talep.iban),
+                iban: undefined,
+                ibanSnapshot: undefined
             }))
 
         });
@@ -340,55 +342,6 @@ exports.adminTalepler = async (
 
             error:
                 err.message
-
-        });
-
-    }
-
-};
-
-
-/*
-==================================================
-ADMIN - ONAYLA
-==================================================
-*/
-
-exports.onayla = async (
-    req,
-    res
-) => {
-
-    try {
-
-        const sonuc = await finalizeManualWithdrawal({
-            firestore,
-            FieldValue,
-            withdrawalId: req.params.id,
-            admin: req.user,
-            body: req.body
-        });
-
-
-        res.json({
-
-            success: true,
-
-            sonuc
-
-        });
-
-
-    } catch (err) {
-
-        console.error(err);
-
-        res.status(err.status || 400).json({
-
-            success: false,
-
-            code: err.code || "WITHDRAWAL_FINALIZATION_FAILED",
-            error: err instanceof WithdrawalFinalizationError ? err.message : "Para çekme finalizasyonu tamamlanamadı."
 
         });
 
@@ -418,6 +371,16 @@ exports.reddet = async (
             body: req.body
         });
 
+        if (!sonuc.idempotent) {
+            await recordAdminAction({
+                adminUser: req.user,
+                action: "WITHDRAWAL_CANCELLED",
+                targetType: "withdrawal",
+                targetId: req.params.id,
+                details: { reason: String(req.body?.reason ?? req.body?.neden ?? "").trim().slice(0, 1000) }
+            });
+        }
+
 
         res.json({
 
@@ -436,8 +399,8 @@ exports.reddet = async (
 
             success: false,
 
-            code: err.code || "WITHDRAWAL_REJECTION_FAILED",
-            error: err instanceof WithdrawalRejectionError ? err.message : "Para çekme talebi reddedilemedi."
+            code: err.code || "WITHDRAWAL_CANCELLATION_FAILED",
+            error: err instanceof WithdrawalRejectionError ? err.message : "Para çekme talebi iptal edilemedi."
 
         });
 

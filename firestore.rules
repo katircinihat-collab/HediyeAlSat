@@ -473,6 +473,10 @@ service cloud.firestore {
       allow read, create, update, delete: if false;
     }
 
+    match /withdrawalRequestGuards/{ownerUid} {
+      allow read, create, update, delete: if false;
+    }
+
     match /sponsorBasvurular/{applicationId} {
       allow read: if isAdmin()
         || (signedIn() && (resource.data.ownerUid == request.auth.uid

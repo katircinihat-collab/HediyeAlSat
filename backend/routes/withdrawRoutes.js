@@ -52,26 +52,12 @@ router.get(
 
 
 // =====================================================
-// ADMIN - PARA ÇEKME TALEBİNİ ONAYLA
-// PUT /api/withdraw/approve/:id
+// ADMIN - PARA ÇEKME TALEBİNİ İPTAL ET / BLOKE ET
+// PUT /api/withdraw/cancel/:id
 // =====================================================
 
 router.put(
-    "/approve/:id",
-    authMiddleware,
-    adminMiddleware,
-    financialRateLimit,
-    walletController.onayla
-);
-
-
-// =====================================================
-// ADMIN - PARA ÇEKME TALEBİNİ REDDET
-// PUT /api/withdraw/reject/:id
-// =====================================================
-
-router.put(
-    "/reject/:id",
+    "/cancel/:id",
     authMiddleware,
     adminMiddleware,
     financialRateLimit,
