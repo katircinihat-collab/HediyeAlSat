@@ -41,7 +41,9 @@ test("maintenance stok cleanup ve wallet release işlemlerini çağırır", asyn
     let releaseCalls = 0;
     const run = createMaintenanceRunner({
         cleanupExpiredReservations: async () => { cleanupCalls += 1; return { released: 2 }; },
-        releaseWallets: async () => { releaseCalls += 1; return { basarili: 1 }; }
+        releaseWallets: async () => { releaseCalls += 1; return { basarili: 1 }; },
+        syncAdminTasks: async () => ({ activated: 0, resolved: 0, archived: 0 }),
+        recordHealth: async () => {}
     });
     const result = await run();
     assert.equal(result.success, true);
@@ -56,7 +58,9 @@ test("üst üste maintenance çağrısı aynı proseste ikinci çalışmayı ba�
     const cleanupPromise = new Promise((resolve) => { resolveCleanup = resolve; });
     const run = createMaintenanceRunner({
         cleanupExpiredReservations: async () => { cleanupCalls += 1; return cleanupPromise; },
-        releaseWallets: async () => { releaseCalls += 1; return { basarili: 0 }; }
+        releaseWallets: async () => { releaseCalls += 1; return { basarili: 0 }; },
+        syncAdminTasks: async () => ({ activated: 0, resolved: 0, archived: 0 }),
+        recordHealth: async () => {}
     });
     const first = run();
     const overlap = await run();
@@ -66,4 +70,32 @@ test("üst üste maintenance çağrısı aynı proseste ikinci çalışmayı ba�
     resolveCleanup({ released: 0 });
     await first;
     assert.equal(releaseCalls, 1);
+});
+
+test("bir bakım adımı hata verse de diğerleri ve heartbeat çalışır", async () => {
+    const calls = [];
+    const run = createMaintenanceRunner({
+        cleanupExpiredReservations: async () => { calls.push("stock"); throw Object.assign(new Error("sensitive detail"), { code: "STOCK_FAILED" }); },
+        releaseWallets: async () => { calls.push("wallet"); return { basarili: 1 }; },
+        syncAdminTasks: async () => { calls.push("tasks"); return { activated: 1 }; },
+        recordHealth: async (payload) => { calls.push("health"); assert.equal(payload.success, false); }
+    });
+    const result = await run();
+    assert.equal(result.success, false);
+    assert.deepEqual(calls, ["stock", "wallet", "tasks", "health"]);
+    assert.deepEqual(result.steps[0], { name: "stockReservations", success: false, errorCode: "STOCK_FAILED" });
+    assert.equal(JSON.stringify(result).includes("sensitive detail"), false);
+});
+
+test("başarılı bakım heartbeat özetini bir kez günceller", async () => {
+    let healthCalls = 0;
+    const run = createMaintenanceRunner({
+        cleanupExpiredReservations: async () => ({ released: 0 }),
+        releaseWallets: async () => ({ basarili: 0 }),
+        syncAdminTasks: async () => ({ activated: 0, resolved: 0, archived: 0 }),
+        recordHealth: async ({ success, summary }) => { healthCalls += 1; assert.equal(success, true); assert.equal(summary.steps.length, 3); }
+    });
+    const result = await run();
+    assert.equal(result.success, true);
+    assert.equal(healthCalls, 1);
 });

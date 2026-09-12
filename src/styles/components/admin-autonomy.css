@@ -1,0 +1,6 @@
+.admin-action-tabs { display:flex; gap:8px; margin:0 0 14px; }
+.admin-action-tabs button { min-height:38px; padding:7px 13px; border:1px solid #d9dde5; border-radius:9px; background:#fff; cursor:pointer; }
+.admin-action-tabs button[aria-selected="true"] { border-color:#bd2b4a; background:#fff1f4; color:#941b37; font-weight:700; }
+.admin-action-meta { display:flex; align-items:center; gap:10px; }
+.admin-action-meta em { font-size:11px; font-style:normal; padding:4px 7px; border-radius:999px; background:#eef1f5; color:#596579; }
+@media (max-width:760px) { .admin-action-meta { width:100%; justify-content:space-between; } }

@@ -2,25 +2,18 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { adminApi } from "../../config/adminApi";
 import "../../styles/components/admin-operations.css";
 
-const KPI = [
-  ["totalUsers", "Kullanıcı", "👥"], ["activeListings", "Aktif ilan", "📦"],
-  ["pendingListings", "Bekleyen ilan", "⌛"], ["totalOrders", "Sipariş", "🛒"],
-  ["salesVolume", "Satış hacmi", "💰", true], ["commissionRevenue", "%8 komisyon", "📈", true],
-  ["platformServiceRevenue", "Sponsor / boost geliri", "🚀", true], ["pendingSellerAmount", "Bekleyen hakediş", "🏦", true],
-  ["openClaims", "Açık itiraz/iade", "⚖️"], ["pendingSponsors", "Sponsor inceleme", "🏪"],
-  ["activeBoosts", "Aktif ücretli boost", "⭐"], ["reconciliationCount", "Mutabakat kaydı", "🔎"],
-  ["actionRequiredCount", "İşlem gerektiren", "🚨"]
-];
-
 function money(value) { return `${Number(value || 0).toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺`; }
 function dateText(value) { const seconds = value?._seconds ?? value?.seconds; const date = seconds != null ? new Date(seconds * 1000) : value ? new Date(value) : null; return date && !Number.isNaN(date.getTime()) ? date.toLocaleString("tr-TR") : "-"; }
+const HEALTH_LABELS = { payment: "Ödeme", orderFlow: "Sipariş akışı", earnings48h: "48 saat hakediş", withdrawal: "Para çekme", scheduledMaintenance: "Planlı bakım", backendErrors: "Kritik backend hataları" };
+const HEALTH_TEXT = { HEALTHY: "Sağlıklı", WARNING: "Kontrol edilmeli", CRITICAL: "Kritik" };
 
 export function AdminOperationsOverview() {
-  const [metrics, setMetrics] = useState(null); const [error, setError] = useState("");
-  useEffect(() => { adminApi("/overview").then((data) => setMetrics(data.metrics)).catch((err) => setError(err.message)); }, []);
+  const [dashboard, setDashboard] = useState(null); const [error, setError] = useState("");
+  useEffect(() => { adminApi("/overview").then(setDashboard).catch((err) => setError(err.message)); }, []);
   if (error) return <section className="admin-section"><p className="admin-operation-error">Dashboard verisi alınamadı: {error}</p></section>;
-  if (!metrics) return <section className="admin-section admin-operation-loading" role="status">Operasyon verileri yükleniyor...</section>;
-  return <section className="admin-section" id="admin-dashboard"><div className="admin-section-heading"><div><h2>Operasyon Dashboard</h2><p>Sunucu tarafından hesaplanan gerçek operasyon göstergeleri.</p></div></div>{metrics.waitingPayments > 0 && <div className="admin-critical-alert" role="alert">⚠️ {metrics.waitingPayments} ödeme hâlâ WAITING durumunda. Callback/finalizasyon takibi gerekebilir.</div>}<div className="admin-operations-kpis">{KPI.map(([key, label, icon, isMoney]) => <article key={key}><span>{icon}</span><strong>{isMoney ? money(metrics[key]) : Number(metrics[key] || 0).toLocaleString("tr-TR")}</strong><small>{label}</small></article>)}</div></section>;
+  if (!dashboard) return <section className="admin-section admin-operation-loading" role="status">Operasyon verileri yükleniyor...</section>;
+  const { overall, health, today, metrics } = dashboard;
+  return <section className="admin-section admin-control-center" id="admin-dashboard"><div className={`admin-overall ${overall.status === "HEALTHY" ? "healthy" : "attention"}`}><span aria-hidden="true">{overall.status === "HEALTHY" ? "✓" : "!"}</span><div><h2>{overall.status === "HEALTHY" ? "Her şey yolunda" : `${overall.actionRequiredCount} işlem müdahale bekliyor`}</h2><p>Normal operasyonlar sunucu tarafında otomatik izleniyor.</p></div></div><div className="admin-dashboard-grid"><article><h3>Sistem Sağlığı</h3><div className="admin-health-list">{Object.entries(HEALTH_LABELS).map(([key, label]) => <div key={key}><i className={(health[key] || "WARNING").toLowerCase()} /><span>{label}</span><strong>{HEALTH_TEXT[health[key]] || "Bilinmiyor"}</strong></div>)}</div><small>Son bakım: {dateText(health.lastMaintenanceAt)}</small></article><article><h3>Bugünün Özeti</h3><dl><div><dt>Sipariş</dt><dd>{Number(today.orders || 0).toLocaleString("tr-TR")}</dd></div><div><dt>Platform geliri</dt><dd>{money(today.platformRevenue)}</dd></div><div><dt>Açık itiraz/iade</dt><dd>{Number(metrics.openClaims || 0)}</dd></div><div><dt>Bekleyen sponsor inceleme</dt><dd>{Number(metrics.pendingSponsors || 0)}</dd></div></dl></article></div></section>;
 }
 
 export function AdminUsers() {

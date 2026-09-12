@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { adminApi } from "../../config/adminApi";
 import "../../styles/components/admin-orders.css";
+import "../../styles/components/admin-autonomy.css";
 
 const dateText = (value) => {
   const seconds = value?._seconds ?? value?.seconds;
@@ -11,8 +12,9 @@ const money = (value) => `${Number(value || 0).toLocaleString("tr-TR", { minimum
 
 export function AdminActionRequired() {
   const [state, setState] = useState({ loading: true, items: [], count: 0, error: "" });
-  useEffect(() => { adminApi("/orders/action-required").then((data) => setState({ loading: false, items: data.items || [], count: data.count || 0, error: "" })).catch((error) => setState({ loading: false, items: [], count: 0, error: error.message })); }, []);
-  return <section className="admin-section" id="admin-action-required"><div className="admin-section-heading"><div><h2>⚠️ İşlem Gerektirenler</h2><p>Yalnız ödeme, claim, teslimat veya hakediş anomalileri.</p></div><strong className={state.count ? "admin-action-count alert" : "admin-action-count"}>İşlem Gerektiren: {state.count}</strong></div>{state.loading ? <p>Kontroller yükleniyor...</p> : state.error ? <p className="admin-operation-error">{state.error}</p> : state.items.length === 0 ? <div className="admin-all-clear">✅ Manuel müdahale gerektiren işlem bulunmuyor.</div> : <div className="admin-action-list">{state.items.map((item) => <article key={item.id}><div><strong>{item.title}</strong><small>{item.reason} · {dateText(item.createdAt)}</small></div>{item.orderId ? <a href={`#order-${item.orderId}`}>Siparişi bul</a> : <span>{item.referenceId}</span>}</article>)}</div>}</section>;
+  const [view, setView] = useState("active");
+  useEffect(() => { setState((old) => ({ ...old, loading: true, error: "" })); adminApi(`/orders/action-required${view === "archive" ? "?view=archive" : ""}`).then((data) => setState({ loading: false, items: data.items || [], count: data.count || 0, error: "" })).catch((error) => setState({ loading: false, items: [], count: 0, error: error.message })); }, [view]);
+  return <section className="admin-section" id="admin-action-required"><div className="admin-section-heading"><div><h2>⚠️ İşlem Gerektirenler</h2><p>Yalnız insan kararı gerektiren aktif istisnalar; çözülen kayıtlar silinmeden arşivlenir.</p></div><strong className={view === "active" && state.count ? "admin-action-count alert" : "admin-action-count"}>{view === "active" ? `İşlem Gerektiren: ${state.count}` : `Geçmiş: ${state.count}`}</strong></div><div className="admin-action-tabs" role="tablist" aria-label="Operasyon görevleri"><button type="button" role="tab" aria-selected={view === "active"} onClick={() => setView("active")}>Aktif</button><button type="button" role="tab" aria-selected={view === "archive"} onClick={() => setView("archive")}>Geçmiş / Arşiv</button></div>{state.loading ? <p>Kontroller yükleniyor...</p> : state.error ? <p className="admin-operation-error">{state.error}</p> : state.items.length === 0 ? <div className="admin-all-clear">✅ {view === "active" ? "Manuel müdahale gerektiren işlem bulunmuyor." : "Arşivlenmiş operasyon görevi bulunmuyor."}</div> : <div className="admin-action-list">{state.items.map((item) => <article key={item.id}><div><strong>{item.title}</strong><small>{item.reason} · {dateText(item.updatedAt || item.createdAt)}</small></div><div className="admin-action-meta">{view === "archive" && <em>{item.status}</em>}{item.orderId ? <a href={`#order-${item.orderId}`}>Siparişi bul</a> : <span>{item.referenceId || item.sourceId}</span>}</div></article>)}</div>}</section>;
 }
 
 export default function AdminOrders() {

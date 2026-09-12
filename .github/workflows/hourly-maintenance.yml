@@ -1,0 +1,38 @@
+name: Hourly production maintenance
+
+on:
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hediyealsat-production-maintenance
+  cancel-in-progress: false
+
+jobs:
+  run-maintenance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      MAINTENANCE_URL: https://hediyealsat-backend.onrender.com/api/internal/maintenance
+      MAINTENANCE_TOKEN: ${{ secrets.MAINTENANCE_CRON_SECRET }}
+    steps:
+      - name: Validate scheduler secret
+        shell: bash
+        run: |
+          if [ -z "$MAINTENANCE_TOKEN" ]; then
+            echo "MAINTENANCE_CRON_SECRET repository secret is required."
+            exit 1
+          fi
+      - name: Run protected maintenance
+        shell: bash
+        run: |
+          curl --fail-with-body --silent --show-error \
+            --retry 2 --retry-all-errors \
+            --connect-timeout 30 --max-time 180 \
+            --request POST \
+            --header "Authorization: Bearer $MAINTENANCE_TOKEN" \
+            "$MAINTENANCE_URL"

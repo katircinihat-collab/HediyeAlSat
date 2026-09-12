@@ -76,20 +76,16 @@ exports.detail = async (req, res, next) => {
     } catch (error) { next(error); }
 };
 
-exports.actionRequired = async (_req, res, next) => {
+exports.actionRequired = async (req, res, next) => {
     try {
-        const [waitingPayments, openClaims, reconciliations, recentOrders] = await Promise.all([
-            firestore.collection("odemeler").where("paymentStatus", "==", "WAITING").limit(100).get(),
-            firestore.collection("orderClaims").where("durum", "in", ["acik", "inceleniyor", "kabul_edildi"]).limit(100).get(),
-            firestore.collection("financialReconciliations").where("status", "==", "incelemede").limit(100).get(),
-            firestore.collection("siparisler").orderBy("tarih", "desc").limit(200).get()
-        ]);
-        const items = [];
-        waitingPayments.forEach((doc) => items.push({ id: `payment:${doc.id}`, type: "payment", referenceId: doc.id, reason: "WAITING_PAYMENT", title: "Ödeme sonucu bekleniyor", createdAt: doc.get("createdAt") || doc.get("tarih") || null }));
-        openClaims.forEach((doc) => items.push({ id: `claim:${doc.id}`, type: "claim", referenceId: doc.id, orderId: doc.get("orderId") || null, reason: "OPEN_CLAIM_OR_DISPUTE", title: "Açık iade veya itiraz", createdAt: doc.get("createdAt") || null }));
-        reconciliations.forEach((doc) => items.push({ id: `reconciliation:${doc.id}`, type: "reconciliation", referenceId: doc.id, orderId: doc.get("orderId") || null, reason: doc.get("reasonCode") || "RECONCILIATION", title: "Finansal mutabakat gerekli", createdAt: doc.get("createdAt") || null }));
-        recentOrders.forEach((doc) => actionReasons(doc.data()).forEach((reason) => items.push({ id: `order:${doc.id}:${reason}`, type: "order", referenceId: doc.id, orderId: doc.id, reason, title: "Sipariş yaşam döngüsü anomalisi", createdAt: doc.get("tarih") || null })));
-        return res.json({ success: true, count: items.length, items: items.slice(0, 200) });
+        const archive = req.query.view === "archive";
+        const statuses = archive ? ["RESOLVED", "ARCHIVED"] : ["ACTIVE"];
+        const snapshot = await firestore.collection("adminOperationTasks").where("status", "in", statuses).limit(200).get();
+        const items = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })).sort((a, b) => {
+            const time = (value) => value?.toMillis?.() ?? value?.toDate?.().getTime?.() ?? new Date(value || 0).getTime();
+            return time(b.updatedAt || b.createdAt) - time(a.updatedAt || a.createdAt);
+        });
+        return res.json({ success: true, count: items.length, items });
     } catch (error) { next(error); }
 };
 

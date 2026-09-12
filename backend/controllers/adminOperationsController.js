@@ -18,10 +18,13 @@ async function sum(query, field) {
 
 exports.overview = async (_req, res, next) => {
     try {
+        const today = new Date(); today.setHours(0, 0, 0, 0);
+        const todayTimestamp = admin.firestore.Timestamp.fromDate(today);
         const [listingSnapshot, totalUsers, totalOrders, paidOrders, totalStores,
             openClaims, pendingSponsors, activeBoosts, waitingPayments,
             reconciliationCount, salesVolume, commissionRevenue,
-            platformServiceRevenue, pendingSellerAmount] = await Promise.all([
+            platformServiceRevenue, pendingSellerAmount, activeTaskSnapshot, todayOrders,
+            todayRevenue, maintenanceDoc, legacyWithdrawals] = await Promise.all([
             firestore.collection("ilanlar").select("onay", "aktif", "yayinda", "durum", "stok", "adet", "urunTipi", "fizikselKargo", "dijitalTeslimat").get(),
             count(firestore.collection("users")),
             count(firestore.collection("siparisler")),
@@ -35,20 +38,42 @@ exports.overview = async (_req, res, next) => {
             sum(firestore.collection("siparisler").where("odemeDurumu", "==", true), "toplam"),
             sum(firestore.collection("bakiyeHareketleri"), "komisyon"),
             sum(firestore.collection("platformRevenueEvents"), "amount"),
-            sum(firestore.collection("wallets"), "pending")
+            sum(firestore.collection("wallets"), "pending"),
+            firestore.collection("adminOperationTasks").where("status", "==", "ACTIVE").limit(400).get(),
+            count(firestore.collection("siparisler").where("tarih", ">=", todayTimestamp)),
+            sum(firestore.collection("platformRevenueEvents").where("createdAt", ">=", todayTimestamp), "amount"),
+            firestore.collection("systemMaintenance").doc("latest").get(),
+            count(firestore.collection("paraCekmeTalepleri").where("durum", "==", "BEKLIYOR"))
         ]);
 
         const listings = listingSnapshot.docs.map((doc) => doc.data());
         const activeListings = listings.filter(isListingPublished).length;
         const pendingListings = listings.filter((item) => item.onay !== true && !["Reddedildi", "Taslak"].includes(item.durum)).length;
 
+        const maintenance = maintenanceDoc.exists ? maintenanceDoc.data() : null;
+        const lastRun = maintenance?.completedAt?.toDate?.() || null;
+        const schedulerHealthy = Boolean(maintenance?.success && lastRun && Date.now() - lastRun.getTime() < 2 * 60 * 60 * 1000);
+        const activeTasks = activeTaskSnapshot.size;
+        const activeTaskTypes = new Set(activeTaskSnapshot.docs.map((doc) => doc.get("sourceType")));
+        const health = {
+            payment: activeTaskTypes.has("payment") || activeTaskTypes.has("reconciliation") ? "WARNING" : "HEALTHY",
+            orderFlow: activeTaskTypes.has("order") || activeTaskTypes.has("claim") ? "WARNING" : "HEALTHY",
+            earnings48h: maintenance?.success === false ? "CRITICAL" : schedulerHealthy ? "HEALTHY" : "WARNING",
+            withdrawal: legacyWithdrawals > 0 ? "WARNING" : "HEALTHY",
+            scheduledMaintenance: schedulerHealthy ? "HEALTHY" : "WARNING",
+            backendErrors: maintenance?.success === false ? "CRITICAL" : "HEALTHY",
+            lastMaintenanceAt: maintenance?.completedAt || null
+        };
         return res.json({
             success: true,
+            overall: { status: activeTasks === 0 ? "HEALTHY" : "ATTENTION", actionRequiredCount: activeTasks },
+            health,
+            today: { orders: todayOrders, platformRevenue: todayRevenue },
             metrics: {
                 totalUsers, totalOrders, paidOrders, totalStores,
                 activeListings, pendingListings, openClaims, pendingSponsors,
                 activeBoosts, waitingPayments, reconciliationCount,
-                actionRequiredCount: waitingPayments + openClaims + reconciliationCount,
+                actionRequiredCount: activeTasks,
                 salesVolume, commissionRevenue, platformServiceRevenue,
                 pendingSellerAmount
             }

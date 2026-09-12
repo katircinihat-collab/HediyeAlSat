@@ -14,6 +14,15 @@ test("admin panelinde gerçek dashboard kullanıcı ve audit ekranları bulunur"
   assert.match(operations, /Sonraki 50 kullanıcıyı yükle/);
 });
 
+test("otonom kontrol merkezi yalnız durum sağlık özet ve arşivlenebilir istisnaları öne çıkarır", () => {
+  const orders = readFileSync("src/components/admin/AdminOrders.jsx", "utf8");
+  assert.match(operations, /Her şey yolunda/);
+  assert.match(operations, /Sistem Sağlığı/);
+  assert.match(operations, /Bugünün Özeti/);
+  assert.match(orders, /Geçmiş \/ Arşiv/);
+  assert.match(orders, /view=archive/);
+});
+
 test("ilan yönetimi arama filtre detay ve red aksiyonlarını korur", () => {
   assert.match(adminPage, /ilanArama/);
   assert.match(adminPage, /ilanFiltre/);

@@ -330,6 +330,14 @@ service cloud.firestore {
       allow read, create, update, delete: if false;
     }
 
+    match /adminOperationTasks/{taskId} {
+      allow read, create, update, delete: if false;
+    }
+
+    match /systemMaintenance/{documentId} {
+      allow read, create, update, delete: if false;
+    }
+
     match /magazalar/{storeId} {
       allow read: if true;
 
