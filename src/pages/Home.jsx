@@ -22,13 +22,12 @@ import FlashSale from "../components/FlashSale";
 import CategoryBar from "../components/CategoryBar";
 import FilterBar from "../components/FilterBar";
 import AdBanner from "../components/AdBanner";
-import ProductSlider from "../components/ProductSlider";
 import FeaturedStores from "../components/FeaturedStores";
 import SpecialDays from "../components/SpecialDays";
 import GiftAssistant from "../components/GiftAssistant";
 import Stats from "../components/Stats";
 import Footer from "../components/Footer";
-import TopDesignShowcase from "../components/TopDesignShowcase";
+import HomeDiscovery from "../components/HomeDiscovery";
 import GiftBattle from "../components/GiftBattle";
 import DailyQuote from "../components/DailyQuote";
 import SponsorBanner from "../components/SponsorBanner";
@@ -40,6 +39,7 @@ import "../styles/pages/home.css";
 function Home() {
 
   const [ilanlar, setIlanlar] = useState([]);
+  const [ilanlarYukleniyor, setIlanlarYukleniyor] = useState(true);
   const sponsored = useSponsoredContent();
 
   const [searchParams, setSearchParams] =
@@ -153,6 +153,10 @@ function Home() {
           "İlanlar alınamadı:",
           error
         );
+
+      } finally {
+
+        setIlanlarYukleniyor(false);
 
       }
 
@@ -273,90 +277,6 @@ function Home() {
   const gosterTrend =
     gununFirsatlari.length > 0
       ? gununFirsatlari
-      : filtreli.slice(
-          0,
-          20
-        );
-
-
-
-  /*
-  ==================================================
-  EN ÇOK SATANLAR
-  ==================================================
-  */
-
-  const enCokSatan =
-    [...filtreli]
-      .sort(
-        (a, b) =>
-          (b.satisSayisi || 0) -
-          (a.satisSayisi || 0)
-      )
-      .slice(
-        0,
-        20
-      );
-
-
-
-  /*
-  ==================================================
-  SON EKLENENLER
-  ==================================================
-  */
-
-  const sonEklenen =
-    [...filtreli]
-      .sort(
-        (a, b) => {
-
-          const ta =
-            a.tarih?.seconds || 0;
-
-          const tb =
-            b.tarih?.seconds || 0;
-
-          return tb - ta;
-
-        }
-      )
-      .slice(
-        0,
-        20
-      );
-
-
-
-  /*
-  ==================================================
-  PREMIUM MAĞAZALAR
-  ==================================================
-  */
-
-  const premiumMagazalar =
-    filtreli.filter(
-      (x) =>
-        x.premium === true
-    );
-
-
-
-  /*
-  ==================================================
-  EDİTÖRÜN SEÇİMİ
-  ==================================================
-  */
-
-  const editorSecimi =
-    filtreli.filter(
-      (x) =>
-        x.oneCikan === true
-    );
-
-  const gosterEditor =
-    editorSecimi.length > 0
-      ? editorSecimi
       : filtreli.slice(
           0,
           20
@@ -599,44 +519,10 @@ function Home() {
 
 
 
-      <ProductSlider
-        title="🔥 En Çok Satan Hediyeler"
-        ilanlar={enCokSatan}
-        allTo="/ilanlar?view=best-sellers"
-      />
-
-      <ProductSlider
-        title="🆕 Yeni Gelen Hediyeler"
-        ilanlar={sonEklenen}
-        allTo="/ilanlar?view=new"
-      />
-
-
-
-      {
-        premiumMagazalar.length > 0 &&
-
-        <ProductSlider
-          title="👑 Premium Mağazalar"
-          ilanlar={premiumMagazalar}
-          allTo="/ilanlar?view=premium"
-        />
-      }
-
-
-
-      <ProductSlider
-        title="✨ Editörün Seçimi"
-        ilanlar={
-          sponsored.sponsored_product?.product
-            ? [
-                sponsored.sponsored_product.product,
-                ...gosterEditor.filter((item) => item.id !== sponsored.sponsored_product.product.id)
-              ]
-            : gosterEditor
-        }
-        sponsoredProductId={sponsored.sponsored_product?.product?.id}
-        allTo="/ilanlar?view=editors-choice"
+      <HomeDiscovery
+        listings={ilanlar}
+        loading={ilanlarYukleniyor}
+        sponsoredProduct={sponsored.sponsored_product?.product}
       />
 
 
@@ -646,8 +532,6 @@ function Home() {
       <GiftBattle />
 
       <GiftAssistant />
-
-      <TopDesignShowcase />
 
       <SponsorBanner sponsor={sponsored.lower_banner} />
 

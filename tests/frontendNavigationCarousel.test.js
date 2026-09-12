@@ -7,6 +7,7 @@ const navbarCss = readFileSync("src/styles/layout/navbar.css", "utf8");
 const slider = readFileSync("src/components/ProductSlider.jsx", "utf8");
 const sliderCss = readFileSync("src/styles/components/product-slider.css", "utf8");
 const home = readFileSync("src/pages/Home.jsx", "utf8");
+const homeDiscovery = readFileSync("src/components/HomeDiscovery.jsx", "utf8");
 const listings = readFileSync("src/pages/Listings.jsx", "utf8");
 
 test("mobil header logo, arama, sepet ve hesap aksiyonlarını birlikte sunar", () => {
@@ -39,11 +40,9 @@ test("ortak ürün sliderı sınır durumlu oklar ve mobil swipe kullanır", () 
   assert.match(sliderCss, /@media \(max-width: 600px\)[\s\S]*overflow-x: auto/);
 });
 
-test("ana sayfa Tümünü Gör bağlantıları mevcut ilanlar routeunda desteklenen filtreleri açar", () => {
-  for (const view of ["best-sellers", "new", "premium", "editors-choice"]) {
-    assert.match(home, new RegExp(`allTo="/ilanlar\\?view=${view}"`));
-  }
-  assert.match(slider, /<Link className="all-button" to=\{allTo\}>/);
+test("ana sayfa keşif vitrini mevcut ilanlar routeuna gider ve ilanlar eski filtreleri desteklemeyi sürdürür", () => {
+  assert.match(home, /<HomeDiscovery/);
+  assert.match(homeDiscovery, /<Link to="\/ilanlar">Tüm İlanları Gör/);
   assert.match(listings, /searchParams\.get\("view"\)/);
   assert.match(listings, /view === "best-sellers"/);
   assert.match(listings, /view === "new"/);
