@@ -51,11 +51,32 @@ function GiftBattle() {
 
   useEffect(() => {
     let active = true;
-    getTodayGiftBattle()
-      .then((data) => { if (active) setBattle(data.battle || null); })
-      .catch((requestError) => { if (active) setError(requestError.message); })
-      .finally(() => { if (active) setLoading(false); });
-    return () => { active = false; };
+    let retryTimer;
+
+    const loadBattle = (attempt = 0) => {
+      getTodayGiftBattle()
+        .then((data) => {
+          if (!active) return;
+          setBattle(data.battle || null);
+          setError("");
+          setLoading(false);
+        })
+        .catch((requestError) => {
+          if (!active) return;
+          if (attempt === 0) {
+            retryTimer = window.setTimeout(() => loadBattle(1), 1200);
+            return;
+          }
+          setError(requestError.message);
+          setLoading(false);
+        });
+    };
+
+    loadBattle();
+    return () => {
+      active = false;
+      if (retryTimer) window.clearTimeout(retryTimer);
+    };
   }, []);
 
   useEffect(() => {
@@ -91,8 +112,6 @@ function GiftBattle() {
     }
   }
 
-  if (!loading && !battle) return null;
-
   return (
     <section
       id="hediye-kapismasi"
@@ -107,7 +126,7 @@ function GiftBattle() {
 
       {loading ? (
         <div className="gift-battle-loading">Kapışma hazırlanıyor...</div>
-      ) : (
+      ) : battle ? (
         <>
           <div className="gift-battle-arena">
             <p className="gift-battle-question">{battle.question}</p>
@@ -136,6 +155,10 @@ function GiftBattle() {
           {selectedId && <p className="gift-battle-thanks">Oyun kaydedildi. Teşekkürler!</p>}
           {error && <p className="gift-battle-error" role="alert">{error}</p>}
         </>
+      ) : (
+        <div className="gift-battle-loading" role="status">
+          Bugünün kapışması kısa süre içinde burada olacak.
+        </div>
       )}
     </section>
   );
