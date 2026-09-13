@@ -22,7 +22,6 @@ import SellerProducts from "../components/seller/SellerProducts";
 import SellerOrders from "../components/seller/SellerOrders";
 import SellerFinance from "../components/seller/SellerFinance";
 import SellerPerformance from "../components/seller/SellerPerformance";
-import SellerStatistics from "../components/seller/SellerStatistics";
 import SellerChart from "../components/seller/SellerChart";
 function Seller(){
 
@@ -37,6 +36,8 @@ const [aylikKazanc,setAylikKazanc]=useState(0);
 const [toplamKazanc,setToplamKazanc]=useState(0);
 
 const [bekleyen,setBekleyen]=useState(0);
+
+const [hazirlanan,setHazirlanan]=useState(0);
 
 const [kargoda,setKargoda]=useState(0);
 
@@ -115,6 +116,8 @@ let ay=0;
 
 let bekleyenSayisi=0;
 
+let hazirlananSayisi=0;
+
 let kargodaSayisi=0;
 
 let teslimSayisi=0;
@@ -136,6 +139,12 @@ toplam+=tutar;
 if(s.durum==="Bekliyor"){
 
 bekleyenSayisi++;
+
+}
+
+if(s.durum==="Hazırlanıyor"){
+
+hazirlananSayisi++;
 
 }
 
@@ -200,6 +209,8 @@ setBugunKazanc(bugun);
 setAylikKazanc(ay);
 
 setBekleyen(bekleyenSayisi);
+
+setHazirlanan(hazirlananSayisi);
 
 setKargoda(kargodaSayisi);
 
@@ -278,6 +289,8 @@ toplamFavori={toplamFavori}
 
 bekleyen={bekleyen}
 
+hazirlanan={hazirlanan}
+
 kargoda={kargoda}
 
 teslim={teslim}
@@ -312,11 +325,6 @@ siparisler={siparisler}
 
 toplamKazanc={toplamKazanc}
 
-/>
-
-<SellerStatistics
-siparisler={siparisler}
-toplamKazanc={toplamKazanc}
 />
 
 <SellerChart

@@ -28,6 +28,12 @@ export function getActiveBoostListings(listings, now = Date.now()) {
     .sort((left, right) => listingDateMs(right) - listingDateMs(left));
 }
 
+export function getAdminFeaturedListings(listings) {
+  return getNormalAvailableListings(listings)
+    .filter((listing) => listing.trend === true)
+    .sort((left, right) => listingDateMs(right) - listingDateMs(left));
+}
+
 export function getNewestProducts(listings, limit = 10) {
   return getNormalAvailableListings(listings)
     .sort((left, right) => listingDateMs(right) - listingDateMs(left))

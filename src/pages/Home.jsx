@@ -269,16 +269,12 @@ function Home() {
   ==================================================
   */
 
-  const gununFirsatlari =
-    filtreli.filter(
-      (x) =>
-        x.trend === true
-    );
+  const gununFirsatlari = filtreli.filter((x) => x.kampanyali === true);
 
   const gosterTrend =
     gununFirsatlari.length > 0
       ? gununFirsatlari
-      : filtreli.slice(
+      : filtreli.filter((x) => x.trend !== true).slice(
           0,
           20
         );
@@ -455,9 +451,6 @@ function Home() {
 
       <SponsorBanner sponsor={sponsored.middle_banner} />
 
-      <TopDesignShowcase />
-
-
       <section
         className="shopping-hubs"
         aria-label="Özel alışveriş bölümleri"
@@ -490,6 +483,7 @@ function Home() {
 
       </section>
 
+      <TopDesignShowcase />
 
 
       <HomeDiscovery

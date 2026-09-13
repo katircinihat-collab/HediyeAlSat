@@ -10,9 +10,9 @@ function SellerFinance({ siparisler }) {
   const metrics = calculateSellerFinanceMetrics(siparisler);
 
   return <section className="seller-sales-summary">
-    <h2 className="section-title">📊 Satış İstatistikleri</h2>
+    <h2 className="section-title">💳 Marketplace Satış Özeti</h2>
     <p className="finance-disclaimer">
-      Bu alan ödemesi doğrulanmış satışların tarihsel özetidir. Çekilebilir tutarın tek kaynağı aşağıdaki Satıcı Cüzdanıdır.
+      Bu alan iyzico Marketplace satışlarının tarihsel özetidir. Buradaki net satış payı, legacy/iç cüzdandaki çekilebilir bakiye değildir.
     </p>
 
     <div className="finance-grid">

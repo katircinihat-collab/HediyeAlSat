@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 
 import ProductCard from "./ProductCard";
 import {
-  getActiveBoostListings,
+  getAdminFeaturedListings,
   getNewestProducts,
   getTopProducts
 } from "../utils/homeDiscovery";
@@ -64,7 +64,7 @@ function DiscoverySkeleton() {
 function HomeDiscovery({ listings, loading = false, sponsoredProduct = null }) {
   const [featuredIndex, setFeaturedIndex] = useState(0);
   const [featuredPaused, setFeaturedPaused] = useState(false);
-  const boosted = useMemo(() => getActiveBoostListings(listings), [listings]);
+  const featured = useMemo(() => getAdminFeaturedListings(listings), [listings]);
   const top = useMemo(() => getTopProducts(listings), [listings]);
   const newest = useMemo(() => getNewestProducts(listings), [listings]);
   const visibleSponsoredProduct = useMemo(
@@ -73,27 +73,27 @@ function HomeDiscovery({ listings, loading = false, sponsoredProduct = null }) {
   );
 
   useEffect(() => {
-    if (boosted.length < 2 || featuredPaused) return undefined;
+    if (featured.length < 2 || featuredPaused) return undefined;
     const timer = window.setInterval(
-      () => setFeaturedIndex((current) => (current + 1) % boosted.length),
+      () => setFeaturedIndex((current) => (current + 1) % featured.length),
       6000
     );
     return () => window.clearInterval(timer);
-  }, [boosted.length, featuredPaused]);
+  }, [featured.length, featuredPaused]);
 
   useEffect(() => {
-    if (featuredIndex >= boosted.length) setFeaturedIndex(0);
-  }, [boosted.length, featuredIndex]);
+    if (featuredIndex >= featured.length) setFeaturedIndex(0);
+  }, [featured.length, featuredIndex]);
 
   const moveFeatured = (direction) => {
-    setFeaturedIndex((current) => (current + direction + boosted.length) % boosted.length);
+    setFeaturedIndex((current) => (current + direction + featured.length) % featured.length);
   };
 
   return (
     <div className="home-discovery" aria-label="HediyeAlSat keşif vitrini">
       {loading && <DiscoverySkeleton />}
 
-      {!loading && boosted.length > 0 && (
+      {!loading && featured.length > 0 && (
         <section
           className="discovery-featured"
           aria-labelledby="discovery-featured-title"
@@ -108,15 +108,15 @@ function HomeDiscovery({ listings, loading = false, sponsoredProduct = null }) {
           </header>
           <div className="discovery-featured-stage">
             <ProductCard
-              key={boosted[featuredIndex].id}
-              ilan={boosted[featuredIndex]}
+              key={featured[featuredIndex].id}
+              ilan={featured[featuredIndex]}
               variant="discovery-hero"
               cardExtra={<span className="discovery-featured-cta">Ürünü Gör →</span>}
             />
-            {boosted.length > 1 && (
+            {featured.length > 1 && (
               <div className="discovery-featured-controls" aria-label="Öne çıkan ilan gezinme kontrolleri">
                 <button type="button" onClick={() => moveFeatured(-1)} aria-label="Önceki öne çıkan ilan">←</button>
-                <span>{featuredIndex + 1} / {boosted.length}</span>
+                <span>{featuredIndex + 1} / {featured.length}</span>
                 <button type="button" onClick={() => moveFeatured(1)} aria-label="Sonraki öne çıkan ilan">→</button>
               </div>
             )}
