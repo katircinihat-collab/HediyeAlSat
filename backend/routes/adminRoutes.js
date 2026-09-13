@@ -28,6 +28,7 @@ router.put("/listings/:id/reject", adminListingController.reddet);
 router.patch("/listings/:id/flags", adminListingController.ozellikDegistir);
 router.patch("/listings/:id/stock", adminListingController.stokGuncelle);
 router.patch("/listings/:id/publication", adminListingController.yayinDurumuGuncelle);
+router.patch("/listings/:id", adminListingController.duzenle);
 router.delete("/listings/:id", adminListingController.sil);
 router.patch("/stores/:id/status", adminListingController.magazaDurumuGuncelle);
 router.post("/orders/:orderId/confirm-delivery", orderStatusController.confirmDeliveryAsAdmin);

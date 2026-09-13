@@ -6,6 +6,7 @@ import { isListingPublished as frontendRule } from "../src/utils/listingAvailabi
 const require = createRequire(import.meta.url);
 const {
   buildApprovedListingState,
+  buildArchivedListingState,
   buildListingStockUpdate,
   buildPublishedListingState,
   buildUnpublishedListingState,
@@ -91,4 +92,22 @@ test("yayından kaldırma canonical kapalı alanları yazar", () => {
   assert.equal(update.aktif, false);
   assert.equal(update.yayinda, false);
   assert.equal(update.durum, "Yayından Kaldırıldı");
+});
+
+test("admin arşivleme ilanı kalıcı olarak satıştan çıkarır ve finansal belge silmez", () => {
+  const update = buildArchivedListingState({ timestamp: "now", adminUid: "admin" });
+  assert.equal(update.onay, false);
+  assert.equal(update.aktif, false);
+  assert.equal(update.yayinda, false);
+  assert.equal(update.durum, "Yayından Kaldırıldı");
+  assert.equal(update.silindi, true);
+  assert.equal(update.trend, false);
+  assert.equal(update.oneCikan, false);
+});
+
+test("arşivlenmiş ilan yeniden yayınlanamaz", () => {
+  assert.throws(
+    () => buildPublishedListingState({ listing: { onay: true, stok: 1, silindi: true }, timestamp: "now", adminUid: "admin" }),
+    /Arşivlenmiş/
+  );
 });

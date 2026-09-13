@@ -11,6 +11,7 @@ import {db} from "../firebase";
 
 import { auth } from "../firebase";
 import { validatePublicContent } from "../utils/publicContentModeration";
+import { adminApi } from "../config/adminApi";
 
 function EditListing(){
 
@@ -24,6 +25,9 @@ const navigate=useNavigate();
 const [ilan,setIlan]=useState(null);
 
 const [yeniFotolar,setYeniFotolar]=useState([]);
+const [adminMode,setAdminMode]=useState(false);
+const [kaydediliyor,setKaydediliyor]=useState(false);
+const [hata,setHata]=useState("");
 
 useEffect(()=>{
 
@@ -47,13 +51,20 @@ const sahibiMi=veri.sahipUid
 ? veri.sahipUid===auth.currentUser?.uid
 : veri.sahip===auth.currentUser?.email;
 
-if(!sahibiMi && auth.currentUser?.email !== "alper54nihat@hediyealsat.com"){
+if(!sahibiMi){
+
+try {
+await adminApi("/me");
+setAdminMode(true);
+} catch {
 
 alert("Bu ilanı düzenleme yetkin yok");
 
 navigate("/");
 
 return;
+
+}
 
 }
 
@@ -87,61 +98,47 @@ return <h2>Yükleniyor...</h2>;
 async function kaydet(e){
 
 e.preventDefault();
+if(kaydediliyor) return;
+setKaydediliyor(true);
+setHata("");
 
 let guvenliAciklama;
 try {
 guvenliAciklama=validatePublicContent(ilan.aciklama);
 } catch (error) {
-alert(error.message);
+setHata(error.message);
+setKaydediliyor(false);
 return;
 }
 
-
-await updateDoc(
-
-doc(db,"ilanlar",id),
-
-{
+const update = {
 baslik:ilan.baslik,
-
 fiyat:ilan.fiyat,
-
-telefon:deleteField(),
-
 aciklama:guvenliAciklama,
-
 kategori:ilan.kategori,
-
 renk:ilan.renk,
-
 marka:ilan.marka,
+resimler:yeniFotolar.length > 0 ? yeniFotolar : ilan.resimler,
+resim:yeniFotolar.length > 0 ? yeniFotolar[0] : ilan.resim
+};
 
-
-resimler:
-yeniFotolar.length > 0
-?
-yeniFotolar
-:
-ilan.resimler,
-
-
-resim:
-yeniFotolar.length > 0
-?
-yeniFotolar[0]
-:
-ilan.resim
-
+try {
+if(adminMode){
+await adminApi(`/listings/${id}`, {
+method:"PATCH",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify(update)
+});
+} else {
+await updateDoc(doc(db,"ilanlar",id), {...update,telefon:deleteField()});
 }
-
-);
-
-
 alert("İlan güncellendi ✅");
-
-
-navigate("/");
-
+navigate(adminMode ? "/admin" : "/");
+} catch (error) {
+setHata(error.message || "İlan güncellenemedi.");
+} finally {
+setKaydediliyor(false);
+}
 
 }
 
@@ -154,6 +151,8 @@ return (
 
 
 <h2>✏️ İlan Düzenle</h2>
+
+{hata && <p className="admin-operation-error" role="alert">{hata}</p>}
 
 <div>
 
@@ -358,9 +357,9 @@ aciklama:e.target.value
 
 
 
-<button>
+<button disabled={kaydediliyor}>
 
-Kaydet
+{kaydediliyor ? "Kaydediliyor..." : "Kaydet"}
 
 </button>
 

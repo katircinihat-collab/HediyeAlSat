@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import {
   collection,
@@ -61,6 +61,8 @@ function Admin() {
   const [ilanIslemi, setIlanIslemi] = useState("");
   const [ilanArama, setIlanArama] = useState("");
   const [ilanFiltre, setIlanFiltre] = useState("tumu");
+  const [ilanHatasi, setIlanHatasi] = useState("");
+  const ilanIslemKilidi = useRef(new Set());
 
   const [bakiyeler, setBakiyeler] = useState([]);
   const [magazalar, setMagazalar] = useState([]);
@@ -96,6 +98,22 @@ function Admin() {
 
   }
 
+  async function ilanAksiyonu(id, action) {
+    if (ilanIslemKilidi.current.has(id)) return;
+    ilanIslemKilidi.current.add(id);
+    setIlanIslemi(id);
+    setIlanHatasi("");
+    try {
+      await action();
+      await getir();
+    } catch (error) {
+      setIlanHatasi(error.message || "İlan işlemi tamamlanamadı. Lütfen tekrar deneyin.");
+    } finally {
+      ilanIslemKilidi.current.delete(id);
+      setIlanIslemi("");
+    }
+  }
+
   async function bakiyeleriGetir() {
     const bakiyeSnap = await getDocs(
       query(collection(db, "bakiyeHareketleri"), limit(100))
@@ -124,86 +142,44 @@ function Admin() {
   }, [activeSection]);
 
   async function ozellikDegistir(id, alan, deger){
-
-  await adminApi(`/listings/${id}/flags`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ alan, deger })
-  });
-
-  getir();
-
+    await ilanAksiyonu(id, () => adminApi(`/listings/${id}/flags`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ alan, deger })
+    }));
   }
 
   async function onayla(id) {
-    try {
-      setIlanIslemi(id);
-      await adminApi(`/listings/${id}/approve`, { method: "PUT" });
-      await getir();
-    } catch (error) {
-      alert(error.message);
-    } finally {
-      setIlanIslemi("");
-    }
-
+    await ilanAksiyonu(id, () => adminApi(`/listings/${id}/approve`, { method: "PUT" }));
   }
 
   async function reddet(ilan) {
     if (!window.confirm(`${ilan.baslik || "İlan"} reddedilsin mi?`)) return;
-    try {
-      setIlanIslemi(ilan.id);
-      await adminApi(`/listings/${ilan.id}/reject`, { method: "PUT" });
-      await getir();
-    } catch (error) {
-      alert(error.message);
-    } finally {
-      setIlanIslemi("");
-    }
+    await ilanAksiyonu(ilan.id, () => adminApi(`/listings/${ilan.id}/reject`, { method: "PUT" }));
   }
 
   async function stokKaydet(ilan) {
-    try {
-      setIlanIslemi(ilan.id);
+    await ilanAksiyonu(ilan.id, async () => {
       const stok = stokTaslaklari[ilan.id] ?? ilan.stok ?? ilan.adet ?? 0;
       await adminApi(`/listings/${ilan.id}/stock`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ stok: Number(stok) })
       });
-      await getir();
-    } catch (error) {
-      alert(error.message);
-    } finally {
-      setIlanIslemi("");
-    }
+    });
   }
 
   async function yayinDurumuDegistir(ilan) {
-    try {
-      setIlanIslemi(ilan.id);
-      await adminApi(`/listings/${ilan.id}/publication`, {
+    await ilanAksiyonu(ilan.id, () => adminApi(`/listings/${ilan.id}/publication`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ published: !isListingPublished(ilan) })
-      });
-      await getir();
-    } catch (error) {
-      alert(error.message);
-    } finally {
-      setIlanIslemi("");
-    }
+      }));
   }
 
-  async function sil(id) {
-
-    if (!window.confirm("İlan silinsin mi?")) return;
-
-    await adminApi(`/listings/${id}`, { method: "DELETE" });
-
-    getir();
-
-    magazalariGetir();
-
+  async function sil(ilan) {
+    if (!window.confirm(`${ilan.baslik || "İlan"} satıştan kaldırılıp arşivlensin mi? Sipariş ve finans geçmişi korunacaktır.`)) return;
+    await ilanAksiyonu(ilan.id, () => adminApi(`/listings/${ilan.id}`, { method: "DELETE" }));
   }
 
   function magazaDurumunuGuncelle(id, aktif) {
@@ -396,6 +372,8 @@ onStatusChanged={magazaDurumunuGuncelle}
 
 </h2>
 
+{ilanHatasi && <p className="admin-operation-error" role="alert">{ilanHatasi}</p>}
+
 <div className="admin-listing-tools">
 <input value={ilanArama} onChange={(event)=>setIlanArama(event.target.value)} placeholder="İlan, satıcı, kategori veya ID ara" />
 <select value={ilanFiltre} onChange={(event)=>setIlanFiltre(event.target.value)} aria-label="İlan durum filtresi">
@@ -474,7 +452,9 @@ alt={ilan.baslik}
 </div>
 
 <div className={`admin-product-status ${isListingPublished(ilan) ? "published" : ilan.onay === true ? "closed" : "pending"}`}>
-{isListingPublished(ilan)
+{ilan.silindi === true
+  ? "🗄️ Arşivlendi"
+  : isListingPublished(ilan)
   ? "✅ Yayında"
   : ilan.onay !== true
     ? "⌛ Onay Bekliyor"
@@ -508,14 +488,14 @@ onChange={(event)=>setStokTaslaklari((onceki)=>({...onceki,[ilan.id]:event.targe
 
 <div className="admin-product-actions">
 
-<Link className="admin-action-btn admin-edit" to={`/ilan/${ilan.id}`}>Detay</Link>
+<Link className="admin-action-btn admin-edit" to={`/admin/${ilan.id}`}>Detay</Link>
 
 <button
 className="admin-action-btn admin-approve"
-disabled={ilanIslemi===ilan.id}
+disabled={ilanIslemi===ilan.id || ilan.durum === "Reddedildi" || ilan.silindi === true}
 onClick={()=>ilan.onay===true ? yayinDurumuDegistir(ilan) : onayla(ilan.id)}
 >
-{isListingPublished(ilan) ? "Yayından Kaldır" : "Yayınla"}
+{ilan.silindi === true ? "Arşivlendi" : ilan.durum === "Reddedildi" ? "Reddedildi" : isListingPublished(ilan) ? "Yayından Kaldır" : ilan.onay === true ? "Tekrar Yayınla" : "Onayla ve Yayınla"}
 </button>
 
 {ilan.onay !== true && ilan.durum !== "Reddedildi" && <button
@@ -534,6 +514,7 @@ ilan.trend
 :
 "admin-action-btn admin-trend"
 }
+disabled={ilanIslemi===ilan.id || (!ilan.trend && !isListingPublished(ilan))}
 onClick={()=>
 ozellikDegistir(
 ilan.id,
@@ -542,7 +523,7 @@ ilan.id,
 )
 }
 >
-⭐ Öne Çıkar
+{ilan.trend ? "⭐ Öne Çıkarmayı Kaldır" : "⭐ Öne Çıkar"}
 </button>
 
 <button
@@ -553,6 +534,7 @@ ilan.oneCikan
 :
 "admin-action-btn admin-featured"
 }
+disabled={ilanIslemi===ilan.id || (!ilan.oneCikan && !isListingPublished(ilan))}
 onClick={()=>
 ozellikDegistir(
 ilan.id,
@@ -561,14 +543,15 @@ ilan.id,
 )
 }
 >
-👑 Editör Seçimi
+{ilan.oneCikan ? "👑 Editör Seçiminden Kaldır" : "👑 Editör Seçimi"}
 </button>
 
 <button
 className="admin-action-btn admin-delete"
-onClick={()=>sil(ilan.id)}
+disabled={ilanIslemi===ilan.id || ilan.silindi === true}
+onClick={()=>sil(ilan)}
 >
-🗑️ Sil
+🗄️ Arşivle
 </button>
 
 </div>

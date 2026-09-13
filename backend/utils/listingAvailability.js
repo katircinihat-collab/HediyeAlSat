@@ -71,6 +71,12 @@ function buildListingStockUpdate({ listing, stock, timestamp, adminUid }) {
 }
 
 function buildPublishedListingState({ listing, timestamp, adminUid }) {
+    if (listing?.silindi === true) {
+        const error = new Error("Arşivlenmiş ilan yeniden yayınlanamaz.");
+        error.status = 409;
+        error.code = "LISTING_ARCHIVED";
+        throw error;
+    }
     if (!isDigitalListing(listing) && !hasAvailableStock(listing)) {
         const error = new Error("İlanı yayınlamadan önce fiziksel ürün stoğunu girin.");
         error.status = 409;
@@ -78,6 +84,21 @@ function buildPublishedListingState({ listing, timestamp, adminUid }) {
         throw error;
     }
     return buildApprovedListingState({ timestamp, adminUid });
+}
+
+function buildArchivedListingState({ timestamp, adminUid }) {
+    return {
+        onay: false,
+        aktif: false,
+        yayinda: false,
+        durum: "Yayından Kaldırıldı",
+        silindi: true,
+        silinmeTarihi: timestamp,
+        silmeYapanUid: adminUid,
+        trend: false,
+        oneCikan: false,
+        kampanyali: false
+    };
 }
 
 function buildUnpublishedListingState({ timestamp, adminUid }) {
@@ -92,6 +113,7 @@ function buildUnpublishedListingState({ timestamp, adminUid }) {
 
 module.exports = {
     buildApprovedListingState,
+    buildArchivedListingState,
     buildListingStockUpdate,
     buildPublishedListingState,
     buildUnpublishedListingState,

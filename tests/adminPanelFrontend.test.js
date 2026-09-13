@@ -26,7 +26,7 @@ test("otonom kontrol merkezi yalnız durum sağlık özet ve arşivlenebilir ist
 test("ilan yönetimi arama filtre detay ve red aksiyonlarını korur", () => {
   assert.match(adminPage, /ilanArama/);
   assert.match(adminPage, /ilanFiltre/);
-  assert.match(adminPage, /to=\{`\/ilan\/\$\{ilan\.id\}`\}/);
+  assert.match(adminPage, /to=\{`\/admin\/\$\{ilan\.id\}`\}/);
   assert.match(adminPage, /\/listings\/\$\{ilan\.id\}\/reject/);
 });
 

@@ -9,6 +9,7 @@ getDoc
 import { db } from "../firebase";
 import { adminApi } from "../config/adminApi";
 import { formatListingCategory } from "../data/categories";
+import { isListingPublished } from "../utils/listingAvailability";
 
 
 function AdminDetail(){
@@ -19,6 +20,8 @@ const {id}=useParams();
 const navigate=useNavigate();
 
 const [ilan,setIlan]=useState(null);
+const [busy,setBusy]=useState(false);
+const [error,setError]=useState("");
 
 
 
@@ -27,7 +30,7 @@ useEffect(()=>{
 
 async function getir(){
 
-
+try {
 const snap =
 await getDoc(
 doc(db,"ilanlar",id)
@@ -43,8 +46,12 @@ id:snap.id,
 
 });
 
+} else {
+setError("İlan bulunamadı.");
 }
-
+} catch {
+setError("İlan detayları şu anda alınamıyor.");
+}
 
 }
 
@@ -58,32 +65,24 @@ getir();
 
 
 async function onayla(){
-
-
-await adminApi(`/listings/${id}/approve`, { method: "PUT" });
-
-
-alert("İlan yayınlandı ✅");
-
-navigate("/admin");
-
-
+const published=isListingPublished(ilan);
+if(ilan.onay===true){
+await runAction(() => adminApi(`/listings/${id}/publication`, {
+method:"PATCH",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({published:!published})
+}), published ? "İlan yayından kaldırıldı" : "İlan yayınlandı ✅");
+return;
+}
+await runAction(() => adminApi(`/listings/${id}/approve`, { method: "PUT" }), "İlan onaylandı ve yayınlandı ✅");
 }
 
 
 
 
 async function reddet(){
-
-
-await adminApi(`/listings/${id}/reject`, { method: "PUT" });
-
-
-alert("İlan reddedildi");
-
-navigate("/admin");
-
-
+if(!confirm("İlan reddedilsin mi?")) return;
+await runAction(() => adminApi(`/listings/${id}/reject`, { method: "PUT" }), "İlan reddedildi");
 }
 
 
@@ -92,16 +91,27 @@ navigate("/admin");
 async function sil(){
 
 
-if(!confirm("Silinsin mi?"))
+if(!confirm("İlan satıştan kaldırılıp arşivlensin mi? Sipariş ve finans geçmişi korunacaktır."))
 return;
 
+await runAction(() => adminApi(`/listings/${id}`, { method: "DELETE" }), "İlan arşivlendi");
 
-await adminApi(`/listings/${id}`, { method: "DELETE" });
 
+}
 
+async function runAction(action, successMessage){
+if(busy) return;
+setBusy(true);
+setError("");
+try {
+await action();
+alert(successMessage);
 navigate("/admin");
-
-
+} catch (actionError) {
+setError(actionError.message || "İlan işlemi tamamlanamadı.");
+} finally {
+setBusy(false);
+}
 }
 
 
@@ -110,7 +120,7 @@ navigate("/admin");
 
 if(!ilan){
 
-return <h2>Yükleniyor...</h2>
+return <div className="page"><h2>{error || "Yükleniyor..."}</h2></div>
 
 }
 
@@ -125,6 +135,8 @@ return (
 <h1>
 👑 Yönetici Kontrol
 </h1>
+
+{error && <p className="admin-operation-error" role="alert">{error}</p>}
 
 
 
@@ -268,18 +280,22 @@ Durum:
 
 
 
-<button onClick={onayla}>
-✅ Yayınla
+<button disabled={busy || ilan.durum === "Reddedildi" || ilan.silindi === true} onClick={onayla}>
+{isListingPublished(ilan) ? "⛔ Yayından Kaldır" : ilan.onay === true ? "✅ Tekrar Yayınla" : "✅ Onayla ve Yayınla"}
 </button>
 
 
-<button onClick={reddet}>
+<button disabled={busy || ilan.silindi === true} onClick={reddet}>
 ❌ Reddet
 </button>
 
 
-<button onClick={sil}>
-🗑 Sil
+<button disabled={busy || ilan.silindi === true} onClick={()=>navigate(`/duzenle/${id}`)}>
+✏️ Düzenle
+</button>
+
+<button disabled={busy || ilan.silindi === true} onClick={sil}>
+🗄️ Arşivle
 </button>
 
 
