@@ -35,3 +35,26 @@ test("admin tabloları tablet ve mobilde taşmadan kullanılabilir", () => {
   assert.match(css, /@media \(max-width:900px\)/);
   assert.match(css, /@media \(max-width:520px\)/);
 });
+
+test("sponsor admin aksiyonları JSON gönderir, onay ister ve duplicate çağrıyı kilitler", () => {
+  const sponsor = readFileSync("src/components/admin/AdminSponsorApplications.jsx", "utf8");
+  assert.match(sponsor, /"Content-Type": "application\/json"/);
+  assert.match(sponsor, /window\.confirm/);
+  assert.match(sponsor, /actionLock\.current\.has\(id\)/);
+});
+
+test("işlem gereken sipariş doğru Siparişler sekmesinde detay modalını açar", () => {
+  const exceptions = readFileSync("src/components/admin/AdminExceptions.jsx", "utf8");
+  const orders = readFileSync("src/components/admin/AdminOrders.jsx", "utf8");
+  assert.match(adminPage, /onInspectOrder=\{\(orderId\)/);
+  assert.match(exceptions, /onInspectOrder\?\.\(item\.orderId\)/);
+  assert.match(orders, /initialOrderId/);
+  assert.match(orders, /openDetail\(initialOrderId\)/);
+  assert.doesNotMatch(exceptions, /href=\{`#order-/);
+});
+
+test("kullanıcı ve mağaza aksiyonları çift tıklama ve modal kapanışını güvenli yönetir", () => {
+  const stores = readFileSync("src/components/admin/AdminStores.jsx", "utf8");
+  assert.match(operations, /actionLock\.current\.has\(user\.uid\)/);
+  assert.match(stores, /event\.target === event\.currentTarget/);
+});

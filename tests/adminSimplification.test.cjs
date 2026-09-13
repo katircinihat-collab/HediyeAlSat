@@ -43,6 +43,7 @@ test("aktif settlement kartı para çekme değil satıcı settlement sorunu olar
 test("arşiv yalnız resolved ve archived endpoint görünümünü kullanır", () => {
   assert.match(archive, /action-required\?view=archive/);
   assert.doesNotMatch(archive, /\?view=active/);
+  assert.match(archive, /Arşivde ara/);
 });
 
 test("trafik ışığı sağlık satırlarında marketplace settlement bulunur", () => {

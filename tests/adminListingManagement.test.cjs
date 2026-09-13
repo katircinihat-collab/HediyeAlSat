@@ -63,9 +63,18 @@ test("silme hard delete yerine canonical soft archive yapar ve tekrar çağrı f
 
 test("bütün ilan mutasyonları auth ve server-side admin middleware arkasındadır", () => {
   assert.ok(routes.indexOf("router.use(authMiddleware, adminMiddleware)") < routes.indexOf("/listings/:id/approve"));
+  assert.match(routes, /router\.get\("\/listings", adminListingController\.list\)/);
+  assert.match(controllerSource, /collection\("ilanlar"\)\.limit\(200\)\.get\(\)/);
   for (const action of ["approve", "reject", "flags", "stock", "publication"]) {
     assert.match(routes, new RegExp(`/listings/:id/${action}`));
   }
+});
+
+test("admin ilan listesi client Firestore yerine yetkili backend üzerinden yüklenir ve hata yutulmaz", () => {
+  assert.match(adminPage, /adminApi\("\/listings"\)/);
+  assert.match(adminPage, /setIlanHatasi\(error\.message/);
+  assert.match(adminPage, /İlanlar yükleniyor/);
+  assert.doesNotMatch(adminPage, /collection\(db, "ilanlar"\)/);
 });
 
 test("UI duplicate clicki kilitler, işlem sırasında disable eder, hatayı gösterir ve listeyi yeniler", () => {

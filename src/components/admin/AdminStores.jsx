@@ -97,7 +97,7 @@ function AdminStores({ magazalar, onStatusChanged }) {
       )}
 
       {seciliMagaza && (
-        <div className="admin-store-modal-backdrop" role="presentation">
+        <div className="admin-store-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !islemdekiId) setSeciliMagaza(null); }}>
           <div className="admin-store-modal" role="dialog" aria-modal="true" aria-labelledby="store-status-title">
             <h3 id="store-status-title">{seciliMagaza.aktif === false ? "Mağazayı yeniden açmak istiyor musunuz?" : "Bu mağazayı kapatmak istediğinize emin misiniz?"}</h3>
             <p>{seciliMagaza.aktif === false ? "Mağaza yeniden public vitrinlerde görüntülenebilecektir." : "Mağaza ve geçmiş kayıtlar silinmeyecek. Mağaza kullanıcılar tarafından görüntülenemeyecek ve yeni ilan veremeyecektir."}</p>

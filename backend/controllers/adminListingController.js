@@ -74,6 +74,18 @@ exports.me = (_req, res) => {
     });
 };
 
+exports.list = async (_req, res, next) => {
+    try {
+        const snapshot = await firestore.collection("ilanlar").limit(200).get();
+        return res.json({
+            success: true,
+            listings: snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 exports.onayla = async (req, res, next) => {
     try {
         const found = await ilanGetir(req.params.id, res);

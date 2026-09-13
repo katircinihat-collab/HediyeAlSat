@@ -16,6 +16,7 @@ const router = express.Router();
 router.use(authMiddleware, adminMiddleware);
 
 router.get("/me", adminListingController.me);
+router.get("/listings", adminListingController.list);
 router.get("/overview", adminOperationsController.overview);
 router.get("/users", adminOperationsController.listUsers);
 router.patch("/users/:uid/status", adminOperationsController.updateUserStatus);

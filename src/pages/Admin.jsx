@@ -1,11 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import {
-  collection,
-  getDocs,
-  limit,
-  query
-} from "firebase/firestore";
+import { collection, getDocs, limit, query } from "firebase/firestore";
 
 import { db } from "../firebase";
 import { Link } from "react-router-dom";
@@ -62,28 +57,24 @@ function Admin() {
   const [ilanArama, setIlanArama] = useState("");
   const [ilanFiltre, setIlanFiltre] = useState("tumu");
   const [ilanHatasi, setIlanHatasi] = useState("");
+  const [ilanlarYukleniyor, setIlanlarYukleniyor] = useState(false);
+  const [incelenecekSiparisId, setIncelenecekSiparisId] = useState("");
   const ilanIslemKilidi = useRef(new Set());
 
   const [bakiyeler, setBakiyeler] = useState([]);
   const [magazalar, setMagazalar] = useState([]);
 
   async function getir() {
-
-    const snap = await getDocs(
-      query(collection(db, "ilanlar"), limit(200))
-    );
-
-    setIlanlar(
-
-      snap.docs.map((d) => ({
-
-        id: d.id,
-
-        ...d.data()
-
-      }))
-
-    );
+    setIlanlarYukleniyor(true);
+    setIlanHatasi("");
+    try {
+      const data = await adminApi("/listings");
+      setIlanlar(data.listings || []);
+    } catch (error) {
+      setIlanHatasi(error.message || "İlanlar şu anda alınamıyor.");
+    } finally {
+      setIlanlarYukleniyor(false);
+    }
 
   }
   async function magazalariGetir() {
@@ -135,7 +126,7 @@ function Admin() {
 
   useEffect(() => {
     if (activeSection === "listings") {
-      getir().catch(() => setIlanlar([]));
+      getir();
       magazalariGetir().catch(() => setMagazalar([]));
     }
     if (activeSection === "finance") bakiyeleriGetir().catch(() => setBakiyeler([]));
@@ -234,8 +225,8 @@ className="admin-action-btn admin-approve"
 </nav>
 
 {activeSection === "dashboard" && <AdminOperationsOverview />}
-{activeSection === "actions" && <><AdminExceptions /><AdminOrderClaims /></>}
-{activeSection === "orders" && <AdminOrders />}
+{activeSection === "actions" && <><AdminExceptions onInspectOrder={(orderId) => { setIncelenecekSiparisId(orderId); setActiveSection("orders"); }} /><AdminOrderClaims /></>}
+{activeSection === "orders" && <AdminOrders initialOrderId={incelenecekSiparisId} onInitialOrderHandled={() => setIncelenecekSiparisId("")} />}
 {activeSection === "finance" && <div className="admin-finance-split"><article><h2>Marketplace Settlement</h2><p>Marketplace satıcı kazançları iyzico settlement akışında izlenir. Bu bölümden manuel ödeme başlatılmaz.</p></article><article><h2>Legacy / İç Bakiye</h2><p>Eski iç bakiye ve para çekme kayıtları ayrı muhasebe alanıdır.</p></article></div>}
 {activeSection === "finance" && <div className="admin-section">
 
@@ -382,6 +373,9 @@ onStatusChanged={magazaDurumunuGuncelle}
 </div>
 
 <div className="admin-products">
+
+{ilanlarYukleniyor && <p role="status">İlanlar yükleniyor...</p>}
+{!ilanlarYukleniyor && !ilanHatasi && gorunenIlanlar.length === 0 && <p>Bu filtreye uygun ilan bulunamadı.</p>}
 
 {
 
