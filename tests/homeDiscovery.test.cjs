@@ -10,6 +10,7 @@ const styles = fs.readFileSync(path.join(root, "src/styles/components/home-disco
 const productCard = fs.readFileSync(path.join(root, "src/components/ProductCard.jsx"), "utf8");
 const home = fs.readFileSync(path.join(root, "src/pages/Home.jsx"), "utf8");
 const giftBattle = fs.readFileSync(path.join(root, "src/components/GiftBattle.jsx"), "utf8");
+const topDesignShowcase = fs.readFileSync(path.join(root, "src/components/TopDesignShowcase.jsx"), "utf8");
 
 test("Top 10 en fazla 10 canonical normal ürünü impressionCount değerine göre sıralar", () => {
   assert.match(helper, /getTopProducts\(listings, limit = 10\)/);
@@ -76,8 +77,11 @@ test("üst akış, Günün Fırsatları, mağazalar ve diğer özel alanlar koru
   assert.match(home, /<DailyQuote \/>[\s\S]*<Footer \/>/);
   assert.match(home, /sponsoredProduct=\{sponsored\.sponsored_product\?\.product\}/);
   assert.match(component, /isListingPublished\(sponsoredProduct\)/);
-  assert.ok(home.indexOf("A4 Tasarım Pazarı") < home.indexOf("Ne Alırsan 100 TL"));
+  assert.match(home, /import TopDesignShowcase from "\.\.\/components\/TopDesignShowcase"/);
+  assert.ok(home.indexOf("<TopDesignShowcase />") < home.indexOf("Ne Alırsan 100 TL"));
   assert.ok(home.indexOf("Ne Alırsan 100 TL") < home.indexOf("<HomeDiscovery"));
+  assert.match(topDesignShowcase, /getTopDesigns\(4\)/);
+  assert.match(topDesignShowcase, /<TopDesignCard key=\{design\.id\} design=\{design\} \/>/);
 });
 
 test("Hediye Kapışması geçici API hatasında kaybolmaz ve eski konumunu korur", () => {

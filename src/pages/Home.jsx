@@ -27,6 +27,7 @@ import SpecialDays from "../components/SpecialDays";
 import GiftAssistant from "../components/GiftAssistant";
 import Stats from "../components/Stats";
 import Footer from "../components/Footer";
+import TopDesignShowcase from "../components/TopDesignShowcase";
 import HomeDiscovery from "../components/HomeDiscovery";
 import GiftBattle from "../components/GiftBattle";
 import DailyQuote from "../components/DailyQuote";
@@ -454,41 +455,13 @@ function Home() {
 
       <SponsorBanner sponsor={sponsored.middle_banner} />
 
+      <TopDesignShowcase />
 
 
       <section
         className="shopping-hubs"
         aria-label="Özel alışveriş bölümleri"
       >
-
-        <article
-          className="shopping-hub-card shopping-hub-card-design"
-        >
-
-          <span className="shopping-hub-icon">
-            🎨
-          </span>
-
-          <div>
-
-            <h2>
-              A4 Tasarım Pazarı
-            </h2>
-
-            <p>
-              Özgün poster ve A4 tasarımları keşfet.
-            </p>
-
-          </div>
-
-          <Link to="/a4-tasarimlar">
-            Tasarımları Gör
-          </Link>
-
-        </article>
-
-
-
         <article
           className="shopping-hub-card shopping-hub-card-budget"
         >
