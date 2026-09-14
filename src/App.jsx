@@ -107,8 +107,7 @@ function App() {
     <BrowserRouter>
       <ScrollManager />
 
-      <Suspense
-        fallback={
+      <Suspense fallback={
           <main className="route-loading" role="status">
             Sayfa yükleniyor...
           </main>
