@@ -293,7 +293,7 @@ function Home() {
 
       <SEO
         title="HediyeAlSat | Türkiye'nin Hediye Pazaryeri"
-        description="Türkiye'nin en yeni hediye pazaryeri. El yapımı ürünler, butik mağazalar ve binlerce hediye ilanı HediyeAlSat'ta."
+        description="El yapımı ürünleri, butik mağazaları ve farklı hediye seçeneklerini HediyeAlSat'ta keşfedin."
         canonical="https://hediyealsat.com/"
         image="https://hediyealsat.com/logo192.png"
       />

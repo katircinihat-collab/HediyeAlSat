@@ -20,8 +20,7 @@ function Footer() {
           <h2>🎁 HediyeAlSat</h2>
 
           <p>
-            Türkiye'nin en güvenli hediye pazaryeri.
-            Binlerce satıcı ve on binlerce ürün tek platformda.
+            Hediye ürünlerini ve bağımsız mağazaları tek platformda keşfedin.
           </p>
 
         </div>
@@ -41,18 +40,6 @@ function Footer() {
 
           <Link to="/iletisim">
             İletişim
-          </Link>
-
-          <Link to="/">
-            Blog
-          </Link>
-
-          <Link to="/">
-            Kariyer
-          </Link>
-
-          <Link to="/">
-            Basında Biz
           </Link>
 
         </div>
