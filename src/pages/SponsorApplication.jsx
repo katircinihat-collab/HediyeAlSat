@@ -26,6 +26,7 @@ function SponsorApplication() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState("");
+  const [selectedPackageId, setSelectedPackageId] = useState(packageConfig.packages[0]?.id || "");
   const [openedAt] = useState(() => Date.now());
 
   const load = useCallback(async () => {
@@ -55,8 +56,8 @@ function SponsorApplication() {
     if (!store || submitting) return;
     setMessage(""); setSubmitting(true);
     try {
-      await sponsorStoreApi("/applications", { method: "POST", body: JSON.stringify({ storeId: store.id, ...form }) });
-      setMessage("Başvurunuz incelemeye alındı. Paket seçimi admin onayından sonra yapılacaktır.");
+      await sponsorStoreApi("/applications", { method: "POST", body: JSON.stringify({ storeId: store.id, packageId: selectedPackageId, ...form }) });
+      setMessage("Başvurunuz alındı! 🎉 Sponsor mağaza işleminiz tamamlandığında mağazanız seçtiğiniz süre boyunca sponsor alanlarında öne çıkarılacaktır.");
       await load();
     } catch (error) { setMessage(error.message); }
     finally { setSubmitting(false); }
@@ -70,8 +71,8 @@ function SponsorApplication() {
 
   return <><Navbar /><main className="sponsor-application-page"><div className="sponsor-application-container">
     <Link to="/sponsor-magaza" className="sponsor-application-back">← Sponsor Mağaza</Link>
-    <section className="sponsor-application-hero"><div className="sponsor-application-icon">🏪</div><h1>Sponsor Mağaza Başvurusu</h1><p>Başvurunuz incelendikten sonra paketiniz admin tarafından belirlenir; ödeme tamamlanmadan sponsor görünümü açılmaz.</p></section>
-    <section className="sponsor-package-section"><div className="sponsor-form-title"><span>✨</span><div><h2>Sponsor Paketleri</h2><p>Paket seçimini başvurunuzu inceleyen ekip yapar.</p></div></div><div className="sponsor-package-grid">{packageConfig.packages.map((item) => <div key={item.id} className={`sponsor-package-card sponsor-tier-${item.id}`}><h3>{item.name}</h3><div className="sponsor-package-price">{item.price.toLocaleString("tr-TR")} TL</div><div className="sponsor-package-duration">{item.durationDays} gün</div></div>)}</div></section>
+    <section className="sponsor-application-hero"><div className="sponsor-application-icon">🏪</div><h1>Mağazamı Öne Çıkar</h1><p>Sürenizi ve bütçenizi seçin. HediyeAlSat yalnızca mağazanızın platform kurallarına uygunluğunu inceler; müşteriler ürünlerini mağazanızdan kendileri seçer.</p></section>
+    <section className="sponsor-package-section"><div className="sponsor-form-title"><span>✨</span><div><h2>Sponsor Paketini Seçin</h2><p>Mağazanızın kaç gün ve hangi ücretle öne çıkacağını siz belirlersiniz.</p></div></div><div className="sponsor-package-grid">{packageConfig.packages.map((item) => <label key={item.id} className={`sponsor-package-card sponsor-tier-${item.id} ${selectedPackageId === item.id ? "selected" : ""}`}><input type="radio" name="sponsorPackage" value={item.id} checked={selectedPackageId === item.id} onChange={() => setSelectedPackageId(item.id)} /><h3>{item.name}</h3><div className="sponsor-package-price">{item.price.toLocaleString("tr-TR")} TL</div><div className="sponsor-package-duration">{item.durationDays} gün</div><span>{selectedPackageId === item.id ? "Seçildi" : "Paketi seç"}</span></label>)}</div></section>
     {applications.length > 0 && <section className="sponsor-application-form-section"><div className="sponsor-form-title"><span>📋</span><div><h2>Başvurularım</h2><p>İnceleme ve ödeme durumunu buradan takip edin.</p></div></div><div className="sponsor-status-list">{applications.map((item) => { const selected = packageConfig.packages.find((pkg) => pkg.id === item.selectedPackageId); return <article key={item.id} className="sponsor-status-card"><strong>{item.magazaAdi}</strong><span>{applicationStatus(item, openedAt)}</span>{selected && <p>{selected.name} · {selected.durationDays} gün · {selected.price.toLocaleString("tr-TR")} TL</p>}{item.status === "APPROVED_PAYMENT_PENDING" && <button type="button" onClick={() => pay(item)}>Ödemeyi Tamamla</button>}</article>; })}</div></section>}
     {loading ? <div className="sponsor-store-info">Başvuru bilgileri yükleniyor…</div> : !auth.currentUser ? <div className="sponsor-store-info">Başvuru için <Link to="/login">giriş yapın</Link>.</div> : !store ? <div className="sponsor-store-info">Sponsor başvurusu için önce kendi mağazanızı oluşturmalısınız.</div> : !blocking && <section className="sponsor-application-form-section"><div className="sponsor-form-title"><span>📝</span><div><h2>{store.magazaAdi || store.adi}</h2><p>Başvurunuz bu mağazaya güvenli biçimde bağlanacaktır.</p></div></div><form className="sponsor-application-form" onSubmit={submit}><div className="sponsor-form-grid"><div className="sponsor-form-group"><label>Yetkili Adı *</label><input value={form.yetkiliAdi} onChange={(e) => setForm({ ...form, yetkiliAdi: e.target.value })} required maxLength={100} /></div><div className="sponsor-form-group"><label>Telefon *</label><input type="tel" value={form.telefon} onChange={(e) => setForm({ ...form, telefon: e.target.value })} required maxLength={30} /></div><div className="sponsor-form-group sponsor-full"><label>Web Sitesi</label><input type="url" value={form.webSitesi} onChange={(e) => setForm({ ...form, webSitesi: e.target.value })} maxLength={250} /></div><div className="sponsor-form-group sponsor-full"><label>Mağazanız Hakkında *</label><textarea value={form.hakkinda} onChange={(e) => setForm({ ...form, hakkinda: e.target.value })} minLength={20} maxLength={1000} rows={6} required /></div></div><button className="sponsor-application-submit" disabled={submitting}>{submitting ? "Gönderiliyor…" : "Başvuruyu İncelemeye Gönder"}</button></form></section>}
     {message && <div className="sponsor-store-info" role="status">{message}</div>}

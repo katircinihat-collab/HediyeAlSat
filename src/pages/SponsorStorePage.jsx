@@ -146,8 +146,8 @@ function SponsorStorePage() {
                 </h3>
 
                 <p>
-                  Mağazanızı sponsor mağaza olarak
-                  öne çıkarmak için başvurun.
+                  Süre ve ücret paketini kendiniz seçin;
+                  mağazanızı sponsor alanlarında öne çıkarın.
                 </p>
 
               </div>
@@ -174,8 +174,10 @@ function SponsorStorePage() {
             </strong>
 
             <p>
-              Başvurunuz HediyeAlSat ekibi tarafından
-              incelendikten sonra sizinle iletişime geçilecektir.
+              Paketinizi siz seçersiniz. HediyeAlSat yalnızca mağazanızın
+              platform kurallarına uygunluğunu inceler. Onay ve ödeme sonrası
+              mağazanız seçtiğiniz süre boyunca sponsor alanlarında görünür;
+              müşteriler satın alacakları ürünü kendileri seçer.
             </p>
 
           </section>

@@ -6,19 +6,30 @@ const path = require("node:path");
 const root = path.join(__dirname, "..");
 const read = (file) => fs.readFileSync(path.join(root, file), "utf8");
 
-test("müşteri yalnız admin onayından sonra ödeme aksiyonu görür", () => {
+test("müşteri paketi kendisi seçer ve yalnız moderasyon onayından sonra ödeme aksiyonu görür", () => {
   const source = read("src/pages/SponsorApplication.jsx");
   assert.match(source, /item\.status === "APPROVED_PAYMENT_PENDING"/);
   assert.match(source, /Ödemeyi Tamamla/);
   assert.match(source, /Başvuruyu İncelemeye Gönder/);
-  assert.doesNotMatch(source, /setPaket/);
+  assert.match(source, /setSelectedPackageId/);
+  assert.match(source, /packageId: selectedPackageId/);
+  assert.match(source, /Mağazanızın kaç gün ve hangi ücretle öne çıkacağını siz belirlersiniz/);
+  assert.doesNotMatch(source, /paketiniz admin tarafından belirlenir|Paket seçimini başvurunuzu inceleyen ekip yapar/);
 });
 
-test("admin bronze gold diamond seçebilir ve reddedebilir", () => {
+test("admin yeni başvuruda seçilmiş paketin uygunluğunu onaylar ve reddedebilir", () => {
   const source = read("src/components/admin/AdminSponsorApplications.jsx");
-  assert.match(source, /packages\.packages\.map/);
+  assert.match(source, /Uygunluğu Onayla/);
+  assert.match(source, /item\.selectedPackageId/);
   assert.match(source, /"approve"/);
   assert.match(source, /"reject"/);
+});
+
+test("tanıtım metni ekip ürün seçiyor izlenimi vermez", () => {
+  const landing = read("src/pages/SponsorStorePage.jsx");
+  assert.match(landing, /Paketinizi siz seçersiniz/);
+  assert.match(landing, /müşteriler satın alacakları ürünü kendileri seçer/);
+  assert.doesNotMatch(landing, /HediyeAlSat ekibi tarafından/);
 });
 
 test("sponsor payment LISTING olup normal sepet temizleme koşulundan ayrıdır", () => {
