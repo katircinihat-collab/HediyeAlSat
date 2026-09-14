@@ -9,7 +9,6 @@ import Footer from "../components/Footer";
 import "../styles/pages/special-listings.css";
 import {
   isA4Listing,
-  isDigitalA4Listing,
   isLegacySecondHandListing
 } from "../data/categories";
 import {
@@ -91,7 +90,7 @@ function SpecialListingsPage({ tur }) {
   useEffect(() => {
     if (yuzTlSayfasi) return;
     const dijitalIds = ilanlar
-      .filter(isDigitalA4Listing)
+      .filter(isA4Listing)
       .map((ilan) => ilan.id);
 
     if (!dijitalIds.length) {
@@ -125,7 +124,7 @@ function SpecialListingsPage({ tur }) {
       else await addDesignVote(ilanId);
 
       const [ozet, kullaniciOylari] = await Promise.all([
-        getDesignVoteSummary(ilanlar.filter(isDigitalA4Listing).map((ilan) => ilan.id)),
+        getDesignVoteSummary(ilanlar.filter(isA4Listing).map((ilan) => ilan.id)),
         getMyDesignVotes()
       ]);
       setOySayilari(ozet.counts || {});
@@ -138,7 +137,7 @@ function SpecialListingsPage({ tur }) {
   }
 
   function a4Karti(ilan) {
-    const dijital = isDigitalA4Listing(ilan);
+    const dijital = isA4Listing(ilan);
     const kendiTasarimi = Boolean(kullanici && (
       ilan.sahipUid === kullanici.uid || ilan.sahip === kullanici.email
     ));

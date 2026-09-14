@@ -17,8 +17,7 @@ function currentWeekKey(now = new Date()) {
 }
 
 function validDesign(listing) {
-    return listing.urunTipi === "dijital"
-        && listing.kategori === "A4 Tasarım"
+    return (listing.kategori === "A4 Tasarım" || listing.anaKategori === "A4 Tasarım")
         && listing.onay === true
         && listing.aktif === true;
 }
@@ -37,7 +36,6 @@ exports.top = async (req, res, next) => {
                 .where("periodKey", "==", periodKey)
                 .get(),
             firestore.collection("ilanlar")
-                .where("urunTipi", "==", "dijital")
                 .where("kategori", "==", "A4 Tasarım")
                 .where("onay", "==", true)
                 .where("aktif", "==", true)
