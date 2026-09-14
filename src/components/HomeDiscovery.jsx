@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import ProductCard from "./ProductCard";
 import {
   getAdminFeaturedListings,
+  getBudgetProducts,
   getNewestProducts,
   getTopProducts
 } from "../utils/homeDiscovery";
@@ -61,7 +62,26 @@ function DiscoverySkeleton() {
   return <div className="discovery-skeleton" aria-hidden="true">{[1, 2, 3, 4].map((item) => <i key={item} />)}</div>;
 }
 
-function HomeDiscovery({ listings, loading = false, sponsoredProduct = null }) {
+export function BudgetProductShowcase({ listings, loading = false }) {
+  const products = useMemo(() => getBudgetProducts(listings), [listings]);
+
+  return (
+    <div className="home-discovery home-discovery-budget">
+      {loading && <DiscoverySkeleton />}
+      {!loading && (
+        <DiscoveryRail title="💯 Ne Alırsan 100 TL" eyebrow="UYGUN FİYATLI HEDİYELER" description="100 TL ve altındaki hediyeleri keşfet" itemCount={products.length}>
+          {products.length ? products.map((listing) => (
+            <article className="discovery-budget-product" key={listing.id}>
+              <ProductCard ilan={listing} variant="home" />
+            </article>
+          )) : <div className="discovery-empty">Şu anda 100 TL ve altında yayında ürün bulunmuyor.</div>}
+        </DiscoveryRail>
+      )}
+    </div>
+  );
+}
+
+function HomeDiscovery({ listings, loading = false, sponsoredProduct = null, section = "all" }) {
   const [featuredIndex, setFeaturedIndex] = useState(0);
   const [featuredPaused, setFeaturedPaused] = useState(false);
   const featured = useMemo(() => getAdminFeaturedListings(listings), [listings]);
@@ -93,7 +113,7 @@ function HomeDiscovery({ listings, loading = false, sponsoredProduct = null }) {
     <div className="home-discovery" aria-label="HediyeAlSat keşif vitrini">
       {loading && <DiscoverySkeleton />}
 
-      {!loading && featured.length > 0 && (
+      {!loading && section !== "rankings" && featured.length > 0 && (
         <section
           className="discovery-featured"
           aria-labelledby="discovery-featured-title"
@@ -124,7 +144,7 @@ function HomeDiscovery({ listings, loading = false, sponsoredProduct = null }) {
         </section>
       )}
 
-      {!loading && visibleSponsoredProduct && (
+      {!loading && section !== "featured" && visibleSponsoredProduct && (
         <aside className="discovery-sponsored-spot" aria-label="Sponsorlu ilan">
           <span>Sponsorlu</span>
           <Link to={`/ilan/${visibleSponsoredProduct.id}`}>
@@ -135,7 +155,7 @@ function HomeDiscovery({ listings, loading = false, sponsoredProduct = null }) {
         </aside>
       )}
 
-      {!loading && top.length > 0 && (
+      {!loading && section !== "featured" && top.length > 0 && (
         <DiscoveryRail title="🔥 Bugünün Top 10 Ürünü" eyebrow="ÇOK SEVİLENLER" description="En çok görüntülenen popüler ürünler" itemCount={top.length}>
           {top.map((listing, index) => (
             <article className="discovery-ranked-card" key={listing.id}>
@@ -146,7 +166,7 @@ function HomeDiscovery({ listings, loading = false, sponsoredProduct = null }) {
         </DiscoveryRail>
       )}
 
-      {!loading && newest.length > 0 && (
+      {!loading && section !== "featured" && newest.length > 0 && (
         <DiscoveryRail title="✨ Yeni Gelen 10 Ürün" eyebrow="TAZE KEŞİFLER" description="HediyeAlSat'a en son eklenen ürünler" itemCount={newest.length}>
           {newest.map((listing, index) => (
             <article className="discovery-ranked-card" key={listing.id}>

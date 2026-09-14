@@ -28,7 +28,7 @@ import GiftAssistant from "../components/GiftAssistant";
 import Stats from "../components/Stats";
 import Footer from "../components/Footer";
 import TopDesignShowcase from "../components/TopDesignShowcase";
-import HomeDiscovery from "../components/HomeDiscovery";
+import HomeDiscovery, { BudgetProductShowcase } from "../components/HomeDiscovery";
 import GiftBattle from "../components/GiftBattle";
 import DailyQuote from "../components/DailyQuote";
 import SponsorBanner from "../components/SponsorBanner";
@@ -451,37 +451,9 @@ function Home() {
 
       <SponsorBanner sponsor={sponsored.middle_banner} />
 
-      <section
-        className="shopping-hubs"
-        aria-label="Özel alışveriş bölümleri"
-      >
-        <article
-          className="shopping-hub-card shopping-hub-card-budget"
-        >
+      <HomeDiscovery listings={ilanlar} loading={ilanlarYukleniyor} section="featured" />
 
-          <span className="shopping-hub-icon">
-            💯
-          </span>
-
-          <div>
-
-            <h2>
-              Ne Alırsan 100 TL
-            </h2>
-
-            <p>
-              100 TL ve altındaki hediyeleri keşfet.
-            </p>
-
-          </div>
-
-          <Link to="/100-tl-alti">
-            Ürünleri Gör
-          </Link>
-
-        </article>
-
-      </section>
+      <BudgetProductShowcase listings={ilanlar} loading={ilanlarYukleniyor} />
 
       <TopDesignShowcase />
 
@@ -490,6 +462,7 @@ function Home() {
         listings={ilanlar}
         loading={ilanlarYukleniyor}
         sponsoredProduct={sponsored.sponsored_product?.product}
+        section="rankings"
       />
 
 

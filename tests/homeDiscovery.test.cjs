@@ -23,6 +23,15 @@ test("Top 10 en fazla 10 canonical normal ürünü impressionCount değerine gö
   assert.match(component, /Bugünün Top 10 Ürünü/);
 });
 
+test("100 TL vitrini canonical normal ürünleri ve gerçek ProductCard davranışını kullanır", () => {
+  assert.match(helper, /getBudgetProducts\(listings, limit = 10\)/);
+  assert.match(helper, /price >= 0 && price <= 100/);
+  assert.match(component, /function BudgetProductShowcase/);
+  assert.match(component, /discovery-budget-product/);
+  assert.match(component, /<ProductCard ilan=\{listing\} variant="home" \/>/);
+  assert.match(component, /Şu anda 100 TL ve altında yayında ürün bulunmuyor/);
+});
+
 test("öne çıkan hero yalnız canonical admin trend normal ürünlerini kullanır", () => {
   assert.match(helper, /getAdminFeaturedListings\(listings\)/);
   assert.match(helper, /getNormalAvailableListings\(listings\)/);
@@ -48,7 +57,7 @@ test("Yeni Gelen 10 canonical normal ürünü en yeni tarihe göre sıralar", ()
 
 test("iki sırada da büyük 1-10 numarası ve mevcut ProductCard kullanılır", () => {
   assert.equal((component.match(/index \+ 1/g) || []).length, 4);
-  assert.equal((component.match(/<ProductCard ilan=\{listing\} variant="home" \/>/g) || []).length, 2);
+  assert.equal((component.match(/<ProductCard ilan=\{listing\} variant="home" \/>/g) || []).length, 3);
   assert.doesNotMatch(component, /getTopDesigns|Top 10 Tasarımı|Yeni 10 Tasarım/);
   assert.match(component, /En çok görüntülenen popüler ürünler/);
   assert.match(styles, /\.discovery-ranked-card \{[^}]*flex:0 0 285px;[^}]*min-width:285px/);
@@ -79,8 +88,9 @@ test("üst akış, Günün Fırsatları, mağazalar ve diğer özel alanlar koru
   assert.match(home, /sponsoredProduct=\{sponsored\.sponsored_product\?\.product\}/);
   assert.match(component, /isListingPublished\(sponsoredProduct\)/);
   assert.match(home, /import TopDesignShowcase from "\.\.\/components\/TopDesignShowcase"/);
-  assert.ok(home.indexOf("Ne Alırsan 100 TL") < home.indexOf("<TopDesignShowcase />"));
-  assert.ok(home.indexOf("<TopDesignShowcase />") < home.indexOf("<HomeDiscovery"));
+  assert.ok(home.indexOf('section="featured"') < home.indexOf("<BudgetProductShowcase"));
+  assert.ok(home.indexOf("<BudgetProductShowcase") < home.indexOf("<TopDesignShowcase />"));
+  assert.ok(home.indexOf("<TopDesignShowcase />") < home.lastIndexOf("<HomeDiscovery"));
   assert.match(home, /x\.kampanyali === true/);
   assert.doesNotMatch(home, /gununFirsatlari[\s\S]{0,100}x\.trend === true/);
   assert.match(topDesignShowcase, /getTopDesigns\(4\)/);

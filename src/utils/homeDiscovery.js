@@ -28,6 +28,16 @@ export function getActiveBoostListings(listings, now = Date.now()) {
     .sort((left, right) => listingDateMs(right) - listingDateMs(left));
 }
 
+export function getBudgetProducts(listings, limit = 10) {
+  return getNormalAvailableListings(listings)
+    .filter((listing) => {
+      const price = Number(String(listing.fiyat ?? "").replace(",", "."));
+      return Number.isFinite(price) && price >= 0 && price <= 100;
+    })
+    .sort((left, right) => listingDateMs(right) - listingDateMs(left))
+    .slice(0, limit);
+}
+
 export function getAdminFeaturedListings(listings) {
   return getNormalAvailableListings(listings)
     .filter((listing) => listing.trend === true)
