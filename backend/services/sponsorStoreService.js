@@ -13,6 +13,21 @@ function getSponsorStorePackage(id) {
     return packageConfig.packages.find((item) => item.id === id) || null;
 }
 
+function resolveApplicationPackage(input = {}) {
+    const selected = getSponsorStorePackage(String(input.packageId || input.selectedPackageId || "").trim());
+    if (!selected) throw new PaymentValidationError("Sponsor paketi seçimi gereklidir.", 400, "PACKAGE_INVALID");
+    return selected;
+}
+
+function resolveApprovalPackage(application = {}, requestedPackageId) {
+    const selected = getSponsorStorePackage(application.selectedPackageId || application.selectedTier || requestedPackageId);
+    if (!selected) throw new PaymentValidationError("Sponsor paketi geçersiz.", 400, "PACKAGE_INVALID");
+    if (application.selectedPackageId && requestedPackageId && application.selectedPackageId !== requestedPackageId) {
+        throw new PaymentValidationError("Satıcının seçtiği sponsor paketi değiştirilemez.", 409, "PACKAGE_CHANGE_FORBIDDEN");
+    }
+    return selected;
+}
+
 function ownsStore(store, user) {
     if (!store || !user?.uid) return false;
     if (store.sahipUid) return store.sahipUid === user.uid;
@@ -34,6 +49,7 @@ function publicApplication(snapshot) {
 
 async function createApplication({ firestore, FieldValue, user, input }) {
     const storeId = String(input.storeId || input.magazaId || "").trim();
+    const selected = resolveApplicationPackage(input);
     if (!storeId) throw new PaymentValidationError("Mağaza seçimi gereklidir.", 400, "STORE_REQUIRED");
     const storeRef = firestore.collection("magazalar").doc(storeId);
     const guardRef = firestore.collection("sponsorStoreGuards").doc(storeId);
@@ -62,6 +78,9 @@ async function createApplication({ firestore, FieldValue, user, input }) {
             kullaniciId: user.uid, status: STATUS.REVIEW_PENDING, durum: STATUS.REVIEW_PENDING,
             paymentStatus: "NOT_AVAILABLE", odemeDurumu: false, sponsorActive: false,
             sponsorAktif: false, createdAt: FieldValue.serverTimestamp(), basvuruTarihi: FieldValue.serverTimestamp(),
+            selectedTier: selected.id, selectedPackageId: selected.id,
+            selectedPackageName: selected.name, selectedPrice: selected.price,
+            selectedDurationDays: selected.durationDays, selectedPriority: selected.priority,
             updatedAt: FieldValue.serverTimestamp(), okunmadi: true
         };
         tx.set(applicationRef, record);
@@ -81,14 +100,15 @@ async function listApplications({ firestore }) {
 }
 
 async function approveApplication({ firestore, FieldValue, applicationId, packageId, adminUser }) {
-    const selected = getSponsorStorePackage(packageId);
-    if (!selected) throw new PaymentValidationError("Sponsor paketi geçersiz.", 400, "PACKAGE_INVALID");
     const ref = firestore.collection("sponsorBasvurular").doc(applicationId);
+    let approvedPackage = null;
     await firestore.runTransaction(async (tx) => {
         const snap = await tx.get(ref);
         if (!snap.exists) throw new PaymentValidationError("Başvuru bulunamadı.", 404, "APPLICATION_NOT_FOUND");
         const app = snap.data();
         if (app.status !== STATUS.REVIEW_PENDING) throw new PaymentValidationError("Başvuru inceleme durumunda değil.", 409, "APPLICATION_STATE_INVALID");
+        const selected = resolveApprovalPackage(app, packageId);
+        approvedPackage = selected;
         tx.update(ref, {
             status: STATUS.APPROVED_PAYMENT_PENDING, durum: STATUS.APPROVED_PAYMENT_PENDING,
             paymentStatus: "PENDING", selectedTier: selected.id, selectedPackageId: selected.id,
@@ -102,7 +122,7 @@ async function approveApplication({ firestore, FieldValue, applicationId, packag
             status: STATUS.APPROVED_PAYMENT_PENDING, updatedAt: FieldValue.serverTimestamp()
         }, { merge: true });
     });
-    return { status: STATUS.APPROVED_PAYMENT_PENDING, package: selected };
+    return { status: STATUS.APPROVED_PAYMENT_PENDING, package: approvedPackage };
 }
 
 async function rejectApplication({ firestore, FieldValue, applicationId, adminUser }) {
@@ -136,4 +156,4 @@ function sponsorPaymentBasket(selected) {
     return [{ id: `SPONSOR_STORE_${selected.id}`, name: selected.name, category1: "Sponsor Mağaza", category2: "Reklam Hizmeti", itemType: "VIRTUAL", price: selected.price.toFixed(2) }];
 }
 
-module.exports = { STATUS, DAY_MS, getSponsorStorePackage, ownsStore, timestampMillis, createApplication, listOwnApplications, listApplications, approveApplication, rejectApplication, prepareSponsorPayment, sponsorPaymentBasket };
+module.exports = { STATUS, DAY_MS, getSponsorStorePackage, resolveApplicationPackage, resolveApprovalPackage, ownsStore, timestampMillis, createApplication, listOwnApplications, listApplications, approveApplication, rejectApplication, prepareSponsorPayment, sponsorPaymentBasket };
