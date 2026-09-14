@@ -284,12 +284,16 @@ async function finalizePayment({ firestore, FieldValue, conversationId, paymentI
                 if (!movementSnapshots[index].exists) {
                     const hesap = calculateOrderEarnings(order);
                     walletAdds.set(order.satici, Number(((walletAdds.get(order.satici) || 0) + hesap.netTutar).toFixed(2)));
+                    const marketplaceSettlement = payment.paymentGroup === "PRODUCT";
                     transaction.set(movementRefs[index], {
                         siparisId: order.id, satici: order.satici, alici: order.alici || "",
                         toplamTutar: hesap.toplamTutar, komisyon: hesap.komisyon, netTutar: hesap.netTutar,
                         komisyonOrani: hesap.komisyonOrani,
                         blockageResolvedDate: digitalDelivery?.hakEdisBlokeBitis || null,
                         tip: "Satış", durum: "Bekliyor", paymentId, conversationId,
+                        settlementMode: marketplaceSettlement ? "IYZICO_MARKETPLACE" : "INTERNAL_WALLET",
+                        settlementStatus: marketplaceSettlement ? "PROTECTED" : "NOT_APPLICABLE",
+                        ...(itemTransaction ? { paymentTransactionId: itemTransaction.paymentTransactionId } : {}),
                         tarih: FieldValue.serverTimestamp()
                     });
                 }
@@ -298,6 +302,8 @@ async function finalizePayment({ firestore, FieldValue, conversationId, paymentI
                         odemeDurumu: true, durum: "Ödendi", paymentId, conversationId,
                         ...(digitalDelivery || {}),
                         ...(itemTransaction ? { paymentTransactionId: itemTransaction.paymentTransactionId, iyzicoItemPrice: itemTransaction.itemPrice, iyzicoItemPaidPrice: itemTransaction.itemPaidPrice, paymentCurrency: itemTransaction.currency || currency } : {}),
+                        settlementMode: payment.paymentGroup === "PRODUCT" ? "IYZICO_MARKETPLACE" : "INTERNAL_WALLET",
+                        settlementStatus: payment.paymentGroup === "PRODUCT" ? "PROTECTED" : "NOT_APPLICABLE",
                         odemeTarihi: FieldValue.serverTimestamp(), guncellenmeTarihi: FieldValue.serverTimestamp()
                     });
                 } else if (digitalDelivery && order.teslimatDogrulandi !== true) {

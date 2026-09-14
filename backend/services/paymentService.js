@@ -255,6 +255,8 @@ async function createPayment(data, authenticatedUser, requestContext = {}) {
 
         currency: "TRY",
 
+        paymentGroup: trustedPaymentGroup,
+
         odemeTipi: boostOdeme ? "listing_boost" : sponsorOdeme ? "sponsor" : "siparis",
 
         urunToplami: trustedProductTotal,

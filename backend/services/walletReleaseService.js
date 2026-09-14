@@ -97,6 +97,19 @@ async function hareketiBalanceAktar(
     const activeFieldValue = dependencies.FieldValue || FieldValue;
     const currentTime = dependencies.now ? dependencies.now() : new Date();
 
+    if (dependencies.skipMarketplaceSettlement !== true) {
+        const { releaseMarketplaceEarning } = require("./iyzicoMarketplaceSettlementService");
+        const marketplaceResult = await releaseMarketplaceEarning({
+            firestore: activeFirestore,
+            FieldValue: activeFieldValue,
+            movementId: hareketId,
+            now: currentTime,
+            ...(dependencies.approveMarketplace ? { approve: dependencies.approveMarketplace } : {}),
+            ...(dependencies.queryMarketplace ? { query: dependencies.queryMarketplace } : {})
+        });
+        if (marketplaceResult.applicable) return marketplaceResult;
+    }
+
     const hareketRef =
         activeFirestore
             .collection("bakiyeHareketleri")

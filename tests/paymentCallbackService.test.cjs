@@ -119,10 +119,14 @@ test("çok adetli sipariş wallet ve hareket tutarlarına doğru yansır", async
 });
 
 test("callback güvenilir paymentTransactionId bilgisini sipariş ve ödeme kaydına yazar", async () => {
-    const db = memoryFirestore(normalSeed());
+    const seed = normalSeed();
+    seed["odemeler/conv-1"].paymentGroup = "PRODUCT";
+    const db = memoryFirestore(seed);
     const items = [{ orderId: "order-1", listingId: "listing-1", paymentTransactionId: "tx-1", itemPrice: 100, itemPaidPrice: 100, currency: "TRY", quantity: 1 }];
     await finalizePayment({ firestore: db, FieldValue: { serverTimestamp: timestamp }, conversationId: "conv-1", paymentId: "pay-1", itemTransactions: items });
     assert.equal(db.data.get("siparisler/order-1").paymentTransactionId, "tx-1");
+    assert.equal(db.data.get("siparisler/order-1").settlementMode, "IYZICO_MARKETPLACE");
+    assert.equal(db.data.get("bakiyeHareketleri/pay-1_order-1").settlementStatus, "PROTECTED");
     assert.deepEqual(db.data.get("odemeler/conv-1").paymentItemTransactions, items);
 });
 

@@ -1,5 +1,6 @@
 const { admin, firestore } = require("../config/firebase");
 const { lifecycleView, actionReasons, buildTimeline } = require("../services/orderLifecycleService");
+const { queryMarketplaceSettlement, MarketplaceSettlementError } = require("../services/iyzicoMarketplaceSettlementService");
 
 const PAGE_SIZE = 25;
 const SCAN_LIMIT = 50;
@@ -87,6 +88,22 @@ exports.actionRequired = async (req, res, next) => {
         });
         return res.json({ success: true, count: items.length, items });
     } catch (error) { next(error); }
+};
+
+exports.queryMarketplaceSettlement = async (req, res, next) => {
+    try {
+        const result = await queryMarketplaceSettlement({
+            firestore,
+            FieldValue: admin.firestore.FieldValue,
+            orderId: String(req.params.orderId || "").trim()
+        });
+        return res.json({ success: true, status: result.status, reserved: result.reserved === true });
+    } catch (error) {
+        if (error instanceof MarketplaceSettlementError) {
+            return res.status(error.status).json({ success: false, code: error.code, error: error.message });
+        }
+        return next(error);
+    }
 };
 
 module.exports.safeOrder = safeOrder;

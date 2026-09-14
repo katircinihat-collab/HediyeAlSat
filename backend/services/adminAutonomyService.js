@@ -55,7 +55,18 @@ async function collectOperationalIssues({ firestore, now = new Date() }) {
     });
     orders.forEach((doc) => {
         const key = `order:${doc.id}`; checkedSourceKeys.add(key);
+        checkedSourceKeys.add(`marketplace_settlement:${doc.id}`);
         actionReasons(doc.data(), now).forEach((reason) => issues.push(issue("order", doc.id, reason, "Sipariş yaşam döngüsü anomalisi", { orderId: doc.id, createdAt: doc.get("tarih") || null })));
+        const settlementStatus = doc.get("settlementStatus");
+        if (["REVIEW_REQUIRED", "FAILED"].includes(settlementStatus)) {
+            issues.push(issue("marketplace_settlement", doc.id, "MARKETPLACE_SETTLEMENT_REVIEW", "Para Çekme Sorunu", {
+                orderId: doc.id,
+                amount: Number(doc.get("iyzicoItemPaidPrice") || 0),
+                statusText: "Ödeme sonucu doğrulanamadı",
+                fundsText: "Rezerve",
+                createdAt: doc.get("guncellenmeTarihi") || doc.get("tarih") || null
+            }));
+        }
     });
     return { issues, checkedSourceKeys, scanned: { payments: payments.size, claims: claims.size, reconciliations: reconciliations.size, orders: orders.size } };
 }

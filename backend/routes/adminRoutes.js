@@ -24,6 +24,7 @@ router.get("/audit-logs", adminOperationsController.auditLogs);
 router.get("/orders", adminOrderController.list);
 router.get("/orders/action-required", adminOrderController.actionRequired);
 router.get("/orders/:orderId", adminOrderController.detail);
+router.post("/orders/:orderId/marketplace-settlement/query", financialRateLimit, adminOrderController.queryMarketplaceSettlement);
 router.put("/listings/:id/approve", adminListingController.onayla);
 router.put("/listings/:id/reject", adminListingController.reddet);
 router.patch("/listings/:id/flags", adminListingController.ozellikDegistir);
