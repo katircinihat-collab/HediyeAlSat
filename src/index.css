@@ -7,3 +7,11 @@ body,
     min-height:100%;
     overflow-anchor:none;
 }
+/* Route-level code splitting sırasında mevcut sayfa yüksekliğini korur. */
+.route-loading {
+  min-height: 60vh;
+  display: grid;
+  place-items: center;
+  color: #6f5548;
+  font-weight: 700;
+}

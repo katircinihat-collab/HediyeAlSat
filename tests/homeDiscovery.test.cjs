@@ -18,7 +18,7 @@ test("Top 10 en fazla 10 canonical normal ürünü impressionCount değerine gö
   assert.match(helper, /filterAvailableListings\(listings\)/);
   assert.match(helper, /!isA4Listing\(listing\)/);
   assert.match(helper, /!isLegacySecondHandListing\(listing\)/);
-  assert.match(helper, /Number\(right\.impressionCount \|\| 0\) - Number\(left\.impressionCount \|\| 0\)/);
+  assert.match(helper, /getListingImpressionCount\(right\) - getListingImpressionCount\(left\)/);
   assert.doesNotMatch(helper, /satisSayisi/);
   assert.match(helper, /\.slice\(0, limit\)/);
   assert.match(component, /Bugünün Top 10 Ürünü/);

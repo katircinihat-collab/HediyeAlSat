@@ -12,13 +12,13 @@ return(
 
 <h2 className="stat-number">
 
-25.000+
+Geniş
 
 </h2>
 
 <p className="stat-title">
 
-İlan
+Ürün seçkisi
 
 </p>
 
@@ -28,13 +28,13 @@ return(
 
 <h2 className="stat-number">
 
-1.500+
+Kolay
 
 </h2>
 
 <p className="stat-title">
 
-Mağaza
+Mağaza keşfi
 
 </p>
 
@@ -44,13 +44,13 @@ Mağaza
 
 <h2 className="stat-number">
 
-15.000+
+Güvenli
 
 </h2>
 
 <p className="stat-title">
 
-Kullanıcı
+Alışveriş deneyimi
 
 </p>
 
@@ -60,13 +60,13 @@ Kullanıcı
 
 <h2 className="stat-number">
 
-%98
+Özenli
 
 </h2>
 
 <p className="stat-title">
 
-Memnuniyet
+Hediye seçenekleri
 
 </p>
 

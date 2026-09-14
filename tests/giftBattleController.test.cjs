@@ -3,7 +3,9 @@ const test = require("node:test");
 const {
   eligibleListing,
   istanbulDate,
-  selectPair
+  selectPair,
+  withTimeout,
+  GIFT_BATTLE_CANDIDATE_LIMIT
 } = require("../backend/controllers/giftBattleController");
 
 test("aynı gün aynı ürün ikilisi deterministik seçilir", () => {
@@ -17,6 +19,17 @@ test("aynı gün aynı ürün ikilisi deterministik seçilir", () => {
   const second = selectPair([...listings].reverse(), "2026-09-02");
   assert.deepEqual(first, second);
   assert.notEqual(first[0], first[1]);
+});
+
+test("Firestore beklemesi kontrollü timeout ile sonlanır", async () => {
+  await assert.rejects(
+    withTimeout(new Promise(() => {}), 10),
+    (error) => error.code === "GIFT_BATTLE_TIMEOUT"
+  );
+});
+
+test("günlük aday taraması sınırlıdır", () => {
+  assert.equal(GIFT_BATTLE_CANDIDATE_LIMIT, 100);
 });
 
 test("farklı alt kategoriler mevcutsa farklı kategoriler eşleşir", () => {

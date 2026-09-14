@@ -24,6 +24,8 @@ import {
 } from "../data/categories";
 import useFavorite from "../hooks/useFavorite";
 import useListingImpression from "../hooks/useListingImpression";
+import { getListingImpressionCount } from "../utils/listingMetrics";
+import productFallback from "../assets/product-fallback.svg";
 import { formatImpressionCount } from "../utils/impressions";
 import { isListingPublished } from "../utils/listingAvailability";
 import { isListingBoostActive } from "../utils/listingBoost";
@@ -33,7 +35,7 @@ function ProductCard({ ilan, cardExtra = null, variant = "" }) {
 
   const { impressionRef, impressionCount } = useListingImpression(
     ilan.id,
-    ilan.impressionCount
+    getListingImpressionCount(ilan)
   );
 
 
@@ -271,7 +273,7 @@ function ProductCard({ ilan, cardExtra = null, variant = "" }) {
 
             ilan.resim ||
 
-            "https://via.placeholder.com/500x500",
+            productFallback,
 
           adet:
             1,
@@ -351,7 +353,7 @@ function ProductCard({ ilan, cardExtra = null, variant = "" }) {
 
             ilan.resim ||
 
-            "https://via.placeholder.com/500x500"
+            productFallback
 
           }
 

@@ -10,6 +10,21 @@ const QUESTIONS = [
     "Doğum gününde hangisini hediye ederdin?"
 ];
 
+const GIFT_BATTLE_TIMEOUT_MS = 7000;
+const GIFT_BATTLE_CANDIDATE_LIMIT = 100;
+
+function withTimeout(promise, timeoutMs = GIFT_BATTLE_TIMEOUT_MS) {
+    let timer;
+    const timeout = new Promise((_, reject) => {
+        timer = setTimeout(() => {
+            const error = new Error("Gift Battle veri kaynağı zaman aşımına uğradı.");
+            error.code = "GIFT_BATTLE_TIMEOUT";
+            reject(error);
+        }, timeoutMs);
+    });
+    return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
 function istanbulDate(now = new Date()) {
     const parts = new Intl.DateTimeFormat("en-CA", {
         timeZone: "Europe/Istanbul",
@@ -102,6 +117,7 @@ async function createOrGetTodayBattle() {
     if (!battleSnapshot.exists) {
         const eligibleSnapshot = await firestore.collection("ilanlar")
             .where("onay", "==", true)
+            .limit(GIFT_BATTLE_CANDIDATE_LIMIT)
             .get();
         const candidates = eligibleSnapshot.docs
             .filter((snapshot) => eligibleListing(snapshot.data()))
@@ -148,7 +164,7 @@ async function createOrGetTodayBattle() {
 
 exports.today = async (_req, res, next) => {
     try {
-        const current = await createOrGetTodayBattle();
+        const current = await withTimeout(createOrGetTodayBattle());
         if (!current) {
             return res.json({ success: true, battle: null, message: "Kapışma için yeterli uygun ürün bulunmuyor." });
         }
@@ -157,6 +173,15 @@ exports.today = async (_req, res, next) => {
             battle: resultPayload(current.battle, current.leftSnapshot, current.rightSnapshot)
         });
     } catch (error) {
+        if (error.code === "GIFT_BATTLE_TIMEOUT") {
+            console.error("Gift Battle today timeout", { code: error.code });
+            return res.status(503).json({
+                success: false,
+                battle: null,
+                code: "GIFT_BATTLE_TEMPORARILY_UNAVAILABLE",
+                message: "Hediye Kapışması şu anda hazırlanıyor. Lütfen biraz sonra tekrar deneyin."
+            });
+        }
         next(error);
     }
 };
@@ -164,10 +189,10 @@ exports.today = async (_req, res, next) => {
 exports.mine = async (req, res, next) => {
     try {
         const { dateKey } = istanbulDate();
-        const [battleSnapshot, voteSnapshot] = await Promise.all([
+        const [battleSnapshot, voteSnapshot] = await withTimeout(Promise.all([
             firestore.collection("giftBattles").doc(dateKey).get(),
             firestore.collection("giftBattleVotes").doc(voteDocumentId(dateKey, req.user.uid)).get()
-        ]);
+        ]));
         const ownListingIds = [];
         if (battleSnapshot.exists) {
             const battle = battleSnapshot.data();
@@ -205,7 +230,7 @@ exports.vote = async (req, res, next) => {
         const battleRef = firestore.collection("giftBattles").doc(dateKey);
         const voteRef = firestore.collection("giftBattleVotes").doc(voteDocumentId(dateKey, req.user.uid));
 
-        await firestore.runTransaction(async (transaction) => {
+        await withTimeout(firestore.runTransaction(async (transaction) => {
             const battleSnapshot = await transaction.get(battleRef);
             if (!battleSnapshot.exists) throw Object.assign(new Error("Bugünün kapışması bulunamadı."), { status: 404 });
             const battle = battleSnapshot.data();
@@ -239,9 +264,9 @@ exports.vote = async (req, res, next) => {
                 [selectedListingId === battle.leftListingId ? "leftVotes" : "rightVotes"]: FieldValue.increment(1),
                 updatedAt: FieldValue.serverTimestamp()
             });
-        });
+        }));
 
-        const current = await createOrGetTodayBattle();
+        const current = await withTimeout(createOrGetTodayBattle());
         return res.status(201).json({
             success: true,
             selectedListingId,
@@ -256,3 +281,5 @@ exports.vote = async (req, res, next) => {
 exports.istanbulDate = istanbulDate;
 exports.eligibleListing = eligibleListing;
 exports.selectPair = selectPair;
+exports.withTimeout = withTimeout;
+exports.GIFT_BATTLE_CANDIDATE_LIMIT = GIFT_BATTLE_CANDIDATE_LIMIT;

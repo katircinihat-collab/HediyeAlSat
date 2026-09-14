@@ -7,7 +7,6 @@ import AdminWithdraw from "./pages/AdminWithdraw";
 
 import MyOrders from "./pages/MyOrders";
 import OrderDetail from "./pages/OrderDetail";
-import Seller from "./pages/Seller";
 import Cart from "./pages/Cart";
 import SellerOrders from "./pages/SellerOrders";
 import Kategori from "./pages/Kategori";
@@ -27,7 +26,6 @@ import MyListings from "./pages/MyListings";
 import Favorites from "./pages/Favorites";
 import Settings from "./pages/Settings";
 import Kiralik from "./pages/Kiralik";
-import Admin from "./pages/Admin";
 import AdminDetail from "./pages/AdminDetail";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -52,6 +50,10 @@ import AdminRoute from "./components/AdminRoute";
 import SpecialListingsPage from "./pages/SpecialListingsPage";
 import TopDesigns from "./pages/TopDesigns";
 import ScrollManager from "./components/ScrollManager";
+import { lazy, Suspense } from "react";
+
+const Seller = lazy(() => import("./pages/Seller"));
+const Admin = lazy(() => import("./pages/Admin"));
 
 
 /* ==============================
@@ -111,6 +113,7 @@ function App() {
 
       <ScrollManager />
 
+      <Suspense fallback={<main className="route-loading" role="status">Sayfa yükleniyor...</main>}>
       <Routes>
 
 
@@ -422,6 +425,7 @@ function App() {
 
 
       </Routes>
+      </Suspense>
 
     </BrowserRouter>
 

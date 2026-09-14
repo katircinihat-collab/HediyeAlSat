@@ -33,6 +33,7 @@ import UserLevelLabel from "../components/UserLevelLabel";
 import { formatListingCategory } from "../data/categories";
 import useFavorite from "../hooks/useFavorite";
 import { isListingPublished } from "../utils/listingAvailability";
+import { getListingImpressionCount } from "../utils/listingMetrics";
 
 import "../App.css";
 
@@ -980,7 +981,7 @@ function DetailPage() {
               <span>
 
                 👁{" "}
-                {ilan.goruntulenme || 0}
+                {getListingImpressionCount(ilan).toLocaleString("tr-TR")}
 
               </span>
 

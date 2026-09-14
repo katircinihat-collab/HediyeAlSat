@@ -7,6 +7,7 @@ import cities from "../data/cities";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { isA4Listing, isLegacySecondHandListing } from "../data/categories";
+import productFallback from "../assets/product-fallback.svg";
 
 import "../styles/pages/kiralik.css";
 
@@ -231,7 +232,7 @@ function Kiralik() {
 
     }
 
-    return "https://via.placeholder.com/600x450?text=HediyeAlSat";
+    return productFallback;
 
   }
 

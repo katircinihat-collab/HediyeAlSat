@@ -16,6 +16,7 @@ import { AdminAuditLog, AdminOperationsOverview, AdminUsers } from "../component
 import AdminOrders from "../components/admin/AdminOrders";
 import AdminArchive from "../components/admin/AdminArchive";
 import AdminExceptions from "../components/admin/AdminExceptions";
+import productFallback from "../assets/product-fallback.svg";
 
 import "../styles/pages/admin.css";
 function fiyatFormat(fiyat) {
@@ -405,7 +406,7 @@ ilan.resimler[0]
 
 ilan.resim ||
 
-"https://via.placeholder.com/500x500"
+productFallback
 
 }
 

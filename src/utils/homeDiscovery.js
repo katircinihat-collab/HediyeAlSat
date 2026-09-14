@@ -1,6 +1,7 @@
 import { isA4Listing, isLegacySecondHandListing } from "../data/categories";
 import { filterAvailableListings } from "./listingAvailability";
 import { isListingBoostActive } from "./listingBoost";
+import { getListingImpressionCount } from "./listingMetrics";
 
 export function listingDateMs(listing) {
   const value = listing?.tarih || listing?.createdAt || listing?.olusturmaTarihi;
@@ -18,7 +19,7 @@ export function getNormalAvailableListings(listings) {
 
 export function getTopProducts(listings, limit = 10) {
   return getNormalAvailableListings(listings)
-    .sort((left, right) => Number(right.impressionCount || 0) - Number(left.impressionCount || 0))
+    .sort((left, right) => getListingImpressionCount(right) - getListingImpressionCount(left))
     .slice(0, limit);
 }
 
