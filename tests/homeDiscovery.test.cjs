@@ -10,6 +10,7 @@ const styles = fs.readFileSync(path.join(root, "src/styles/components/home-disco
 const productCard = fs.readFileSync(path.join(root, "src/components/ProductCard.jsx"), "utf8");
 const home = fs.readFileSync(path.join(root, "src/pages/Home.jsx"), "utf8");
 const giftBattle = fs.readFileSync(path.join(root, "src/components/GiftBattle.jsx"), "utf8");
+const giftBattleApi = fs.readFileSync(path.join(root, "src/services/giftBattleApi.js"), "utf8");
 const topDesignShowcase = fs.readFileSync(path.join(root, "src/components/TopDesignShowcase.jsx"), "utf8");
 
 test("Top 10 en fazla 10 canonical normal ürünü impressionCount değerine göre sıralar", () => {
@@ -103,6 +104,8 @@ test("Hediye Kapışması geçici API hatasında kaybolmaz ve eski konumunu koru
   assert.doesNotMatch(giftBattle, /if \(!loading && !battle\) return null/);
   assert.match(giftBattle, /window\.setTimeout\(\(\) => loadBattle\(1\), 1200\)/);
   assert.match(giftBattle, /Bugünün kapışması kısa süre içinde burada olacak/);
+  assert.match(giftBattleApi, /controller\.abort\(\), 12000/);
+  assert.match(giftBattleApi, /error\?\.name === "AbortError"/);
 });
 
 test("yükleme ve boş veri halinde kırık carousel gösterilmez", () => {

@@ -3,16 +3,27 @@ import { apiUrl } from "../config/api";
 
 async function request(path, options = {}, tokenRequired = false) {
   const headers = { ...(options.headers || {}) };
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), 12000);
   if (tokenRequired) {
     const user = auth.currentUser;
     if (!user) throw new Error("Oy vermek için giriş yapmalısınız.");
     headers.Authorization = `Bearer ${await user.getIdToken()}`;
   }
 
-  const response = await fetch(apiUrl(path), { ...options, headers });
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(data.message || data.error || "Kapışma işlemi tamamlanamadı.");
-  return data;
+  try {
+    const response = await fetch(apiUrl(path), { ...options, headers, signal: controller.signal });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.message || data.error || "Kapışma işlemi tamamlanamadı.");
+    return data;
+  } catch (error) {
+    if (error?.name === "AbortError") {
+      throw new Error("Kapışma servisi geç yanıt verdi. Lütfen tekrar deneyin.", { cause: error });
+    }
+    throw error;
+  } finally {
+    window.clearTimeout(timeout);
+  }
 }
 
 export function getTodayGiftBattle() {
