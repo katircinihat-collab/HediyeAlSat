@@ -13,7 +13,9 @@ getDoc
 import { auth, db } from "../firebase";
 import { confirmOrderDelivery } from "../services/orderDeliveryApi";
 import OrderClaimForm from "../components/OrderClaimForm";
+import OrderTimeline from "../components/OrderTimeline";
 import { getDigitalDownload } from "../services/digitalDownloadApi";
+import { isDigitalOrder, normalizeOrderStatus } from "../utils/orderLifecycle";
 
 import "../styles/pages/order-detail.css";
 
@@ -26,6 +28,7 @@ const [siparis,setSiparis]=useState(null);
 const [loading,setLoading]=useState(true);
 const [dogrulaniyor,setDogrulaniyor]=useState(false);
 const [indiriliyor,setIndiriliyor]=useState(false);
+const [error,setError]=useState("");
 
 async function dijitalDosyaIndir(){
 try{
@@ -77,8 +80,8 @@ id:snap.id,
 }
 
 catch(err){
-
-console.log(err);
+console.error("Sipariş detayı alınamadı", err);
+setError("Sipariş bilgileri şu anda alınamıyor. Lütfen tekrar deneyin.");
 
 }
 
@@ -112,8 +115,11 @@ Yükleniyor...
 
 }
 
-if(!siparis){
+if(error){
+return <div className="page orders-state error" role="alert"><h2>{error}</h2><button type="button" className="detail-btn" onClick={()=>history.back()}>Siparişlerime Dön</button></div>;
+}
 
+if(!siparis){
 return(
 
 <div className="page">
@@ -129,6 +135,9 @@ Sipariş bulunamadı.
 );
 
 }
+
+const digital=isDigitalOrder(siparis);
+const canonicalDurum=normalizeOrderStatus(siparis.durum);
 
 return(
 
@@ -179,7 +188,7 @@ siparis.tarih
 <div
 className={`order-status ${
 
-siparis.durum==="Teslim"
+canonicalDurum==="Teslim Edildi"||canonicalDurum==="Tamamlandı"
 
 ?
 
@@ -187,7 +196,7 @@ siparis.durum==="Teslim"
 
 :
 
-siparis.durum==="Kargoda"
+canonicalDurum==="Kargoda"
 
 ?
 
@@ -195,7 +204,7 @@ siparis.durum==="Kargoda"
 
 :
 
-siparis.durum==="Hazırlanıyor"
+canonicalDurum==="Hazırlanıyor"
 
 ?
 
@@ -210,13 +219,14 @@ siparis.durum==="Hazırlanıyor"
 
 {
 
-siparis.durum
+canonicalDurum
 
 }
 
 </div>
 
 </div>
+<OrderTimeline order={siparis}/>
 <div className="order-grid">
 
 <div className="order-box">
@@ -259,7 +269,7 @@ siparis.durum
 
 </div>
 
-<div className="order-box">
+{!digital&&<div className="order-box">
 
 <h2>
 
@@ -283,7 +293,7 @@ siparis.durum
 
 </p>
 
-</div>
+</div>}
 
 </div>
 
@@ -484,7 +494,7 @@ siparis.toplam ||
 
 
 
-<div className="order-box">
+{!digital&&<div className="order-box">
 
 <h2>
 
@@ -532,7 +542,7 @@ siparis.kargoNo ||
 
 {
 
-siparis.durum
+canonicalDurum
 
 }
 
@@ -564,7 +574,7 @@ siparis.kargoTarihi
 
 </p>
 
-</div>
+</div>}
 
 </div>
 
@@ -660,17 +670,17 @@ className="whatsapp-btn"
 
 </div>
 <div className="order-actions">
-{siparis.urunTipi==="dijital"&&siparis.odemeDurumu===true&&(
+{digital&&siparis.odemeDurumu===true&&(
 <button type="button" className="buy-btn" disabled={indiriliyor} onClick={dijitalDosyaIndir}>
 {indiriliyor?"Hazırlanıyor...":"Dosyayı İndir"}
 </button>
 )}
-{siparis.urunTipi==="dijital"&&siparis.odemeDurumu===true&&(
+{digital&&siparis.odemeDurumu===true&&(
 <span className="order-claim-message">Dijital teslimat tamamlandı. Sorunları 48 saat içinde bildirebilirsiniz.</span>
 )}
 <OrderClaimForm order={siparis} onSubmitted={(result)=>setSiparis((onceki)=>({...onceki,hakEdisBlokeli:true,aktifTalepId:result.claimId}))} onCancelled={()=>setSiparis((onceki)=>({...onceki,hakEdisBlokeli:false,aktifTalepId:null}))}/>
 
-{siparis.urunTipi!=="dijital"&&(siparis.durum==="Kargoda"||siparis.durum==="Kargoya Verildi")&&(
+{!digital&&canonicalDurum==="Kargoda"&&(
 <button type="button" className="buy-btn" disabled={dogrulaniyor} onClick={teslimAldim}>
 {dogrulaniyor?"Doğrulanıyor...":"Teslim Aldım"}
 </button>
@@ -687,36 +697,6 @@ onClick={()=>window.print()}
 🖨 Yazdır
 
 </button>
-
-<button
-
-className="edit-btn"
-
-onClick={()=>alert("PDF oluşturulacak")}
-
->
-
-📄 PDF İndir
-
-</button>
-
-{
-
-siparis.durum==="Teslim" &&
-
-<button
-
-className="buy-btn"
-
-onClick={()=>alert("Değerlendirme sayfası açılacak.")}
-
->
-
-⭐ Ürünü Değerlendir
-
-</button>
-
-}
 
 <button
 

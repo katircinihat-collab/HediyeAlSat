@@ -12,8 +12,10 @@ import {
 import { Link } from "react-router-dom";
 import { confirmOrderDelivery } from "../services/orderDeliveryApi";
 import OrderClaimForm from "../components/OrderClaimForm";
+import OrderTimeline from "../components/OrderTimeline";
 import { getDigitalDownload } from "../services/digitalDownloadApi";
 import { payoutDisplay } from "../utils/orderDelivery";
+import { isDigitalOrder, normalizeOrderStatus } from "../utils/orderLifecycle";
 
 import "../styles/pages/myorders.css";
 
@@ -22,6 +24,9 @@ function MyOrders() {
   const [siparisler, setSiparisler] = useState([]);
   const [dogrulanan, setDogrulanan] = useState(null);
   const [indirilen, setIndirilen] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [retryVersion, setRetryVersion] = useState(0);
 
   async function dijitalDosyaIndir(siparis) {
     try {
@@ -49,7 +54,14 @@ function MyOrders() {
 
   useEffect(() => {
 
-    if (!auth.currentUser) return;
+    if (!auth.currentUser) {
+      setLoading(false);
+      setError("Siparişlerinizi görmek için giriş yapmalısınız.");
+      return undefined;
+    }
+
+    setLoading(true);
+    setError("");
 
     const q = query(
       collection(db, "siparisler"),
@@ -74,12 +86,15 @@ function MyOrders() {
         }))
 
       );
-
+      setLoading(false);
+    }, () => {
+      setLoading(false);
+      setError("Siparişleriniz şu anda alınamıyor. Lütfen tekrar deneyin.");
     });
 
     return () => unsub();
 
-  }, []);
+  }, [retryVersion]);
 
   return (
 
@@ -91,9 +106,9 @@ function MyOrders() {
 
       </h1>
 
-      {
-
-        siparisler.length === 0 ?
+      {loading ? <div className="orders-state" role="status">Siparişleriniz yükleniyor...</div>
+        : error ? <div className="orders-state error" role="alert"><p>{error}</p><button type="button" className="detail-btn" onClick={() => setRetryVersion((value) => value + 1)}>Tekrar Dene</button></div>
+        : siparisler.length === 0 ?
 
           <div className="empty-orders">
 
@@ -111,7 +126,11 @@ function MyOrders() {
 
             {
 
-              siparisler.map((siparis) => (
+              siparisler.map((siparis) => {
+                const digital = isDigitalOrder(siparis);
+                const status = normalizeOrderStatus(siparis.durum);
+                const payout = payoutDisplay(siparis);
+                return (
 <div
   key={siparis.id}
   className="order-card"
@@ -151,21 +170,23 @@ function MyOrders() {
 
     <div
       className={`status ${
-        siparis.durum === "Teslim Edildi"
+        status === "Teslim Edildi" || status === "Tamamlandı"
           ? "done"
-          : siparis.durum === "Kargoda"
+          : status === "Kargoda"
           ? "cargo"
-          : siparis.durum === "Hazırlanıyor"
+          : status === "Hazırlanıyor"
           ? "prepare"
           : "wait"
       }`}
     >
 
-      {siparis.durum}
+      {status}
 
     </div>
 
   </div>
+
+  <OrderTimeline order={siparis} />
 
   <div className="order-middle">
 
@@ -225,25 +246,25 @@ function MyOrders() {
 
   <div className="order-bottom">
 
-    {siparis.urunTipi !== "dijital" && siparis.kargoNo && (
+    {!digital && siparis.kargoNo && (
       <span className="order-claim-message">Kargo: {siparis.kargoFirma || "Kargo firması"} · Takip: {siparis.kargoNo}</span>
     )}
 
-    {payoutDisplay(siparis) && (
-      <span className="order-claim-message">{payoutDisplay(siparis).label}: {payoutDisplay(siparis).detail}</span>
+    {payout && (
+      <span className="order-claim-message">{payout.label}: {payout.detail}</span>
     )}
 
-    {siparis.urunTipi === "dijital" && siparis.odemeDurumu === true && (
+    {digital && siparis.odemeDurumu === true && (
       <button type="button" className="buy-btn" disabled={indirilen === siparis.id} onClick={() => dijitalDosyaIndir(siparis)}>
         {indirilen === siparis.id ? "Hazırlanıyor..." : "Dosyayı İndir"}
       </button>
     )}
 
-    {siparis.urunTipi === "dijital" && siparis.odemeDurumu === true && (
+    {digital && siparis.odemeDurumu === true && (
       <span className="order-claim-message">Dijital teslimat tamamlandı. Sorunları 48 saat içinde bildirebilirsiniz.</span>
     )}
 
-    {siparis.urunTipi !== "dijital" && (siparis.durum === "Kargoda" || siparis.durum === "Kargoya Verildi") && (
+    {!digital && status === "Kargoda" && (
       <button type="button" className="buy-btn" disabled={dogrulanan === siparis.id} onClick={() => teslimAldim(siparis)}>
         {dogrulanan === siparis.id ? "Doğrulanıyor..." : "Teslim Aldım"}
       </button>
@@ -265,7 +286,7 @@ function MyOrders() {
   </div>
 
 </div>
-              ))
+              );})
 
             }
 

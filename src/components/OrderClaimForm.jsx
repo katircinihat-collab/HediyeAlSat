@@ -2,18 +2,17 @@ import { useEffect, useMemo, useState } from "react";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../firebase";
 import { cancelOrderClaim, createOrderClaim, submitReturnShipment } from "../services/orderClaimApi";
+import { claimOptionsForOrder, isDigitalOrder } from "../utils/orderLifecycle";
 import "../styles/components/order-claim-form.css";
 
 const REASONS = { iade: ["Ürün beklentimi karşılamadı", "Yanlış ürün geldi", "Hasarlı ürün", "Eksik ürün", "Diğer"], itiraz: ["Ürün ulaşmadı", "Yanlış ürün", "Hasarlı ürün", "Eksik ürün", "Siparişle ilgili başka sorun", "Diğer"] };
 const DIGITAL_REASONS = ["Dosya indirilemiyor", "Yanlış dosya teslim edildi", "Dosya bozuk/açılamıyor", "İlan açıklamasıyla uyuşmuyor", "Diğer"];
-function dateValue(value) { if (!value) return null; if (typeof value.toDate === "function") return value.toDate(); const date = new Date(value); return Number.isNaN(date.getTime()) ? null : date; }
 export default function OrderClaimForm({ order, onSubmitted, onCancelled }) {
   const [claimWindowCheck] = useState(() => Date.now());
   const [open, setOpen] = useState(false); const [type, setType] = useState("itiraz"); const [reasonCode, setReasonCode] = useState(""); const [description, setDescription] = useState(""); const [saving, setSaving] = useState(false); const [message, setMessage] = useState("");
   const [claim, setClaim] = useState(null); const [carrier, setCarrier] = useState(""); const [trackingNumber, setTrackingNumber] = useState("");
-  const status = order.durum === "Kargoya Verildi" ? "Kargoda" : order.durum === "Teslim" ? "Teslim Edildi" : order.durum;
-  const digital = order.urunTipi === "dijital" || order.fizikselKargo === false || order.dijitalTeslimat === true || order.teslimatTipi === "dijital";
-  const allowedTypes = useMemo(() => { const values = []; const deadline = dateValue(order.hakEdisBlokeBitis); if (digital) { if (status === "Teslim Edildi" && order.teslimatDogrulandi === true && order.odemeDurumu === true && deadline && deadline.getTime() >= claimWindowCheck) values.push("itiraz"); return values; } if (status === "Teslim Edildi" && order.teslimatDogrulandi === true) values.push("iade"); if (["Kargoda", "Teslim Edildi"].includes(status) && order.odemeDurumu === true) values.push("itiraz"); return values; }, [claimWindowCheck, digital, order, status]);
+  const digital = isDigitalOrder(order);
+  const allowedTypes = useMemo(() => claimOptionsForOrder(order, new Date(claimWindowCheck)), [claimWindowCheck, order]);
   useEffect(() => { let active = true; if (!order.aktifTalepId) { setClaim(null); return undefined; } getDoc(doc(db, "orderClaims", order.aktifTalepId)).then((snap) => { if (active && snap.exists()) setClaim({ id: snap.id, ...snap.data() }); }).catch(() => {}); return () => { active = false; }; }, [order.aktifTalepId]);
   async function cancel() { if (!order.aktifTalepId || !window.confirm("Açık talebinizi iptal etmek istiyor musunuz?")) return; setSaving(true); setMessage(""); try { await cancelOrderClaim(order.aktifTalepId); setMessage("Talebiniz iptal edildi."); onCancelled?.(); } catch (error) { setMessage(error.message); } finally { setSaving(false); } }
   async function sendShipment(event) { event.preventDefault(); setSaving(true); setMessage(""); try { const result = await submitReturnShipment(claim.id, { carrier, trackingNumber }); setClaim((old) => ({ ...old, returnFlowStatus: "kargoya_verildi", returnCarrier: result.carrier, returnTrackingNumber: result.trackingNumber })); setMessage("İade kargoya verildi. Satıcıya geri teslim doğrulaması bekleniyor."); } catch (error) { setMessage(error.message); } finally { setSaving(false); } }

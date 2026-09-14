@@ -2,6 +2,7 @@ import { Fragment, useState } from "react";
 import { updateSellerOrderStatus } from "../../services/sellerOrderStatusApi";
 import { payoutDisplay } from "../../utils/orderDelivery";
 import SellerReturnStatus from "./SellerReturnStatus";
+import { isDigitalOrder, normalizeOrderStatus, sellerActionSummary, sellerNextAction } from "../../utils/orderLifecycle";
 import "../../styles/pages/seller-orders.css";
 
 function tarihFormatla(siparis) {
@@ -26,14 +27,7 @@ function durumSinifi(durum) {
 }
 
 function tamamlanmisSiparisMi(siparis) {
-  return siparis.durum === "Teslim Edildi" || siparis.durum === "Teslim";
-}
-
-function normalizeOrderStatus(durum) {
-  if (durum === "Bekliyor") return "Ödendi";
-  if (durum === "Kargoya Verildi") return "Kargoda";
-  if (durum === "Teslim") return "Teslim Edildi";
-  return durum;
+  return normalizeOrderStatus(siparis.durum) === "Teslim Edildi";
 }
 
 function SellerOrderThumbnail({ src, baslik }) {
@@ -89,9 +83,20 @@ function SellerOrders({ siparisler, getir }) {
   const goruntulenenSiparisler = aktifSekme === "tamamlanan"
     ? tamamlananSiparisler
     : aktifSiparisler;
+  const yapilacaklar = sellerActionSummary(siparisler);
+  const yapilacakSayisi = yapilacaklar.prepare.length + yapilacaklar.ship.length + yapilacaklar.trackingMissing.length + yapilacaklar.claims.length;
 
   return (
-    <section className="seller-orders-section">
+    <section className="seller-orders-section" id="seller-orders">
+      <div className="seller-action-center">
+        <header><span>Öncelikli operasyonlar</span><h2>Yapman Gerekenler</h2></header>
+        {yapilacakSayisi === 0 ? <p className="seller-action-clear">✅ Şu anda müdahale gerektiren sipariş bulunmuyor.</p> : <div className="seller-action-list">
+          {yapilacaklar.prepare.length > 0 && <button type="button" onClick={() => setAktifSekme("aktif")}>📦 <strong>{yapilacaklar.prepare.length} sipariş hazırlanmayı bekliyor</strong><span>Siparişleri Gör →</span></button>}
+          {yapilacaklar.ship.length > 0 && <button type="button" onClick={() => setAktifSekme("aktif")}>🚚 <strong>{yapilacaklar.ship.length} sipariş kargoya verilmeli</strong><span>Siparişleri Gör →</span></button>}
+          {yapilacaklar.trackingMissing.length > 0 && <button type="button" onClick={() => setAktifSekme("aktif")}>⚠️ <strong>{yapilacaklar.trackingMissing.length} siparişte takip numarası eksik</strong><span>Kontrol Et →</span></button>}
+          {yapilacaklar.claims.length > 0 && <button type="button" onClick={() => setAktifSekme("aktif")}>🟠 <strong>{yapilacaklar.claims.length} iade/itiraz inceleniyor</strong><span>Durumu Gör →</span></button>}
+        </div>}
+      </div>
       <div className="seller-orders-summary">
         <article><span>Toplam Satış</span><strong>{tutarFormatla({ toplam: toplamSatis })}</strong></article>
         <article><span>Bekleyen</span><strong>{bekleyen}</strong></article>
@@ -169,6 +174,8 @@ function SellerOrders({ siparisler, getir }) {
             const acik = acikSiparis === siparis.id;
             const canonicalDurum = normalizeOrderStatus(siparis.durum);
             const hakEdis = payoutDisplay(siparis);
+            const digital = isDigitalOrder(siparis);
+            const nextAction = sellerNextAction(siparis);
 
             return (
               <Fragment key={siparis.id}>
@@ -207,7 +214,7 @@ function SellerOrders({ siparisler, getir }) {
                       <div><strong>Satıcı</strong><span>{siparis.satici || "—"}</span></div>
                       <div><strong>Telefon</strong><span>{siparis.telefon || "—"}</span></div>
                       <div><strong>Komisyon</strong><span>{tutarFormatla({ toplam: Number(siparis.toplam || 0) * 0.08 })}</span></div>
-                      <label>
+                      {!digital && canonicalDurum === "Hazırlanıyor" && <label>
                         <strong>Kargo firması</strong>
                         <select
                           value={kargoBilgileri[siparis.id]?.firma || "Yurtiçi"}
@@ -219,8 +226,8 @@ function SellerOrders({ siparisler, getir }) {
                           <option>Yurtiçi</option><option>MNG</option><option>Aras</option>
                           <option>Sürat</option><option>PTT</option><option>UPS</option><option>DHL</option>
                         </select>
-                      </label>
-                      <label>
+                      </label>}
+                      {!digital && canonicalDurum === "Hazırlanıyor" && <label>
                         <strong>Takip No</strong>
                         <input
                           type="text"
@@ -231,7 +238,7 @@ function SellerOrders({ siparisler, getir }) {
                             [siparis.id]: { ...onceki[siparis.id], no: event.target.value }
                           }))}
                         />
-                      </label>
+                      </label>}
                     </div>
 
                     <div className="seller-order-contact-actions">
@@ -240,12 +247,12 @@ function SellerOrders({ siparisler, getir }) {
                     </div>
 
                     <div className="seller-order-status-actions">
-                      {canonicalDurum === "Ödendi" && (
+                      {!digital && canonicalDurum === "Ödendi" && (
                         <button type="button" className="edit-btn" disabled={guncellenenSiparis === siparis.id} onClick={() => durumGuncelle(siparis, { durum: "Hazırlanıyor" })}>
-                          📦 Hazırlamaya Başla
+                          {guncellenenSiparis === siparis.id ? "Hazırlanıyor..." : "📦 Siparişi Hazırla"}
                         </button>
                       )}
-                      {canonicalDurum === "Hazırlanıyor" && (
+                      {!digital && canonicalDurum === "Hazırlanıyor" && (
                         <button type="button" className="cart-btn" disabled={guncellenenSiparis === siparis.id} onClick={async () => {
                         const firma = kargoBilgileri[siparis.id]?.firma || "Yurtiçi";
                         const takipNo = kargoBilgileri[siparis.id]?.no || "";
@@ -258,10 +265,10 @@ function SellerOrders({ siparisler, getir }) {
                           kargoFirma: firma,
                           kargoNo: takipNo
                         });
-                      }}>🚚 Kargoya Ver</button>
+                      }}>{guncellenenSiparis === siparis.id ? "Kaydediliyor..." : "🚚 Kargoya Ver"}</button>
                       )}
-                      {canonicalDurum === "Kargoda" && <span className="seller-order-badge shipping">Teslimat Bekleniyor</span>}
-                      {canonicalDurum === "Teslim Edildi" && <span className="seller-order-badge delivered">Teslim Edildi</span>}
+                      {nextAction.kind === "WAIT" && <span className="seller-order-guidance">{nextAction.label}<small>Şu anda işlem yapmanız gerekmiyor.</small></span>}
+                      {nextAction.kind === "TRACKING_MISSING" && <span className="seller-order-guidance warning">Takip numarası eksik. Siparişin kargo bilgisini kontrol edin.</span>}
                       {hakEdis && <span className="seller-order-payout-status"><strong>{hakEdis.label}</strong><small>{hakEdis.detail}</small></span>}
                       <SellerReturnStatus claimId={siparis.aktifTalepId} />
                       <button type="button" className="detail-btn" onClick={() => window.print()}>🖨 Yazdır</button>
