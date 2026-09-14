@@ -118,48 +118,6 @@ function Footer() {
         </div>
 
 
-        {/* =========================
-            SOSYAL MEDYA
-        ========================= */}
-
-        <div>
-
-          <h3>Bizi Takip Edin</h3>
-
-          <div className="socials">
-
-            <a
-              href="#"
-              aria-label="Facebook"
-            >
-              📘
-            </a>
-
-            <a
-              href="#"
-              aria-label="Instagram"
-            >
-              📷
-            </a>
-
-            <a
-              href="#"
-              aria-label="YouTube"
-            >
-              ▶️
-            </a>
-
-            <a
-              href="#"
-              aria-label="LinkedIn"
-            >
-              💼
-            </a>
-
-          </div>
-
-        </div>
-
       </div>
 
 

@@ -18,6 +18,7 @@ test("ana sayfa doğrulanmamış pazarlama KPI rakamları göstermez", () => {
   assert.doesNotMatch(stats, /25\.000\+|1\.500\+|15\.000\+|%98/);
   assert.doesNotMatch(read("src/pages/Home.jsx"), /binlerce hediye ilanı/i);
   assert.doesNotMatch(read("src/components/Footer.jsx"), /binlerce satıcı|on binlerce ürün/i);
+  assert.doesNotMatch(read("src/components/Footer.jsx"), /href="#"/);
 });
 
 test("ağır admin ve seller sayfaları route bazında lazy yüklenir", () => {
