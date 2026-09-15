@@ -226,7 +226,7 @@ service cloud.firestore {
           "ilanNo", "baslik", "fiyat", "eskiFiyat", "kategori",
           "altKategori", "tip", "sehir", "adet", "stok",
           "marka", "renk", "aciklama", "resim", "resimler", "video",
-          "ozelGunler", "sahipUid", "magazaId", "magazaAdi",
+          "ozelGunler", "hedefKisiler", "sahipUid", "magazaId", "magazaAdi",
           "paraBirimi", "puan", "yorumSayisi", "favoriSayisi",
           "satisSayisi", "goruntulenme", "onay", "oneCikan", "trend",
           "kampanyali", "indirim", "ucretsizKargo", "ayniGunKargo",
@@ -271,7 +271,7 @@ service cloud.firestore {
         || (listingOwner() && onlyChanged([
           "baslik", "fiyat", "telefon", "aciklama", "kategori",
           "altKategori", "renk", "marka", "resim", "resimler",
-          "video", "ozelGunler", "tip", "sehir", "adet", "stok",
+          "video", "ozelGunler", "hedefKisiler", "tip", "sehir", "adet", "stok",
           "eskiFiyat", "indirim", "ucretsizKargo", "ayniGunKargo",
           "kargoUcreti", "teslimatSuresi", "aktif", "paraBirimi"
         ]) && !("telefon" in request.resource.data)
