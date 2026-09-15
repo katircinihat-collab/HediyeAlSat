@@ -85,6 +85,7 @@ function MyStore() {
     setMagazaId(bulunanBelge.id);
     setLogoHatasi(false);
     setKapakHatasi(false);
+
     const yuklenenMagaza = {
       magazaAdi: veri.magazaAdi || veri.adi || "",
       logo: veri.logo || "",
@@ -110,35 +111,55 @@ function MyStore() {
     }
 
     let guvenliAciklama;
+
     try {
       guvenliAciklama = validatePublicContent(magaza.aciklama);
     } catch (error) {
       alert(error.message);
       return;
     }
-    const kaydedilecekVeri = duzenlenebilirMagazaVerisi({ ...magaza, aciklama: guvenliAciklama });
+
+    const kaydedilecekVeri = duzenlenebilirMagazaVerisi({
+      ...magaza,
+      aciklama: guvenliAciklama
+    });
 
     try {
       setKaydediliyor(true);
+
       const { telefon, ...publicMagazaVerisi } = kaydedilecekVeri;
+
       await updateDoc(doc(db, "magazalar", magazaId), {
         ...publicMagazaVerisi,
         telefon: deleteField()
       });
-      await setDoc(doc(db, "profiller", auth.currentUser.uid), { telefon }, { merge: true });
+
+      await setDoc(
+        doc(db, "profiller", auth.currentUser.uid),
+        { telefon },
+        { merge: true }
+      );
+
       setIlkMagazaVerisi(kaydedilecekVeri);
       alert("✅ Mağaza kaydedildi.");
+
     } catch (error) {
+
       console.error("Mağaza kaydedilemedi:", error);
       alert("Mağaza bilgileri kaydedilemedi. Lütfen tekrar deneyin.");
+
     } finally {
+
       setKaydediliyor(false);
+
     }
 
   }
 
-  const degisiklikVar = ilkMagazaVerisi !== null &&
-    JSON.stringify(duzenlenebilirMagazaVerisi(magaza)) !== JSON.stringify(ilkMagazaVerisi);
+  const degisiklikVar =
+    ilkMagazaVerisi !== null &&
+    JSON.stringify(duzenlenebilirMagazaVerisi(magaza)) !==
+      JSON.stringify(ilkMagazaVerisi);
 
   const tamamlananAlanSayisi = [
     magaza.magazaAdi,
@@ -148,10 +169,15 @@ function MyStore() {
     magaza.sehir,
     magaza.aciklama
   ].filter((value) => String(value || "").trim()).length;
-  const profilTamamlanma = Math.round((tamamlananAlanSayisi / 6) * 100);
+
+  const profilTamamlanma = Math.round(
+    (tamamlananAlanSayisi / 6) * 100
+  );
 
   function gorselBaglantisiDegistir(alan) {
+
     const etiket = alan === "logo" ? "Logo" : "Kapak";
+
     const yeniBaglanti = window.prompt(
       `${etiket} görsel bağlantısını girin:`,
       magaza[alan] || ""
@@ -166,6 +192,7 @@ function MyStore() {
 
     if (alan === "logo") setLogoHatasi(false);
     if (alan === "kapak") setKapakHatasi(false);
+
   }
 
   return (
@@ -176,105 +203,277 @@ function MyStore() {
         <div>
           <span>Satıcı yönetimi</span>
           <h1>🏪 Mağazam</h1>
-          <p>Mağaza vitrininizde görünen temel bilgileri buradan düzenleyin.</p>
+          <p>
+            Mağaza vitrininizde görünen temel bilgileri buradan düzenleyin.
+          </p>
         </div>
-        <span className={`my-store-status ${magaza.aktif ? "active" : "closed"}`}>
+
+        <span
+          className={`my-store-status ${
+            magaza.aktif ? "active" : "closed"
+          }`}
+        >
           {magaza.aktif ? "Aktif" : "Kapalı"}
         </span>
       </header>
 
       {magaza.aktif === false && (
         <div className="store-closed-notice" role="status">
-          <strong>Mağazanız şu anda yönetim tarafından kapatılmıştır.</strong>
-          <span>Mağaza bilgileriniz ve geçmiş kayıtlarınız korunur; yeni ilan ekleyemezsiniz.</span>
+          <strong>
+            Mağazanız şu anda yönetim tarafından kapatılmıştır.
+          </strong>
+          <span>
+            Mağaza bilgileriniz ve geçmiş kayıtlarınız korunur; yeni ilan
+            ekleyemezsiniz.
+          </span>
         </div>
       )}
 
-      <nav className="my-store-management" aria-label="Mağaza yönetim kısayolları">
-        <a className="my-store-management-link active" href="#magaza-bilgileri">
-          <span>✏️</span><strong>Mağazayı Düzenle</strong><small>Vitrin bilgileri</small>
+      <nav
+        className="my-store-management"
+        aria-label="Mağaza yönetim kısayolları"
+      >
+
+        <a
+          className="my-store-management-link active"
+          href="#magaza-bilgileri"
+        >
+          <span>✏️</span>
+          <strong>Mağazayı Düzenle</strong>
+          <small>Vitrin bilgileri</small>
         </a>
-        <Link className="my-store-management-link" to="/ilan-ver">
-          <span>➕</span><strong>Yeni Ürün Ekle</strong><small>Yeni ilan yayınla</small>
+
+        <Link
+          className="my-store-management-link"
+          to="/ilan-ver"
+        >
+          <span>➕</span>
+          <strong>Yeni Ürün Ekle</strong>
+          <small>Yeni ilan yayınla</small>
         </Link>
-        <Link className="my-store-management-link" to="/satici-siparisleri">
-          <span>📦</span><strong>Siparişler</strong><small>Siparişleri yönet</small>
+
+        <Link
+          className="my-store-management-link"
+          to="/satici-siparisleri"
+        >
+          <span>📦</span>
+          <strong>Siparişler</strong>
+          <small>Siparişleri yönet</small>
         </Link>
-        <Link className="my-store-management-link" to="/seller">
-          <span>💳</span><strong>Cüzdan / Finans</strong><small>Hakedişleri görüntüle</small>
+
+        <Link
+          className="my-store-management-link"
+          to="/seller"
+        >
+          <span>💳</span>
+          <strong>Cüzdan / Finans</strong>
+          <small>Hakedişleri görüntüle</small>
         </Link>
-        <Link className="my-store-management-link" to="/seller">
-          <span>📊</span><strong>İstatistikler</strong><small>Satıcı performansı</small>
+
+        <Link
+          className="my-store-management-link"
+          to="/seller"
+        >
+          <span>📊</span>
+          <strong>İstatistikler</strong>
+          <small>Satıcı performansı</small>
         </Link>
+
+        <Link
+          className="my-store-management-link"
+          to="/sponsor-basvuru"
+        >
+          <span>⭐</span>
+          <strong>Mağazamı Öne Çıkar</strong>
+          <small>Sponsorlu mağaza başvurusu</small>
+        </Link>
+
       </nav>
 
-      <section className="my-store-overview" aria-label="Mağaza özeti">
-        <div><span>Mağaza durumu</span><strong>{magaza.aktif ? "Yayında" : "Kapalı"}</strong></div>
-        <div><span>Profil tamamlanma</span><strong>%{profilTamamlanma}</strong></div>
-        <div><span>Mağaza konumu</span><strong>{magaza.sehir || "Belirtilmedi"}</strong></div>
+      <section
+        className="my-store-overview"
+        aria-label="Mağaza özeti"
+      >
+        <div>
+          <span>Mağaza durumu</span>
+          <strong>{magaza.aktif ? "Yayında" : "Kapalı"}</strong>
+        </div>
+
+        <div>
+          <span>Profil tamamlanma</span>
+          <strong>%{profilTamamlanma}</strong>
+        </div>
+
+        <div>
+          <span>Mağaza konumu</span>
+          <strong>{magaza.sehir || "Belirtilmedi"}</strong>
+        </div>
       </section>
 
-      <section className="my-store-card" id="magaza-bilgileri">
+      <section
+        className="my-store-card"
+        id="magaza-bilgileri"
+      >
+
         <div className="my-store-cover">
+
           {magaza.kapak && !kapakHatasi ? (
-            <img src={magaza.kapak} alt={`${magaza.magazaAdi || "Mağaza"} kapak görseli`} onError={() => setKapakHatasi(true)} />
+            <img
+              src={magaza.kapak}
+              alt={`${magaza.magazaAdi || "Mağaza"} kapak görseli`}
+              onError={() => setKapakHatasi(true)}
+            />
           ) : (
-            <div className="my-store-cover-placeholder" aria-label="Kapak görseli bulunmuyor">
+            <div
+              className="my-store-cover-placeholder"
+              aria-label="Kapak görseli bulunmuyor"
+            >
               <span>🏪</span>
               <small>Mağaza kapak görseli</small>
             </div>
           )}
 
           <div className="my-store-logo">
+
             {magaza.logo && !logoHatasi ? (
-              <img src={magaza.logo} alt={`${magaza.magazaAdi || "Mağaza"} logosu`} onError={() => setLogoHatasi(true)} />
+              <img
+                src={magaza.logo}
+                alt={`${magaza.magazaAdi || "Mağaza"} logosu`}
+                onError={() => setLogoHatasi(true)}
+              />
             ) : (
-              <span aria-label="Mağaza logosu bulunmuyor">🏬</span>
+              <span aria-label="Mağaza logosu bulunmuyor">
+                🏬
+              </span>
             )}
+
           </div>
+
         </div>
 
-        <div className="my-store-image-actions" aria-label="Mağaza görselleri">
-          <button type="button" className="my-store-image-action" onClick={() => gorselBaglantisiDegistir("logo")}>
+        <div
+          className="my-store-image-actions"
+          aria-label="Mağaza görselleri"
+        >
+
+          <button
+            type="button"
+            className="my-store-image-action"
+            onClick={() => gorselBaglantisiDegistir("logo")}
+          >
             Logo Görselini Değiştir
           </button>
-          <button type="button" className="my-store-image-action" onClick={() => gorselBaglantisiDegistir("kapak")}>
+
+          <button
+            type="button"
+            className="my-store-image-action"
+            onClick={() => gorselBaglantisiDegistir("kapak")}
+          >
             Kapak Görselini Değiştir
           </button>
+
         </div>
 
         <div className="my-store-form">
+
           <div className="my-store-field my-store-field-wide">
-            <label htmlFor="my-store-name">Mağaza adı</label>
-            <input id="my-store-name" placeholder="Mağaza Adı" value={magaza.magazaAdi} onChange={(e)=>setMagaza({...magaza,magazaAdi:e.target.value})} />
+
+            <label htmlFor="my-store-name">
+              Mağaza adı
+            </label>
+
+            <input
+              id="my-store-name"
+              placeholder="Mağaza Adı"
+              value={magaza.magazaAdi}
+              onChange={(e) =>
+                setMagaza({
+                  ...magaza,
+                  magazaAdi: e.target.value
+                })
+              }
+            />
+
           </div>
 
           <div className="my-store-field">
-            <label htmlFor="my-store-phone">Telefon</label>
-            <input id="my-store-phone" placeholder="Telefon" value={magaza.telefon} onChange={(e)=>setMagaza({...magaza,telefon:e.target.value})} />
+
+            <label htmlFor="my-store-phone">
+              Telefon
+            </label>
+
+            <input
+              id="my-store-phone"
+              placeholder="Telefon"
+              value={magaza.telefon}
+              onChange={(e) =>
+                setMagaza({
+                  ...magaza,
+                  telefon: e.target.value
+                })
+              }
+            />
+
           </div>
 
           <div className="my-store-field">
-            <label htmlFor="my-store-city">Şehir / konum</label>
-            <input id="my-store-city" placeholder="Şehir" value={magaza.sehir} onChange={(e)=>setMagaza({...magaza,sehir:e.target.value})} />
+
+            <label htmlFor="my-store-city">
+              Şehir / konum
+            </label>
+
+            <input
+              id="my-store-city"
+              placeholder="Şehir"
+              value={magaza.sehir}
+              onChange={(e) =>
+                setMagaza({
+                  ...magaza,
+                  sehir: e.target.value
+                })
+              }
+            />
+
           </div>
 
           <div className="my-store-field my-store-field-wide">
-            <label htmlFor="my-store-about">Mağaza hakkında</label>
-            <textarea id="my-store-about" rows={6} placeholder="Mağazanızı kısaca tanıtın" value={magaza.aciklama} onChange={(e)=>setMagaza({...magaza,aciklama:e.target.value})} />
+
+            <label htmlFor="my-store-about">
+              Mağaza hakkında
+            </label>
+
+            <textarea
+              id="my-store-about"
+              rows={6}
+              placeholder="Mağazanızı kısaca tanıtın"
+              value={magaza.aciklama}
+              onChange={(e) =>
+                setMagaza({
+                  ...magaza,
+                  aciklama: e.target.value
+                })
+              }
+            />
+
           </div>
 
           <div className="my-store-actions my-store-field-wide">
+
             <button
               type="button"
               className="buy-btn"
               onClick={kaydet}
               disabled={!degisiklikVar || kaydediliyor}
             >
-              {kaydediliyor ? "Kaydediliyor..." : "💾 Bilgileri Kaydet"}
+              {kaydediliyor
+                ? "Kaydediliyor..."
+                : "💾 Bilgileri Kaydet"}
             </button>
+
           </div>
+
         </div>
+
       </section>
 
     </div>
