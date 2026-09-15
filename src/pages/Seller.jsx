@@ -29,6 +29,8 @@ const [urunler,setUrunler]=useState([]);
 
 const [siparisler,setSiparisler]=useState([]);
 
+const [marketplaceHareketleri,setMarketplaceHareketleri]=useState([]);
+
 const [bugunKazanc,setBugunKazanc]=useState(0);
 
 const [aylikKazanc,setAylikKazanc]=useState(0);
@@ -107,6 +109,34 @@ id:doc.id,
 }));
 
 setSiparisler(siparisListe);
+
+const hareketQuery=query(
+
+collection(db,"bakiyeHareketleri"),
+
+where("satici","==",user.email)
+
+);
+
+const hareketSnap=await getDocs(hareketQuery);
+
+const hareketListe=hareketSnap.docs
+.map(doc=>({
+
+id:doc.id,
+
+...doc.data()
+
+}))
+.filter(
+
+(hareket)=>
+
+hareket.settlementMode==="IYZICO_MARKETPLACE"
+
+);
+
+setMarketplaceHareketleri(hareketListe);
 
 let toplam=0;
 
@@ -314,6 +344,8 @@ getir={getir}
 <SellerFinance
 
 siparisler={siparisler}
+
+marketplaceHareketleri={marketplaceHareketleri}
 
 />
 
