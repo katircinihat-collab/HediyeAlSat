@@ -116,3 +116,88 @@
     width: 100%;
   }
 }
+/* ==================================================
+   SEO GERÇEK ÜRÜNLER
+================================================== */
+
+.seo-products {
+  max-width: 1400px;
+  margin: 45px auto;
+  padding: 0 24px;
+}
+
+.seo-products-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.seo-products-heading h2 {
+  margin: 6px 0 0;
+  font-size: 28px;
+}
+
+.seo-products-kicker {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.seo-products-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.seo-products-status,
+.seo-products-empty {
+  padding: 45px 24px;
+  text-align: center;
+  border-radius: 16px;
+  background: #f8f8f8;
+}
+
+.seo-products-empty h3 {
+  margin-top: 0;
+}
+
+.seo-products-empty a {
+  display: inline-block;
+  margin-top: 10px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+@media (max-width: 1100px) {
+  .seo-products-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 800px) {
+  .seo-products-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  .seo-products-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 520px) {
+  .seo-products {
+    padding: 0 14px;
+  }
+
+  .seo-products-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .seo-products-heading h2 {
+    font-size: 23px;
+  }
+}
