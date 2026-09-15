@@ -201,3 +201,85 @@
     font-size: 23px;
   }
 }
+/* ==================================================
+   SEO ÜRÜN KARTLARI - KOMPAKT GÖRÜNÜM
+================================================== */
+
+.seo-products-grid > .product-card {
+  width: 100%;
+  height: auto;
+  min-height: 390px;
+}
+
+.seo-products-grid .product-card .product-image,
+.seo-products-grid .product-card.product-card--a4 .product-image,
+.seo-products-grid .product-card.product-card--a4.featured-product .product-image {
+  width: 100%;
+  height: 190px;
+  min-height: 190px;
+  max-height: 190px;
+  aspect-ratio: auto;
+  background: #f7f7f7;
+}
+
+.seo-products-grid .product-card .product-image img,
+.seo-products-grid .product-card.product-card--a4 .product-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.seo-products-grid .product-card .product-body {
+  padding: 10px;
+}
+
+.seo-products-grid .product-card .product-category {
+  font-size: 10px;
+  margin-bottom: 4px;
+}
+
+.seo-products-grid .product-card .product-title {
+  min-height: 35px;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.seo-products-grid .product-card .current-price {
+  font-size: 18px;
+}
+
+.seo-products-grid .product-card .product-rating {
+  min-height: 18px;
+  font-size: 10px;
+}
+
+.seo-products-grid .product-card .product-stats {
+  margin-top: 5px;
+  padding-top: 6px;
+  gap: 5px;
+  font-size: 9px;
+}
+
+.seo-products-grid .product-card .product-actions {
+  padding-top: 7px;
+}
+
+.seo-products-grid .product-card .cart-btn {
+  min-height: 36px;
+  padding: 7px 8px;
+  font-size: 10px;
+}
+
+@media (max-width: 520px) {
+  .seo-products-grid > .product-card {
+    min-height: 350px;
+  }
+
+  .seo-products-grid .product-card .product-image,
+  .seo-products-grid .product-card.product-card--a4 .product-image,
+  .seo-products-grid .product-card.product-card--a4.featured-product .product-image {
+    height: 165px;
+    min-height: 165px;
+    max-height: 165px;
+  }
+}
