@@ -58,3 +58,44 @@ test("tekrarlı satış istatistikleri kaldırılır ve marketplace ile legacy b
     /Banka aktarımı iyzico tarafından\s*tamamlanmadan bir kazanç "Ödendi" olarak gösterilmez/
   );
 });
+test("marketplace kazanç özeti iade ve iptal edilen satışları hariç tutar", () => {
+  assert.match(
+    finance,
+    /realizedMarketplaceHareketleri/
+  );
+
+  assert.match(
+    finance,
+    /isRealizedMarketplaceMovement/
+  );
+
+  assert.match(
+    finance,
+    /refundProviderStatus/
+  );
+
+  assert.match(
+    finance,
+    /refundAccountingCompleted/
+  );
+
+  assert.match(
+    finance,
+    /refundCompleted/
+  );
+
+  assert.match(
+    finance,
+    /INVALID_FINANCIAL_STATUSES\.has\(orderStatus\)/
+  );
+
+  assert.match(
+    finance,
+    /realizedMarketplaceHareketleri\.reduce/
+  );
+
+  assert.doesNotMatch(
+    finance,
+    /0\.08/
+  );
+});

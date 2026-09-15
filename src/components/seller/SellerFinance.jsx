@@ -1,6 +1,5 @@
 import "../../styles/pages/seller-finance.css";
 
-
 const money = (value) =>
   Number(value || 0).toLocaleString("tr-TR", {
     minimumFractionDigits: 2,
@@ -14,6 +13,15 @@ const STATUS_GROUPS = {
   paid: new Set(["PAID"]),
   review: new Set(["REVIEW_REQUIRED", "FAILED"])
 };
+
+const INVALID_FINANCIAL_STATUSES = new Set([
+  "iptal",
+  "iptal edildi",
+  "iade",
+  "refunded",
+  "cancelled",
+  "cancelled_by_seller"
+]);
 
 function normalizeStatus(value) {
   const normalized = String(value || "")
@@ -64,6 +72,7 @@ function buildOrderMap(siparisler) {
 
 function getMovementOrder(item, orderMap) {
   if (!item?.siparisId) return null;
+
   return orderMap.get(String(item.siparisId)) || null;
 }
 
@@ -75,6 +84,40 @@ function getOrderNumber(item, orderMap) {
   return order.siparisNo
     ? String(order.siparisNo)
     : "Sipariş";
+}
+
+function isRealizedMarketplaceMovement(item, orderMap) {
+  const movementStatus = String(item?.durum || "")
+    .trim()
+    .toLocaleLowerCase("tr-TR");
+
+  if (movementStatus === "iade edildi") {
+    return false;
+  }
+
+  const order = getMovementOrder(item, orderMap);
+
+  if (!order) {
+    return true;
+  }
+
+  const orderStatus = String(order.durum || "")
+    .trim()
+    .toLocaleLowerCase("tr-TR");
+
+  const refundProviderStatus = String(
+    order.refundProviderStatus || ""
+  )
+    .trim()
+    .toLowerCase();
+
+  return (
+    order.paymentStatus !== "FAILURE" &&
+    refundProviderStatus !== "success" &&
+    order.refundAccountingCompleted !== true &&
+    order.refundCompleted !== true &&
+    !INVALID_FINANCIAL_STATUSES.has(orderStatus)
+  );
 }
 
 function movementStatusLabel(item, orderMap) {
@@ -121,52 +164,75 @@ function SellerFinance({
   siparisler = [],
   marketplaceHareketleri = []
 }) {
-  const metrics = marketplaceHareketleri.reduce(
-  (totals, item) => ({
-    grossSales: totals.grossSales + Number(item.toplamTutar || 0),
-    platformCommission:
-      totals.platformCommission + Number(item.komisyon || 0),
-    sellerNetShare:
-      totals.sellerNetShare + Number(item.netTutar || 0)
-  }),
-  {
-    grossSales: 0,
-    platformCommission: 0,
-    sellerNetShare: 0
-  }
-);
   const orderMap = buildOrderMap(siparisler);
 
+  const realizedMarketplaceHareketleri =
+    marketplaceHareketleri.filter((item) =>
+      isRealizedMarketplaceMovement(item, orderMap)
+    );
+
+  const metrics = realizedMarketplaceHareketleri.reduce(
+    (totals, item) => ({
+      grossSales:
+        totals.grossSales + Number(item.toplamTutar || 0),
+      platformCommission:
+        totals.platformCommission + Number(item.komisyon || 0),
+      sellerNetShare:
+        totals.sellerNetShare + Number(item.netTutar || 0)
+    }),
+    {
+      grossSales: 0,
+      platformCommission: 0,
+      sellerNetShare: 0
+    }
+  );
+
   const protectedItems = marketplaceHareketleri.filter((item) =>
-    STATUS_GROUPS.protected.has(normalizeStatus(item.settlementStatus))
+    STATUS_GROUPS.protected.has(
+      normalizeStatus(item.settlementStatus)
+    )
   );
 
   const protectionPeriodItems = protectedItems.filter((item) =>
-    isInProtectionPeriod(getMovementOrder(item, orderMap))
+    isInProtectionPeriod(
+      getMovementOrder(item, orderMap)
+    )
   );
 
   const orderProcessItems = protectedItems.filter(
-    (item) => !isInProtectionPeriod(getMovementOrder(item, orderMap))
+    (item) =>
+      !isInProtectionPeriod(
+        getMovementOrder(item, orderMap)
+      )
   );
 
   const processingItems = marketplaceHareketleri.filter((item) =>
-    STATUS_GROUPS.processing.has(normalizeStatus(item.settlementStatus))
+    STATUS_GROUPS.processing.has(
+      normalizeStatus(item.settlementStatus)
+    )
   );
 
   const approvedItems = marketplaceHareketleri.filter((item) =>
-    STATUS_GROUPS.approved.has(normalizeStatus(item.settlementStatus))
+    STATUS_GROUPS.approved.has(
+      normalizeStatus(item.settlementStatus)
+    )
   );
 
   const paidItems = marketplaceHareketleri.filter((item) =>
-    STATUS_GROUPS.paid.has(normalizeStatus(item.settlementStatus))
+    STATUS_GROUPS.paid.has(
+      normalizeStatus(item.settlementStatus)
+    )
   );
 
   const reviewItems = marketplaceHareketleri.filter((item) =>
-    STATUS_GROUPS.review.has(normalizeStatus(item.settlementStatus))
+    STATUS_GROUPS.review.has(
+      normalizeStatus(item.settlementStatus)
+    )
   );
 
   const unknownItems = marketplaceHareketleri.filter(
-    (item) => normalizeStatus(item.settlementStatus) === "UNKNOWN"
+    (item) =>
+      normalizeStatus(item.settlementStatus) === "UNKNOWN"
   );
 
   const protectionPeriodTotal = sumNet(protectionPeriodItems);
@@ -180,24 +246,29 @@ function SellerFinance({
   const aktarimBekleyen =
     processingTotal + approvedTotal;
 
-  const sortedMovements = [...marketplaceHareketleri].sort((a, b) => {
-    const getTime = (value) => {
-      if (!value) return 0;
+  const sortedMovements = [...marketplaceHareketleri].sort(
+    (a, b) => {
+      const getTime = (value) => {
+        if (!value) return 0;
 
-      if (typeof value.toDate === "function") {
-        return value.toDate().getTime();
-      }
+        if (typeof value.toDate === "function") {
+          return value.toDate().getTime();
+        }
 
-      if (value.seconds) {
-        return Number(value.seconds) * 1000;
-      }
+        if (value.seconds) {
+          return Number(value.seconds) * 1000;
+        }
 
-      const date = new Date(value);
-      return Number.isNaN(date.getTime()) ? 0 : date.getTime();
-    };
+        const date = new Date(value);
 
-    return getTime(b.tarih) - getTime(a.tarih);
-  });
+        return Number.isNaN(date.getTime())
+          ? 0
+          : date.getTime();
+      };
+
+      return getTime(b.tarih) - getTime(a.tarih);
+    }
+  );
 
   return (
     <section className="seller-sales-summary">
