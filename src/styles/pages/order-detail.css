@@ -67,6 +67,8 @@
   gap: 12px;
 }
 
+.order-delivery-notice{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;margin:16px 0;padding:14px 16px;border:1px solid #e8d6cf;border-radius:12px;background:#fff9f6;color:#5f3737}.order-delivery-notice strong{color:#7f1d1d}.order-delivery-notice small{flex-basis:100%;line-height:1.5}
+
 @media (max-width: 700px) {
   .order-page {
     margin-top: 20px;

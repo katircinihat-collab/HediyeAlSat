@@ -44,6 +44,19 @@ test("satıcı yapılacaklar özeti öncelikli operasyonları ayırır", () => {
   assert.equal(summary.claims.length, 1);
 });
 
+test("teslim sonrası satıcıya 48 saat, blokaj ve aktarıma hazır durumları açık gösterilir", () => {
+  const future = { durum: "Teslim", teslimatDogrulandi: true, hakEdisBlokeBitis: new Date(Date.now() + 3600000) };
+  assert.match(sellerNextAction(future).label, /48 saatlik kontrol süresi başladı/);
+  assert.match(sellerNextAction({ ...future, hakEdisBlokeli: true }).label, /itiraz incelemesi/);
+  assert.match(sellerNextAction({ ...future, hakEdisBlokeBitis: new Date(Date.now() - 1) }).label, /aktarım sürecine hazır/);
+});
+
+test("teslim onayı response'u alıcı detayına güvenilir 48 saat zamanlarını döndürür", () => {
+  const controller = read("backend/controllers/orderStatusController.js");
+  assert.match(controller, /teslimatDogrulamaTarihi: result\.teslimatDogrulamaTarihi/);
+  assert.match(controller, /hakEdisBlokeBitis: result\.hakEdisBlokeBitis/);
+});
+
 test("sipariş ekranları güvenli state ve gerçek aksiyonları kullanır", () => {
   const list = read("src/pages/MyOrders.jsx");
   const detail = read("src/pages/OrderDetail.jsx");

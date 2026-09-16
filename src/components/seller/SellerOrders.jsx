@@ -20,9 +20,10 @@ function tutarFormatla(siparis) {
 }
 
 function durumSinifi(durum) {
-  if (durum === "Hazırlanıyor") return "preparing";
-  if (durum === "Kargoda") return "shipping";
-  if (durum === "Teslim" || durum === "Teslim Edildi") return "delivered";
+  const canonical = normalizeOrderStatus(durum);
+  if (canonical === "Hazırlanıyor") return "preparing";
+  if (canonical === "Kargoda") return "shipping";
+  if (canonical === "Teslim Edildi" || canonical === "Tamamlandı") return "delivered";
   return "waiting";
 }
 
@@ -74,10 +75,10 @@ function SellerOrders({ siparisler, getir }) {
     (toplam, siparis) => toplam + Number(siparis.toplam ?? siparis.fiyat ?? 0),
     0
   );
-  const bekleyen = siparisler.filter((siparis) => siparis.durum === "Bekliyor").length;
-  const hazirlanan = siparisler.filter((siparis) => siparis.durum === "Hazırlanıyor").length;
-  const kargoda = siparisler.filter((siparis) => siparis.durum === "Kargoda").length;
-  const teslim = siparisler.filter((siparis) => siparis.durum === "Teslim").length;
+  const bekleyen = siparisler.filter((siparis) => normalizeOrderStatus(siparis.durum) === "Ödendi").length;
+  const hazirlanan = siparisler.filter((siparis) => normalizeOrderStatus(siparis.durum) === "Hazırlanıyor").length;
+  const kargoda = siparisler.filter((siparis) => normalizeOrderStatus(siparis.durum) === "Kargoda").length;
+  const teslim = siparisler.filter((siparis) => normalizeOrderStatus(siparis.durum) === "Teslim Edildi").length;
   const tamamlananSiparisler = siparisler.filter(tamamlanmisSiparisMi);
   const aktifSiparisler = siparisler.filter((siparis) => !tamamlanmisSiparisMi(siparis));
   const goruntulenenSiparisler = aktifSekme === "tamamlanan"
@@ -167,7 +168,7 @@ function SellerOrders({ siparisler, getir }) {
           </div>
 
           {goruntulenenSiparisler.map((siparis) => {
-            const siparisNo = siparis.siparisNo || siparis.id;
+            const siparisNo = String(siparis.siparisNo || "Sipariş");
             const kisaSiparisNo = siparisNo.length > 14
               ? `${siparisNo.slice(0, 11)}…`
               : siparisNo;
@@ -191,8 +192,8 @@ function SellerOrders({ siparisler, getir }) {
                   <div role="cell" data-label="Tarih">{tarihFormatla(siparis)}</div>
                   <div role="cell" data-label="Tutar"><strong>{tutarFormatla(siparis)}</strong></div>
                   <div role="cell" data-label="Durum">
-                    <span className={`seller-order-badge ${durumSinifi(siparis.durum)}`}>
-                      {siparis.durum || "Bekliyor"}
+                    <span className={`seller-order-badge ${durumSinifi(canonicalDurum)}`}>
+                      {canonicalDurum}
                     </span>
                   </div>
                   <div role="cell" data-label="İşlem">

@@ -14,11 +14,12 @@ const finance = fs.readFileSync(
   path.join(root, "src/components/seller/SellerFinance.jsx"),
   "utf8"
 );
+const sellerOrders = fs.readFileSync(path.join(root, "src/components/seller/SellerOrders.jsx"), "utf8");
 
 test("satıcı hazırlanan sipariş sayacını dashboarda aktarır", () => {
   assert.match(
     seller,
-    /s\.durum\s*===\s*"Hazırlanıyor"/
+    /canonicalDurum\s*===\s*"Hazırlanıyor"/
   );
 
   assert.match(
@@ -98,4 +99,16 @@ test("marketplace kazanç özeti iade ve iptal edilen satışları hariç tutar"
     finance,
     /0\.08/
   );
+});
+
+test("satıcı sipariş aksiyonları fiziksel yaşam döngüsüne göre tekilleştirilir", () => {
+  assert.match(sellerOrders, /canonicalDurum === "Ödendi"/);
+  assert.match(sellerOrders, /canonicalDurum === "Hazırlanıyor"/);
+  assert.match(sellerOrders, /!digital && canonicalDurum/);
+  assert.doesNotMatch(sellerOrders, /canonicalDurum === "Kargoda"[\s\S]{0,200}Siparişi Hazırla/);
+});
+
+test("satıcı ekranı teknik Firestore sipariş kimliğini fallback olarak göstermez", () => {
+  assert.doesNotMatch(sellerOrders, /siparis\.siparisNo \|\| siparis\.id/);
+  assert.match(sellerOrders, /siparis\.siparisNo \|\| "Sipariş"/);
 });

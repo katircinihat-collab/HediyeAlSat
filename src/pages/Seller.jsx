@@ -23,6 +23,7 @@ import SellerOrders from "../components/seller/SellerOrders";
 import SellerFinance from "../components/seller/SellerFinance";
 import SellerPerformance from "../components/seller/SellerPerformance";
 import SellerChart from "../components/seller/SellerChart";
+import { normalizeOrderStatus } from "../utils/orderLifecycle";
 function Seller(){
 
 const [urunler,setUrunler]=useState([]);
@@ -159,6 +160,7 @@ const bugunStr=bugunTarih.toDateString();
 siparisListe.forEach(s=>{
 
 const tutar=Number(s.toplam||0);
+const canonicalDurum=normalizeOrderStatus(s.durum);
 
 if(s.odemeDurumu===true){
 
@@ -166,25 +168,25 @@ toplam+=tutar;
 
 }
 
-if(s.durum==="Bekliyor"){
+if(canonicalDurum==="Ödendi"){
 
 bekleyenSayisi++;
 
 }
 
-if(s.durum==="Hazırlanıyor"){
+if(canonicalDurum==="Hazırlanıyor"){
 
 hazirlananSayisi++;
 
 }
 
-if(s.durum==="Kargoda"){
+if(canonicalDurum==="Kargoda"){
 
 kargodaSayisi++;
 
 }
 
-if(s.durum==="Teslim"){
+if(canonicalDurum==="Teslim Edildi"){
 
 teslimSayisi++;
 

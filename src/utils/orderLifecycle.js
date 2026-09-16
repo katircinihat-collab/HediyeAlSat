@@ -51,7 +51,12 @@ export function sellerNextAction(order) {
   if (status === "Hazırlanıyor") return { kind: "SHIP", label: "Kargoya Ver" };
   if (status === "Kargoda" && !order.kargoNo) return { kind: "TRACKING_MISSING", label: "Takip numarası gerekli" };
   if (status === "Kargoda") return { kind: "WAIT", label: "Alıcının teslim alması bekleniyor" };
-  if (status === "Teslim Edildi") return { kind: "WAIT", label: "48 saatlik kontrol süreci devam ediyor" };
+  if (status === "Teslim Edildi" && order?.hakEdisBlokeli === true) return { kind: "WAIT", label: "İade veya itiraz incelemesi devam ediyor" };
+  if (status === "Teslim Edildi") {
+    const deadline = dateValue(order?.hakEdisBlokeBitis);
+    if (deadline && deadline.getTime() <= Date.now()) return { kind: "WAIT", label: "Kazancınız aktarım sürecine hazır" };
+    return { kind: "WAIT", label: "48 saatlik kontrol süresi başladı — itiraz olmazsa ödemeniz aktarım sürecine alınacak" };
+  }
   return { kind: "WAIT", label: "Şu anda işlem yapmanız gerekmiyor" };
 }
 

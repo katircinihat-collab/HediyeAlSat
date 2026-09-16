@@ -38,7 +38,14 @@ exports.confirmDeliveryAsBuyer = async (req, res) => {
             orderId: String(req.params.orderId || "").trim(),
             actor: { type: "alici", uid: req.user.uid, email: req.user.email }
         });
-        return res.json({ success: true, idempotent: result.idempotent, durum: "Teslim Edildi" });
+        return res.json({
+            success: true,
+            idempotent: result.idempotent,
+            durum: "Teslim Edildi",
+            teslimatDogrulamaTarihi: result.teslimatDogrulamaTarihi || null,
+            hakEdisBlokeBaslangic: result.hakEdisBlokeBaslangic || null,
+            hakEdisBlokeBitis: result.hakEdisBlokeBitis || null
+        });
     } catch (error) {
         return res.status(error.status || 500).json({ success: false, code: error.code || "DELIVERY_CONFIRMATION_FAILED", message: error instanceof DeliveryConfirmationError ? error.message : "Teslimat doğrulanamadı." });
     }

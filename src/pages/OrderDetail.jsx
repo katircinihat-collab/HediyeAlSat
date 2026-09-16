@@ -16,6 +16,7 @@ import OrderClaimForm from "../components/OrderClaimForm";
 import OrderTimeline from "../components/OrderTimeline";
 import { getDigitalDownload } from "../services/digitalDownloadApi";
 import { isDigitalOrder, normalizeOrderStatus } from "../utils/orderLifecycle";
+import { payoutDisplay } from "../utils/orderDelivery";
 
 import "../styles/pages/order-detail.css";
 
@@ -46,8 +47,8 @@ async function teslimAldim(){
 if(!auth.currentUser||!window.confirm("Ürünü teslim aldığınızı onaylıyor musunuz?"))return;
 try{
 setDogrulaniyor(true);
-await confirmOrderDelivery(siparis.id);
-setSiparis((onceki)=>({...onceki,durum:"Teslim Edildi",teslimatDogrulandi:true}));
+const result=await confirmOrderDelivery(siparis.id);
+setSiparis((onceki)=>({...onceki,durum:"Teslim Edildi",teslimatDogrulandi:true,teslimatDogrulamaTarihi:result.teslimatDogrulamaTarihi||new Date(),hakEdisBlokeBaslangic:result.hakEdisBlokeBaslangic||new Date(),hakEdisBlokeBitis:result.hakEdisBlokeBitis}));
 }catch(error){
 alert(error.message);
 }finally{
@@ -138,6 +139,7 @@ Sipariş bulunamadı.
 
 const digital=isDigitalOrder(siparis);
 const canonicalDurum=normalizeOrderStatus(siparis.durum);
+const hakEdis=payoutDisplay(siparis);
 
 return(
 
@@ -227,6 +229,7 @@ canonicalDurum
 
 </div>
 <OrderTimeline order={siparis}/>
+{siparis.teslimatDogrulandi===true&&<div className="order-delivery-notice"><strong>Teslim alındı</strong><span>{siparis.teslimatDogrulamaTarihi?.toDate?siparis.teslimatDogrulamaTarihi.toDate().toLocaleString("tr-TR"):siparis.teslimatDogrulamaTarihi?new Date(siparis.teslimatDogrulamaTarihi).toLocaleString("tr-TR"):"Teslimat doğrulandı"}</span>{hakEdis&&<small>{hakEdis.label}: {hakEdis.detail}</small>}</div>}
 <div className="order-grid">
 
 <div className="order-box">
