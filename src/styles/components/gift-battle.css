@@ -81,6 +81,10 @@
 .gift-battle-thanks { margin: 14px 0 0; color: #39703c; font-weight: 700; }
 .gift-battle-error { margin: 14px 0 0; color: #b42318; }
 .gift-battle-loading { padding: 42px 10px 22px; color: #78675e; }
+.gift-battle-unavailable { display: grid; justify-items: center; gap: 8px; }
+.gift-battle-unavailable strong { color: #71372f; }
+.gift-battle-unavailable span { max-width: 520px; }
+.gift-battle-unavailable button { min-height: 40px; padding: 8px 18px; border: 0; border-radius: 999px; background: #7c2d3a; color: #fff; font-weight: 800; cursor: pointer; }
 
 @keyframes warrior-ready { 0%, 100% { translate: 0 0; } 50% { translate: 3px -2px; } }
 

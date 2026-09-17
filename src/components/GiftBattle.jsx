@@ -46,6 +46,7 @@ function GiftBattle() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => onAuthStateChanged(auth, setUser), []);
 
@@ -77,7 +78,7 @@ function GiftBattle() {
       active = false;
       if (retryTimer) window.clearTimeout(retryTimer);
     };
-  }, []);
+  }, [reloadKey]);
 
   useEffect(() => {
     if (!user || !battle) {
@@ -110,6 +111,12 @@ function GiftBattle() {
     } finally {
       setBusy(false);
     }
+  }
+
+  function retryBattle() {
+    setError("");
+    setLoading(true);
+    setReloadKey((current) => current + 1);
   }
 
   return (
@@ -155,6 +162,12 @@ function GiftBattle() {
           {selectedId && <p className="gift-battle-thanks">Oyun kaydedildi. Teşekkürler!</p>}
           {error && <p className="gift-battle-error" role="alert">{error}</p>}
         </>
+      ) : error ? (
+        <div className="gift-battle-loading gift-battle-unavailable" role="alert">
+          <strong>Kapışma geçici olarak yüklenemedi.</strong>
+          <span>{error}</span>
+          <button type="button" onClick={retryBattle}>Tekrar Dene</button>
+        </div>
       ) : (
         <div className="gift-battle-loading" role="status">
           Bugünün kapışması kısa süre içinde burada olacak.

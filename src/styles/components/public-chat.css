@@ -253,6 +253,18 @@
   font-size: 11px;
 }
 
+.public-chat__login button {
+  align-self: center;
+  margin-top: 7px;
+  padding: 8px 18px;
+  border: 0;
+  border-radius: 999px;
+  background: #7c2d3a;
+  color: #fff;
+  font-weight: 750;
+  cursor: pointer;
+}
+
 .public-chat__notice {
   padding: 7px 12px 9px;
   background: #fff;
@@ -261,10 +273,36 @@
   text-align: center;
 }
 
+.hediye-cep__live { width: min(330px, calc(100vw - 28px)); padding: 14px; border: 1px solid #eadbd1; border-radius: 20px; background: linear-gradient(145deg, rgba(255, 253, 248, .98), rgba(250, 239, 232, .98)); box-shadow: 0 18px 50px rgba(75, 37, 28, .2); }
+.hediye-cep__live-heading { width: 100%; padding: 0; border: 0; background: transparent; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 8px; color: #3d211a; text-align: left; cursor: pointer; }
+.hediye-cep__live-heading > span { font-size: 12px; }
+.hediye-cep__live-heading > strong { font-size: 14px; }
+.hediye-cep__live-heading > b { color: #8f2f42; font-size: 12px; }
+.hediye-cep__preview { margin: 11px 0; display: grid; gap: 6px; }
+.hediye-cep__preview p, .hediye-cep__guest-copy { margin: 0; overflow: hidden; color: #66534b; font-size: 12px; line-height: 1.4; text-overflow: ellipsis; white-space: nowrap; }
+.hediye-cep__preview strong { color: #8f2f42; }
+.hediye-cep__guest-copy { margin: 10px 0; white-space: normal; }
+.hediye-cep__live-actions { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+.hediye-cep__live-actions button { min-height: 38px; padding: 8px 12px; border: 1px solid #dfc6bc; border-radius: 11px; background: #fff; color: #6f2736; font-weight: 750; cursor: pointer; }
+.hediye-cep__live-actions button:first-child { background: #7c2d3a; color: #fff; border-color: #7c2d3a; }
+.hediye-cep__home { flex: 1; min-height: 0; padding: 20px; overflow-y: auto; background: linear-gradient(180deg, #fffaf5, #f8eee7); }
+.hediye-cep__welcome { margin-bottom: 18px; padding: 15px; border: 1px solid #ead8cd; border-radius: 16px; background: rgba(255, 255, 255, .82); display: flex; align-items: center; gap: 12px; }
+.hediye-cep__welcome > span { font-size: 30px; }
+.hediye-cep__welcome div { display: grid; gap: 4px; }
+.hediye-cep__welcome strong { color: #3d211a; font-size: 15px; }
+.hediye-cep__welcome small { color: #806d64; }
+.hediye-cep__apps { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.hediye-cep__apps button { min-width: 0; min-height: 126px; padding: 15px 12px; border: 1px solid #ead7cc; border-radius: 18px; background: #fff; color: #42271f; display: flex; flex-direction: column; align-items: flex-start; gap: 5px; text-align: left; cursor: pointer; box-shadow: 0 7px 20px rgba(93, 54, 40, .07); transition: transform .18s ease, border-color .18s ease; }
+.hediye-cep__apps button:hover { transform: translateY(-2px); border-color: #bc7c70; }
+.hediye-cep__apps button > span { font-size: 27px; }
+.hediye-cep__apps button > strong { font-size: 13px; }
+.hediye-cep__apps button > small { color: #8b766c; line-height: 1.35; }
+.hediye-cep__back { min-height: 40px; padding: 8px 16px; border: 0; border-bottom: 1px solid #eaded8; background: #fffaf7; color: #7c2d3a; font-weight: 800; text-align: left; cursor: pointer; }
+
 @media (max-width: 600px) {
   .public-chat {
-    right: 14px;
-    bottom: 14px;
+    right: 10px;
+    bottom: 10px;
   }
 
   .public-chat__launcher {
@@ -281,6 +319,10 @@
     border: 0;
     border-radius: 0;
   }
+
+  .hediye-cep__live { width: min(320px, calc(100vw - 20px)); padding: 12px; }
+  .hediye-cep__apps { gap: 10px; }
+  .hediye-cep__apps button { min-height: 112px; }
 
   .public-chat__header {
     min-height: 68px;
