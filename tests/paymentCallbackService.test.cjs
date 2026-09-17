@@ -127,7 +127,27 @@ test("callback güvenilir paymentTransactionId bilgisini sipariş ve ödeme kayd
     assert.equal(db.data.get("siparisler/order-1").paymentTransactionId, "tx-1");
     assert.equal(db.data.get("siparisler/order-1").settlementMode, "IYZICO_MARKETPLACE");
     assert.equal(db.data.get("bakiyeHareketleri/pay-1_order-1").settlementStatus, "PROTECTED");
+    assert.equal(db.data.has("wallets/seller@example.com"), false);
     assert.deepEqual(db.data.get("odemeler/conv-1").paymentItemTransactions, items);
+});
+
+test("marketplace satışı legacy wallet pending bakiyesine eklenmez", async () => {
+    const seed = normalSeed();
+    seed["odemeler/conv-1"].paymentGroup = "PRODUCT";
+    seed["wallets/seller@example.com"] = { pending: 25, balance: 10 };
+    const db = memoryFirestore(seed);
+    await finalizePayment({ firestore: db, FieldValue: { serverTimestamp: timestamp }, conversationId: "conv-1", paymentId: "pay-1" });
+    assert.equal(db.data.get("wallets/seller@example.com").pending, 25);
+    assert.equal(db.data.get("bakiyeHareketleri/pay-1_order-1").settlementMode, "IYZICO_MARKETPLACE");
+});
+
+test("internal wallet satışı pending bakiyeye eklenmeye devam eder", async () => {
+    const seed = normalSeed();
+    seed["wallets/seller@example.com"] = { pending: 25, balance: 10 };
+    const db = memoryFirestore(seed);
+    await finalizePayment({ firestore: db, FieldValue: { serverTimestamp: timestamp }, conversationId: "conv-1", paymentId: "pay-1" });
+    assert.equal(db.data.get("wallets/seller@example.com").pending, 117);
+    assert.equal(db.data.get("bakiyeHareketleri/pay-1_order-1").settlementMode, "INTERNAL_WALLET");
 });
 
 test("aynı callback ikinci kez wallet ve hareketi artırmaz", async () => {

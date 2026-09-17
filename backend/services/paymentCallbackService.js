@@ -283,8 +283,10 @@ async function finalizePayment({ firestore, FieldValue, conversationId, paymentI
                 const digitalDelivery = digital ? buildDigitalDeliveryUpdate(finalizedAt, FieldValue) : null;
                 if (!movementSnapshots[index].exists) {
                     const hesap = calculateOrderEarnings(order);
-                    walletAdds.set(order.satici, Number(((walletAdds.get(order.satici) || 0) + hesap.netTutar).toFixed(2)));
                     const marketplaceSettlement = payment.paymentGroup === "PRODUCT";
+                    if (!marketplaceSettlement) {
+                        walletAdds.set(order.satici, Number(((walletAdds.get(order.satici) || 0) + hesap.netTutar).toFixed(2)));
+                    }
                     transaction.set(movementRefs[index], {
                         siparisId: order.id, satici: order.satici, alici: order.alici || "",
                         toplamTutar: hesap.toplamTutar, komisyon: hesap.komisyon, netTutar: hesap.netTutar,
