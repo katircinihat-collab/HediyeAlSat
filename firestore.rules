@@ -218,6 +218,28 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // Ana sayfadaki genel canlı sohbet. Özel /mesajlar sisteminden tamamen ayrıdır.
+    match /publicChatMessages/{messageId} {
+      allow read: if signedIn();
+
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly([
+          "senderUid", "senderName", "message", "createdAt"
+        ])
+        && request.resource.data.senderUid == request.auth.uid
+        && request.resource.data.senderName is string
+        && request.resource.data.senderName.size() >= 1
+        && request.resource.data.senderName.size() <= 100
+        && request.resource.data.message is string
+        && request.resource.data.message.size() >= 1
+        && request.resource.data.message.size() <= 500
+        && publicTextIsSafe(request.resource.data.message)
+        && request.resource.data.createdAt == request.time;
+
+      allow update: if false;
+      allow delete: if isAdmin();
+    }
+
     match /ilanlar/{listingId} {
       allow read: if resource.data.onay == true || listingOwner() || isAdmin();
 

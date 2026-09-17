@@ -32,6 +32,7 @@ import HomeDiscovery, { BudgetProductShowcase } from "../components/HomeDiscover
 import GiftBattle from "../components/GiftBattle";
 import DailyQuote from "../components/DailyQuote";
 import SponsorBanner from "../components/SponsorBanner";
+import PublicChat from "../components/chat/PublicChat";
 import useSponsoredContent from "../hooks/useSponsoredContent";
 import { sortListingsByBoost } from "../utils/listingBoost";
 
@@ -269,15 +270,17 @@ function Home() {
   ==================================================
   */
 
-  const gununFirsatlari = filtreli.filter((x) => x.kampanyali === true);
+  const gununFirsatlari =
+    filtreli.filter(
+      (x) => x.kampanyali === true
+    );
 
   const gosterTrend =
     gununFirsatlari.length > 0
       ? gununFirsatlari
-      : filtreli.filter((x) => x.trend !== true).slice(
-          0,
-          20
-        );
+      : filtreli
+          .filter((x) => x.trend !== true)
+          .slice(0, 20);
 
 
 
@@ -451,12 +454,18 @@ function Home() {
 
       <SponsorBanner sponsor={sponsored.middle_banner} />
 
-      <HomeDiscovery listings={ilanlar} loading={ilanlarYukleniyor} section="featured" />
+      <HomeDiscovery
+        listings={ilanlar}
+        loading={ilanlarYukleniyor}
+        section="featured"
+      />
 
-      <BudgetProductShowcase listings={ilanlar} loading={ilanlarYukleniyor} />
+      <BudgetProductShowcase
+        listings={ilanlar}
+        loading={ilanlarYukleniyor}
+      />
 
       <TopDesignShowcase />
-
 
       <HomeDiscovery
         listings={ilanlar}
@@ -465,9 +474,9 @@ function Home() {
         section="rankings"
       />
 
-
-
-      <FeaturedStores sponsoredStore={sponsored.sponsored_store?.store} />
+      <FeaturedStores
+        sponsoredStore={sponsored.sponsored_store?.store}
+      />
 
       <GiftBattle />
 
@@ -478,6 +487,8 @@ function Home() {
       <Stats />
 
       <DailyQuote />
+
+      <PublicChat />
 
       <Footer />
 

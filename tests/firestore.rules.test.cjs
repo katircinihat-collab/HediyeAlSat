@@ -12,7 +12,8 @@ const {
   getDoc,
   setDoc,
   updateDoc,
-  deleteDoc
+  deleteDoc,
+  serverTimestamp
 } = require("firebase/firestore");
 
 const projectId = "demo-hediyealsat";
@@ -940,4 +941,83 @@ test("76 - listing promotion kayıtları bütün client erişimine kapalıdır",
     listingId: "published", ownerUid: ownerAuth.uid, status: "ACTIVE"
   }));
   await assertFails(getDoc(doc(dbFor(adminAuth), "listingPromotions", "fake")));
+});
+test("77 - canlı sohbeti giriş yapmayan kullanıcı okuyamaz", async () => {
+  await env.withSecurityRulesDisabled(async (context) => {
+    const db = context.firestore();
+    await setDoc(doc(db, "publicChatMessages", "existing-message"), {
+      senderUid: ownerAuth.uid,
+      senderName: "Nihat",
+      message: "Merhaba",
+      createdAt: new Date()
+    });
+  });
+
+  await assertFails(
+    getDoc(doc(dbFor(), "publicChatMessages", "existing-message"))
+  );
+});
+
+test("78 - giriş yapmış kullanıcı canlı sohbet mesajını okuyabilir", async () => {
+  await assertSucceeds(
+    getDoc(doc(dbFor(otherAuth), "publicChatMessages", "existing-message"))
+  );
+});
+
+test("79 - giriş yapmış kullanıcı kendi UIDsi ile güvenli mesaj gönderebilir", async () => {
+  await assertSucceeds(
+    setDoc(doc(dbFor(ownerAuth), "publicChatMessages", "valid-message"), {
+      senderUid: ownerAuth.uid,
+      senderName: "Nihat",
+      message: "Herkese merhaba",
+      createdAt: serverTimestamp()
+    })
+  );
+});
+
+test("80 - kullanıcı başka UID adına canlı sohbet mesajı gönderemez", async () => {
+  await assertFails(
+    setDoc(doc(dbFor(ownerAuth), "publicChatMessages", "spoofed-message"), {
+      senderUid: otherAuth.uid,
+      senderName: "Başka Kullanıcı",
+      message: "Merhaba",
+      createdAt: new Date()
+    })
+  );
+});
+
+test("81 - canlı sohbette iletişim bilgisi ve 500 karakter üstü mesaj reddedilir", async () => {
+  const db = dbFor(ownerAuth);
+
+  await assertFails(
+    setDoc(doc(db, "publicChatMessages", "phone-message"), {
+      senderUid: ownerAuth.uid,
+      senderName: "Nihat",
+      message: "Beni WhatsApp 0532 111 22 33 üzerinden ara",
+      createdAt: new Date()
+    })
+  );
+
+  await assertFails(
+    setDoc(doc(db, "publicChatMessages", "long-message"), {
+      senderUid: ownerAuth.uid,
+      senderName: "Nihat",
+      message: "a".repeat(501),
+      createdAt: new Date()
+    })
+  );
+});
+
+test("82 - normal kullanıcı canlı sohbet mesajını değiştiremez veya silemez", async () => {
+  const db = dbFor(ownerAuth);
+
+  await assertFails(
+    updateDoc(doc(db, "publicChatMessages", "existing-message"), {
+      message: "Değiştirildi"
+    })
+  );
+
+  await assertFails(
+    deleteDoc(doc(db, "publicChatMessages", "existing-message"))
+  );
 });
