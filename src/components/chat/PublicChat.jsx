@@ -6,10 +6,20 @@ import { auth, db } from "../../firebase";
 import "../../styles/components/public-chat.css";
 
 const MAX_MESSAGE_LENGTH = 500;
+const MINIMIZED_STORAGE_KEY = "hediyeCepMinimized";
+
+function savedMinimizedPreference() {
+  try {
+    return window.localStorage.getItem(MINIMIZED_STORAGE_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
 
 function PublicChat() {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+  const [minimized, setMinimized] = useState(savedMinimizedPreference);
   const [screen, setScreen] = useState("home");
   const [user, setUser] = useState(auth.currentUser);
   const [messages, setMessages] = useState([]);
@@ -27,7 +37,7 @@ function PublicChat() {
   }), []);
 
   useEffect(() => {
-    if (open || !user) return undefined;
+    if (open || minimized || !user) return undefined;
     const previewQuery = query(collection(db, "publicChatMessages"), orderBy("createdAt", "desc"), limit(3));
     return onSnapshot(previewQuery, (snapshot) => {
       setPreviewMessages(snapshot.docs.map((messageDoc) => ({ id: messageDoc.id, ...messageDoc.data() })).reverse());
@@ -35,7 +45,7 @@ function PublicChat() {
       console.error("Canlı sohbet önizlemesi yüklenemedi:", snapshotError);
       setPreviewMessages([]);
     });
-  }, [open, user]);
+  }, [minimized, open, user]);
 
   useEffect(() => {
     if (!open || screen !== "chat" || !user) return undefined;
@@ -68,6 +78,14 @@ function PublicChat() {
   const openChat = () => { setOpen(true); setScreen("chat"); };
   const closeHub = () => { setOpen(false); setScreen("home"); };
   const goTo = (path) => { closeHub(); navigate(path); };
+  const setMinimizedPreference = (value) => {
+    setMinimized(value);
+    try {
+      window.localStorage.setItem(MINIMIZED_STORAGE_KEY, String(value));
+    } catch {
+      // Depolama kapalıysa tercih yalnız bu oturumda korunur.
+    }
+  };
 
   const sendMessage = async (event) => {
     event.preventDefault();
@@ -124,8 +142,8 @@ function PublicChat() {
         {user ? <form className="public-chat__form" onSubmit={sendMessage}><textarea value={text} onChange={(event) => setText(event.target.value.slice(0, MAX_MESSAGE_LENGTH))} placeholder="Bir şeyler yaz..." rows="1" maxLength={MAX_MESSAGE_LENGTH} aria-label="Sohbet mesajı" /><button type="submit" disabled={!text.trim() || sending} aria-label="Mesaj gönder">{sending ? "…" : "➤"}</button></form> : <div className="public-chat__login"><strong>Sohbete katılmak ister misin?</strong><span>Mesajları görmek ve yazmak için giriş yapmalısın.</span><button type="button" onClick={() => goTo("/login")}>Giriş Yap</button></div>}
         <div className="public-chat__notice">Telefon, e-posta ve sosyal medya bilgilerini paylaşma.</div>
       </>}
-    </section> : <aside className="hediye-cep__live" aria-label="HediyeCep canlılık vitrini">
-      <button type="button" className="hediye-cep__live-heading" onClick={() => setOpen(true)} aria-expanded={open} aria-label="HediyeCep'i aç"><span aria-hidden="true">🟢</span><strong>HediyeAlSat Canlı</strong><b>📱 HediyeCep</b></button>
+    </section> : minimized ? <button type="button" className="hediye-cep__capsule" onClick={() => setMinimizedPreference(false)} aria-label="HediyeCep'i büyüt"><span aria-hidden="true">🟢</span><strong>HediyeCep</strong><span aria-hidden="true">💬</span></button> : <aside className="hediye-cep__live" aria-label="HediyeCep canlılık vitrini">
+      <div className="hediye-cep__live-top"><button type="button" className="hediye-cep__live-heading" onClick={() => setOpen(true)} aria-expanded={open} aria-label="HediyeCep'i aç"><span aria-hidden="true">🟢</span><strong>HediyeAlSat Canlı</strong><b>📱 HediyeCep</b></button><button type="button" className="hediye-cep__minimize" onClick={() => setMinimizedPreference(true)} aria-label="HediyeCep'i küçült">−</button></div>
       {user && previewMessages.length > 0 ? <div className="hediye-cep__preview">{previewMessages.map((item) => <p key={item.id}><strong>{item.senderUid === user.uid ? "Sen" : item.senderName || "Üye"}:</strong> {item.message}</p>)}</div> : <p className="hediye-cep__guest-copy">Topluluğa katıl, hediyeler hakkında sohbet et.</p>}
       <div className="hediye-cep__live-actions"><button type="button" onClick={openChat}>💬 Sohbete Katıl</button><button type="button" onClick={() => setOpen(true)}>📱 Aç</button></div>
     </aside>}

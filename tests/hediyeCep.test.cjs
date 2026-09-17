@@ -26,10 +26,19 @@ test("HediyeCep yalnız gerçek uygulama route'larını kullanır", () => {
 });
 
 test("misafir sorgu açmaz, önizleme üç ve açık sohbet elli mesajla sınırlıdır", () => {
-  assert.match(chat, /if \(open \|\| !user\) return undefined;[\s\S]*limit\(3\)/);
+  assert.match(chat, /if \(open \|\| minimized \|\| !user\) return undefined;[\s\S]*limit\(3\)/);
   assert.match(chat, /if \(!open \|\| screen !== "chat" \|\| !user\) return undefined;[\s\S]*limit\(50\)/);
   assert.equal((chat.match(/return onSnapshot\(/g) || []).length, 2);
   assert.match(chat, /setMessages\(\[\]\);[\s\S]*setPreviewMessages\(\[\]\);/);
+});
+
+test("HediyeCep küçültme tercihini saklar ve kapsülden geri büyür", () => {
+  assert.match(chat, /MINIMIZED_STORAGE_KEY = "hediyeCepMinimized"/);
+  assert.match(chat, /localStorage\.getItem\(MINIMIZED_STORAGE_KEY\)/);
+  assert.match(chat, /localStorage\.setItem\(MINIMIZED_STORAGE_KEY, String\(value\)\)/);
+  assert.match(chat, /aria-label="HediyeCep'i küçült">−<\/button>/);
+  assert.match(chat, /className="hediye-cep__capsule"[\s\S]*aria-label="HediyeCep'i büyüt"/);
+  assert.match(chat, /if \(open \|\| minimized \|\| !user\) return undefined/);
 });
 
 test("GiftBattle geçici hata ile gerçek boş günü ayrı gösterir ve yeniden denenebilir", () => {
