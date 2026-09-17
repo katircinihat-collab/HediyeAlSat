@@ -14,7 +14,7 @@ import { confirmOrderDelivery } from "../services/orderDeliveryApi";
 import OrderClaimForm from "../components/OrderClaimForm";
 import OrderTimeline from "../components/OrderTimeline";
 import { getDigitalDownload } from "../services/digitalDownloadApi";
-import { payoutDisplay } from "../utils/orderDelivery";
+
 import { isDigitalOrder, normalizeOrderStatus } from "../utils/orderLifecycle";
 
 import "../styles/pages/myorders.css";
@@ -129,7 +129,7 @@ function MyOrders() {
               siparisler.map((siparis) => {
                 const digital = isDigitalOrder(siparis);
                 const status = normalizeOrderStatus(siparis.durum);
-                const payout = payoutDisplay(siparis);
+                
                 return (
 <div
   key={siparis.id}
@@ -142,7 +142,7 @@ function MyOrders() {
 
       <h3>
 
-        #{siparis.siparisNo}
+        {siparis.siparisNo ? `#${siparis.siparisNo}` : "Sipariş"}
 
       </h3>
 
@@ -250,9 +250,7 @@ function MyOrders() {
       <span className="order-claim-message">Kargo: {siparis.kargoFirma || "Kargo firması"} · Takip: {siparis.kargoNo}</span>
     )}
 
-    {payout && (
-      <span className="order-claim-message">{payout.label}: {payout.detail}</span>
-    )}
+    
 
     {digital && siparis.odemeDurumu === true && (
       <button type="button" className="buy-btn" disabled={indirilen === siparis.id} onClick={() => dijitalDosyaIndir(siparis)}>
