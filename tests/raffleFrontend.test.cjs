@@ -13,6 +13,10 @@ test("Kura sayfası tagline, countdown, 100 XP taahhüt ve temel durumları gös
   assert.match(page, /Şu anda aktif Kura yok/);
   assert.match(page, /Tekrar Dene/);
   assert.match(page, /countdown/);
+  assert.match(page, /HediyeAlSat topluluğuna katıl, sürpriz eşleşmeni keşfet/);
+  assert.match(page, /Nasıl Çalışır/);
+  assert.match(page, /🎲 Kuraya Katıl/);
+  assert.match(page, /disabled=\{busy \|\| \(me\?\.availableXP \?\? 0\) < event\.xpCost\}/);
 });
 
 test("Kura bütçesi tek opsiyonel öneridir ve boşken kullanıcı satırı render edilmez", () => {
@@ -53,6 +57,11 @@ test("admin Kura işlemleri mevcut adminApi ve ayrı draw/cancel endpointlerini 
   assert.match(routes, /router\.post\("\/raffles\/:eventId\/cancel", raffleController\.adminCancel\)/);
   assert.match(routes, /router\.use\(authMiddleware, adminMiddleware\)/);
   assert.match(component, /Değişiklikleri Kaydet/);
+  assert.match(routes, /router\.get\("\/raffles\/:eventId\/participants", raffleController\.adminParticipants\)/);
+  assert.match(routes, /router\.get\("\/raffles\/:eventId\/results", raffleController\.adminResults\)/);
+  assert.match(component, /Kura çekmek için en az 2 aktif katılımcı gerekir/);
+  assert.match(component, /Kura çekildiğinde eşleşmeler kesinleşir/);
+  assert.match(component, /Uygun katılımcıların 100 XP katılım bedelleri idempotent olarak iade edilecek/);
 });
 
 test("eşleşme sonucu authenticated UID'den okunur ve bütün eşleşme listesi endpointi yoktur", () => {
@@ -61,13 +70,44 @@ test("eşleşme sonucu authenticated UID'den okunur ve bütün eşleşme listesi
   assert.match(controller, /doc\(`\$\{req\.params\.eventId\}_\$\{req\.user\.uid\}`\)/);
   assert.match(routes, /router\.get\("\/:eventId\/result", authMiddleware/);
   assert.doesNotMatch(routes, /matches/);
+  assert.match(controller, /giverUid !== req\.user\.uid/);
+});
+
+test("DRAWN kullanıcı görünümü yalnız güvenli ad ve hediye ipucunu gösterir", () => {
+  const page = read("src/pages/Raffle.jsx");
+  const controller = read("backend/controllers/raffleController.js");
+  assert.match(page, /Sürpriz eşleşmen hazır/);
+  assert.match(page, /Senin hediye alacağın kişi/);
+  assert.match(page, /Şimdi sıra sende! Ona güzel bir sürpriz seç/);
+  assert.match(page, /Henüz bir hediye ipucu bırakmamış/);
+  assert.match(controller, /recipient: \{ displayName: safeDisplayName\(data\.displayName\)[^}]+giftHint: data\.giftHint/);
+  assert.doesNotMatch(page, /paymentTransactionId|recipientUid|giverUid/);
+});
+
+test("admin katılımcı ve sonuç görünümü yalnız güvenli alanları kullanır", () => {
+  const controller = read("backend/controllers/raffleController.js");
+  const component = read("src/components/admin/AdminRaffles.jsx");
+  const participantBlock = controller.slice(controller.indexOf("exports.adminParticipants"), controller.indexOf("exports.adminResults"));
+  const resultBlock = controller.slice(controller.indexOf("exports.adminResults"), controller.indexOf("exports.adminCreate"));
+  assert.match(participantBlock, /displayName/);
+  assert.match(participantBlock, /giftHint/);
+  assert.match(participantBlock, /joinedAt/);
+  assert.doesNotMatch(participantBlock, /email|phone|address|token/);
+  assert.match(resultBlock, /giverDisplayName/);
+  assert.match(resultBlock, /recipientDisplayName/);
+  assert.doesNotMatch(resultBlock, /email|phone|address|token/);
+  assert.match(component, /Eşleşme Sonuçları/);
+  assert.match(component, /KURA ÇEKİLDİ/);
+  assert.match(component, /İPTAL EDİLDİ/);
 });
 
 test("Kura responsive kart, modal, chat ve admin form kurallarına sahiptir", () => {
   const css = read("src/styles/pages/raffle.css");
   const adminCss = read("src/styles/pages/admin.css");
-  assert.match(css, /@media\(max-width:800px\)/);
-  assert.match(css, /@media\(max-width:480px\)/);
+  assert.match(css, /@media\(max-width:900px\)/);
+  assert.match(css, /@media\(max-width:600px\)/);
   assert.match(css, /max-height:calc\(100vh - 36px\)/);
+  assert.match(css, /prefers-reduced-motion:reduce/);
   assert.match(adminCss, /admin-raffle-form/);
+  assert.match(adminCss, /admin-raffle-match/);
 });

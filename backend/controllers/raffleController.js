@@ -1,7 +1,7 @@
 const { firestore, FieldValue } = require("../config/firebase");
 const xpConfig = require("../../shared/xpConfig.json");
 const {
-    raffleConfig, RaffleError, toDate, publicEvent, validatePublicText,
+    raffleConfig, RaffleError, toDate, publicEvent, validatePublicText, safeDisplayName,
     joinRaffle, cancelParticipation, drawRaffle
 } = require("../services/raffleService");
 
@@ -92,7 +92,7 @@ exports.result = async (req, res) => {
         const recipient = await firestore.collection("raffleParticipants").doc(`${req.params.eventId}_${matchData.recipientUid}`).get();
         if (!recipient.exists) throw new RaffleError("Eşleşme profili bulunamadı.", 404, "RAFFLE_RECIPIENT_NOT_FOUND");
         const data = recipient.data();
-        return res.json({ success: true, recipient: { displayName: data.displayName || "HediyeAlSat Üyesi", giftHint: data.giftHint || "" } });
+        return res.json({ success: true, recipient: { displayName: safeDisplayName(data.displayName), giftHint: data.giftHint || "" } });
     } catch (error) { return respondError(res, error); }
 };
 
@@ -165,6 +165,51 @@ exports.adminList = async (_req, res) => {
     try {
         const snapshot = await firestore.collection("raffleEvents").orderBy("createdAt", "desc").limit(50).get();
         return res.json({ success: true, events: snapshot.docs.map((doc) => publicEvent(doc.id, doc.data())) });
+    } catch (error) { return respondError(res, error); }
+};
+
+exports.adminParticipants = async (req, res) => {
+    try {
+        const event = await firestore.collection("raffleEvents").doc(req.params.eventId).get();
+        if (!event.exists) throw new RaffleError("Kura bulunamadı.", 404, "RAFFLE_NOT_FOUND");
+        const snapshot = await firestore.collection("raffleParticipants")
+            .where("eventId", "==", req.params.eventId).limit(raffleConfig.maxParticipants).get();
+        const participants = snapshot.docs.map((doc) => {
+            const data = doc.data();
+            return {
+                displayName: safeDisplayName(data.displayName),
+                status: data.status === "CANCELLED" ? "CANCELLED" : "ACTIVE",
+                giftHint: data.giftHint || "",
+                joinedAt: serializeTimestamp(data.joinedAt)
+            };
+        });
+        return res.json({ success: true, participants });
+    } catch (error) { return respondError(res, error); }
+};
+
+exports.adminResults = async (req, res) => {
+    try {
+        const event = await firestore.collection("raffleEvents").doc(req.params.eventId).get();
+        if (!event.exists) throw new RaffleError("Kura bulunamadı.", 404, "RAFFLE_NOT_FOUND");
+        if (!["MATCHED", "COMPLETED"].includes(event.data().status)) {
+            throw new RaffleError("Kura eşleşmeleri henüz hazır değil.", 409, "RAFFLE_RESULTS_NOT_READY");
+        }
+        const [matchesSnapshot, participantsSnapshot] = await Promise.all([
+            firestore.collection("raffleMatches").where("eventId", "==", req.params.eventId).limit(raffleConfig.maxParticipants).get(),
+            firestore.collection("raffleParticipants").where("eventId", "==", req.params.eventId).limit(raffleConfig.maxParticipants).get()
+        ]);
+        const names = new Map(participantsSnapshot.docs.map((doc) => {
+            const data = doc.data();
+            return [data.userUid, safeDisplayName(data.displayName)];
+        }));
+        const matches = matchesSnapshot.docs.map((doc) => {
+            const data = doc.data();
+            return {
+                giverDisplayName: names.get(data.giverUid) || "HediyeAlSat Üyesi",
+                recipientDisplayName: names.get(data.recipientUid) || "HediyeAlSat Üyesi"
+            };
+        });
+        return res.json({ success: true, matchedCount: matches.length, matches });
     } catch (error) { return respondError(res, error); }
 };
 

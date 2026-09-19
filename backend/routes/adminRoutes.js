@@ -22,6 +22,8 @@ router.get("/listings", adminListingController.list);
 router.get("/overview", adminOperationsController.overview);
 router.put("/system-status", systemStatusController.update);
 router.get("/raffles", raffleController.adminList);
+router.get("/raffles/:eventId/participants", raffleController.adminParticipants);
+router.get("/raffles/:eventId/results", raffleController.adminResults);
 router.post("/raffles", raffleController.adminCreate);
 router.patch("/raffles/:eventId", raffleController.adminUpdate);
 router.post("/raffles/:eventId/draw", raffleController.adminDraw);

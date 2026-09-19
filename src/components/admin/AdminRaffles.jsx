@@ -3,6 +3,15 @@ import { adminApi } from "../../config/adminApi";
 
 const emptyForm = { title: "", description: "", status: "UPCOMING", joinStartAt: "", joinEndAt: "", drawAt: "", suggestedGiftBudget: "" };
 const localDateTime = (value) => value ? new Date(value).toISOString().slice(0, 16) : "";
+const formatDate = (value) => value ? new Date(value).toLocaleString("tr-TR") : "—";
+
+function statusLabel(item, now) {
+  if (item.status === "UPCOMING") return "YAKINDA";
+  if (item.status === "MATCHED" || item.status === "COMPLETED") return "KURA ÇEKİLDİ";
+  if (item.status === "CANCELLED") return "İPTAL EDİLDİ";
+  if (item.status === "OPEN" && now >= new Date(item.drawAt).getTime()) return "ÇEKİME HAZIR";
+  return "KATILIMA AÇIK";
+}
 
 function AdminRaffles() {
   const [events, setEvents] = useState([]);
@@ -10,7 +19,15 @@ function AdminRaffles() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [editingId, setEditingId] = useState("");
+  const [details, setDetails] = useState({});
+  const [now, setNow] = useState(0);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setNow(Date.now()), 0);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   async function load() {
     setLoading(true); setError("");
@@ -23,11 +40,12 @@ function AdminRaffles() {
   async function save(event) {
     event.preventDefault();
     if (busy) return;
-    setBusy("save"); setError("");
+    setBusy("save"); setError(""); setSuccess("");
     try {
       await adminApi(editingId ? `/raffles/${editingId}` : "/raffles", { method: editingId ? "PATCH" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
+      setSuccess(editingId ? "Kura bilgileri güncellendi." : "Yeni Kura oluşturuldu.");
       setForm(emptyForm); setEditingId(""); await load();
-    } catch (createError) { setError(createError.message); }
+    } catch (saveError) { setError(saveError.message); }
     finally { setBusy(""); }
   }
 
@@ -38,36 +56,73 @@ function AdminRaffles() {
 
   async function action(item, type) {
     if (busy) return;
-    const message = type === "draw" ? "Kura şimdi çekilsin mi? Bu işlem geri alınamaz." : "Etkinlik iptal edilsin ve çekim öncesi katılımcı XP'leri iade edilsin mi?";
+    const message = type === "draw"
+      ? "Kura çekildiğinde eşleşmeler kesinleşir ve katılımcılar artık katılımı iptal edemez. Devam etmek istiyor musun?"
+      : "Bu Kura iptal edilecek. Uygun katılımcıların 100 XP katılım bedelleri idempotent olarak iade edilecek. Devam etmek istiyor musun?";
     if (!window.confirm(message)) return;
-    setBusy(`${item.id}:${type}`); setError("");
-    try { await adminApi(`/raffles/${item.id}/${type}`, { method: "POST" }); await load(); }
-    catch (actionError) { setError(actionError.message); }
+    setBusy(`${item.id}:${type}`); setError(""); setSuccess("");
+    try {
+      const response = await adminApi(`/raffles/${item.id}/${type}`, { method: "POST" });
+      if (type === "draw") setSuccess(`🎉 Kura başarıyla çekildi! ${response.count || item.participantCount} katılımcı başarıyla eşleştirildi. Kura tamamlandı.`);
+      else setSuccess(`Kura iptal edildi. ${response.refundedParticipants || 0} katılımcının XP bedeli iade edildi.`);
+      await load();
+    } catch (actionError) { setError(actionError.message); }
     finally { setBusy(""); }
   }
 
   async function openEvent(item) {
     if (busy) return;
-    setBusy(`${item.id}:open`); setError("");
-    try { await adminApi(`/raffles/${item.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: "OPEN" }) }); await load(); }
+    setBusy(`${item.id}:open`); setError(""); setSuccess("");
+    try { await adminApi(`/raffles/${item.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: "OPEN" }) }); setSuccess("Kura katılıma açıldı."); await load(); }
     catch (updateError) { setError(updateError.message); }
     finally { setBusy(""); }
   }
 
-  return <section className="admin-section admin-raffles"><h2>🎲 Kura Yönetimi</h2><p>Topluluk Kuralarını oluşturun; çekim zamanı geldiğinde eşleşmeleri güvenli biçimde başlatın.</p>
+  async function toggleDetails(item, type) {
+    const key = `${item.id}:${type}`;
+    if (details[key]?.open) {
+      setDetails((current) => ({ ...current, [key]: { ...current[key], open: false } }));
+      return;
+    }
+    setDetails((current) => ({ ...current, [key]: { open: true, loading: true, data: [] } }));
+    try {
+      const response = await adminApi(`/raffles/${item.id}/${type}`);
+      setDetails((current) => ({ ...current, [key]: { open: true, loading: false, data: type === "participants" ? response.participants || [] : response.matches || [] } }));
+    } catch (detailError) {
+      setDetails((current) => ({ ...current, [key]: { open: true, loading: false, data: [], error: detailError.message } }));
+    }
+  }
+
+  return <section className="admin-section admin-raffles">
+    <header className="admin-raffles__header"><div><span>TOPLULUK ETKİNLİKLERİ</span><h2>🎲 Kura Yönetimi</h2><p>Kuraları oluşturun, katılımcıları izleyin ve zamanı geldiğinde güvenle eşleştirin.</p></div></header>
     {error && <p className="admin-error" role="alert">{error}</p>}
+    {success && <p className="admin-success" role="status" aria-live="polite">{success}</p>}
     <form className="admin-raffle-form" onSubmit={save}>
-      <label>Başlık<input required value={form.title} onChange={(e) => setForm((v) => ({ ...v, title: e.target.value }))} /></label>
-      <label>Açıklama<textarea required value={form.description} onChange={(e) => setForm((v) => ({ ...v, description: e.target.value }))} /></label>
-      <label>Durum<select value={form.status} onChange={(e) => setForm((v) => ({ ...v, status: e.target.value }))}><option value="UPCOMING">Yakında</option><option value="OPEN">Katılıma Açık</option></select></label>
-      <label>Katılım başlangıcı<input required type="datetime-local" value={form.joinStartAt} onChange={(e) => setForm((v) => ({ ...v, joinStartAt: e.target.value }))} /></label>
-      <label>Katılım bitişi<input required type="datetime-local" value={form.joinEndAt} onChange={(e) => setForm((v) => ({ ...v, joinEndAt: e.target.value }))} /></label>
-      <label>Kura zamanı<input required type="datetime-local" value={form.drawAt} onChange={(e) => setForm((v) => ({ ...v, drawAt: e.target.value }))} /></label>
-      <label>Önerilen Hediye Bütçesi (Opsiyonel)<input type="number" min="1" step="0.01" value={form.suggestedGiftBudget} onChange={(e) => setForm((v) => ({ ...v, suggestedGiftBudget: e.target.value }))} /><small>Boş bırakılırsa herhangi bir hediye tutarı sınırı uygulanmaz.</small></label>
+      <label>Başlık<input required value={form.title} onChange={(e) => setForm((value) => ({ ...value, title: e.target.value }))} /></label>
+      <label>Açıklama<textarea required value={form.description} onChange={(e) => setForm((value) => ({ ...value, description: e.target.value }))} /></label>
+      <label>Durum<select value={form.status} onChange={(e) => setForm((value) => ({ ...value, status: e.target.value }))}><option value="UPCOMING">Yakında</option><option value="OPEN">Katılıma Açık</option></select></label>
+      <label>Katılım başlangıcı<input required type="datetime-local" value={form.joinStartAt} onChange={(e) => setForm((value) => ({ ...value, joinStartAt: e.target.value }))} /></label>
+      <label>Katılım bitişi<input required type="datetime-local" value={form.joinEndAt} onChange={(e) => setForm((value) => ({ ...value, joinEndAt: e.target.value }))} /></label>
+      <label>Kura zamanı<input required type="datetime-local" value={form.drawAt} onChange={(e) => setForm((value) => ({ ...value, drawAt: e.target.value }))} /></label>
+      <label>Önerilen Hediye Bütçesi (Opsiyonel)<input type="number" min="1" max="1000000" step="0.01" value={form.suggestedGiftBudget} onChange={(e) => setForm((value) => ({ ...value, suggestedGiftBudget: e.target.value }))} /><small>Boş bırakılırsa herhangi bir hediye tutarı sınırı uygulanmaz.</small></label>
       <button type="submit" disabled={Boolean(busy)}>{busy === "save" ? "Kaydediliyor..." : editingId ? "Değişiklikleri Kaydet" : "Yeni Kura Oluştur"}</button>
       {editingId && <button type="button" className="admin-reject" onClick={() => { setEditingId(""); setForm(emptyForm); }} disabled={Boolean(busy)}>Düzenlemeyi İptal Et</button>}
     </form>
-    {loading ? <p>Kuralar yükleniyor...</p> : events.length === 0 ? <p>Henüz Kura etkinliği oluşturulmadı.</p> : <div className="admin-raffle-list">{events.map((item) => <article key={item.id}><div><strong>{item.title}</strong><span>{item.status} · {item.participantCount} katılımcı · {item.xpCost} XP</span><small>Çekim: {item.drawAt ? new Date(item.drawAt).toLocaleString("tr-TR") : "—"}</small></div><div>{!["MATCHED","COMPLETED","CANCELLED"].includes(item.status) && <button type="button" disabled={Boolean(busy)} onClick={() => edit(item)}>Düzenle</button>}{item.status === "UPCOMING" && <button type="button" disabled={Boolean(busy)} onClick={() => openEvent(item)}>Katılıma Aç</button>}{!["MATCHED","COMPLETED","CANCELLED"].includes(item.status) && <><button type="button" disabled={Boolean(busy)} onClick={() => action(item, "draw")}>Kura Çek</button><button type="button" className="admin-reject" disabled={Boolean(busy)} onClick={() => action(item, "cancel")}>İptal Et</button></>}</div></article>)}</div>}
+    {loading ? <p role="status">Kuralar yükleniyor...</p> : events.length === 0 ? <p>Henüz Kura etkinliği oluşturulmadı.</p> : <div className="admin-raffle-list">{events.map((item) => {
+      const participantDetail = details[`${item.id}:participants`];
+      const resultDetail = details[`${item.id}:results`];
+      const matched = ["MATCHED", "COMPLETED"].includes(item.status);
+      const drawDisabled = item.participantCount < 2 || Boolean(busy);
+      return <article className="admin-raffle-card" key={item.id}>
+        <header><div><span className={`admin-raffle-status admin-raffle-status--${item.status.toLowerCase()}`}>{statusLabel(item, now)}</span><h3>{item.title}</h3><p>{item.description}</p></div><strong>{item.participantCount} katılımcı</strong></header>
+        <dl><div><dt>Katılım bedeli</dt><dd>{item.xpCost} XP</dd></div><div><dt>Katılım başlangıcı</dt><dd>{formatDate(item.joinStartAt)}</dd></div><div><dt>Katılım bitişi</dt><dd>{formatDate(item.joinEndAt)}</dd></div><div><dt>Kura zamanı</dt><dd>{formatDate(item.drawAt)}</dd></div>{item.suggestedGiftBudget && <div><dt>Önerilen bütçe</dt><dd>{item.suggestedGiftBudget.toLocaleString("tr-TR")} TL</dd></div>}<div><dt>Oluşturulma</dt><dd>{formatDate(item.createdAt)}</dd></div></dl>
+        {item.participantCount < 2 && !matched && item.status !== "CANCELLED" && <p className="admin-raffle-note">Kura çekmek için en az 2 aktif katılımcı gerekir.</p>}
+        {matched && <p className="admin-raffle-complete">🎉 Kura başarıyla çekildi! {item.participantCount} katılımcı eşleştirildi.</p>}
+        <div className="admin-raffle-actions"><button type="button" disabled={Boolean(busy)} onClick={() => toggleDetails(item, "participants")}>Katılımcıları Gör</button>{matched && <button type="button" disabled={Boolean(busy)} onClick={() => toggleDetails(item, "results")}>Eşleşme Sonuçları</button>}{!matched && item.status !== "CANCELLED" && <button type="button" disabled={Boolean(busy)} onClick={() => edit(item)}>Düzenle</button>}{item.status === "UPCOMING" && <button type="button" disabled={Boolean(busy)} onClick={() => openEvent(item)}>Katılıma Aç</button>}{!matched && item.status !== "CANCELLED" && <><button type="button" disabled={drawDisabled} title={item.participantCount < 2 ? "En az 2 aktif katılımcı gerekir" : "Kura çek"} onClick={() => action(item, "draw")}>{busy === `${item.id}:draw` ? "Çekiliyor..." : "Kura Çek"}</button><button type="button" className="admin-reject" disabled={Boolean(busy)} onClick={() => action(item, "cancel")}>İptal Et</button></>}</div>
+        {participantDetail?.open && <div className="admin-raffle-detail"><h4>Katılımcılar</h4>{participantDetail.loading ? <p>Yükleniyor...</p> : participantDetail.error ? <p role="alert">{participantDetail.error}</p> : participantDetail.data.length === 0 ? <p>Henüz katılımcı yok.</p> : participantDetail.data.map((participant, index) => <div className="admin-raffle-person" key={`${participant.displayName}-${index}`}><strong>{participant.displayName}</strong><span>{participant.status === "ACTIVE" ? "Aktif" : "İptal"} · {formatDate(participant.joinedAt)}</span>{participant.giftHint && <p>💡 {participant.giftHint}</p>}</div>)}</div>}
+        {resultDetail?.open && <div className="admin-raffle-detail"><h4>Eşleşme Sonuçları</h4>{resultDetail.loading ? <p>Yükleniyor...</p> : resultDetail.error ? <p role="alert">{resultDetail.error}</p> : resultDetail.data.map((match, index) => <div className="admin-raffle-match" key={`${match.giverDisplayName}-${index}`}><strong>{match.giverDisplayName}</strong><span aria-hidden="true">→</span><strong>{match.recipientDisplayName}</strong></div>)}</div>}
+      </article>;
+    })}</div>}
   </section>;
 }
 

@@ -54,6 +54,11 @@ function Raffle() {
       setMessages(messageData.messages || []);
       setMe(ownData);
       setGiftHint(ownData?.participation?.giftHint || "");
+      if (active.event.status === "MATCHED" && ownData?.joined) {
+        setResult((await getRaffleResult(active.event.id, user)).recipient);
+      } else {
+        setResult(null);
+      }
     } catch (loadError) {
       setError(loadError.message || "Kura bilgileri şu anda alınamıyor.");
     } finally { setLoading(false); }
@@ -84,14 +89,6 @@ function Raffle() {
     finally { setBusy(false); }
   }
 
-  async function showResult() {
-    if (!event || !user || busy) return;
-    setBusy(true); setError("");
-    try { setResult((await getRaffleResult(event.id, user)).recipient); }
-    catch (resultError) { setError(resultError.message); }
-    finally { setBusy(false); }
-  }
-
   async function saveHint() {
     if (!event || !user || busy) return;
     setBusy(true); setError("");
@@ -110,32 +107,32 @@ function Raffle() {
   }
 
   return <><Navbar /><main className="raffle-page">
-    <header className="raffle-hero"><span aria-hidden="true">🎲</span><div><p>KURA</p><h1>Hiç tanımadığın birine hediye al,<br />hiç tanımadığın birinden hediye al.</h1><small>Katılım tamamen gönüllüdür.</small></div></header>
+    <header className="raffle-hero"><div className="raffle-hero__visual" aria-hidden="true"><span>🎁</span><b>🎲</b><i>✨</i></div><div><p>KURA · TOPLULUK SÜRPRİZİ</p><h1>Hiç tanımadığın birine hediye al,<br />hiç tanımadığın birinden hediye al. 🎁</h1><strong>HediyeAlSat topluluğuna katıl, sürpriz eşleşmeni keşfet.</strong><small>Katılım tamamen gönüllüdür.</small></div></header>
     {loading ? <section className="raffle-state" role="status">Kura yükleniyor...</section>
       : error && !event ? <section className="raffle-state raffle-error" role="alert"><p>{error}</p><button type="button" onClick={load}>Tekrar Dene</button></section>
       : !event ? <section className="raffle-state"><h2>Şu anda aktif Kura yok</h2><p>Yeni topluluk etkinliği açıldığında burada görebilirsin.</p></section>
       : <>
-        <section className="raffle-card">
+        {event.status === "MATCHED" && me?.joined && result ? <section className="raffle-result" aria-live="polite"><span aria-hidden="true">🎉</span><p>KURA TAMAMLANDI</p><h2>Kura çekildi!</h2><h3>Sürpriz eşleşmen hazır.</h3><div className="raffle-result__person"><small>🎁 Senin hediye alacağın kişi</small><strong>{result.displayName}</strong><div><b>💡 Hediye ipucu</b><p>{result.giftHint || "Henüz bir hediye ipucu bırakmamış."}</p></div></div><p className="raffle-result__next">Şimdi sıra sende! Ona güzel bir sürpriz seç. 🎁</p></section> : <section className="raffle-card">
           <div className="raffle-card__main"><p className={`raffle-status raffle-status--${event.status.toLowerCase()}`}>{event.status === "OPEN" ? "Katılım Açık" : event.status === "MATCHED" ? "Kura Çekildi" : "Yakında"}</p><h2>{event.title}</h2><p>{event.description}</p>
             <div className="raffle-metrics"><div><small>Kura çekimine</small><strong>{time?.done ? "Süre tamamlandı" : time?.text}</strong></div><div><small>Katılımcı</small><strong>{event.participantCount}</strong></div><div><small>Katılım</small><strong>⭐ {event.xpCost} XP</strong></div>{event.suggestedGiftBudget && <div><small>🎁 Önerilen hediye bütçesi</small><strong>{event.suggestedGiftBudget.toLocaleString("tr-TR")} TL</strong><small>Bu tutar yalnızca öneridir; hediye değerinde alt veya üst sınır yoktur.</small></div>}</div>
           </div>
           <aside className="raffle-join">
             {user ? <><p>Kullanılabilir XP</p><strong>{me?.availableXP ?? 0} XP ⭐</strong>
-              {me?.joined ? <><div className="raffle-joined">Kuraya Katıldın ✓</div><label className="raffle-hint">Hediye ipucun<textarea value={giftHint} onChange={(e) => setGiftHint(e.target.value.slice(0, 240))} maxLength={240} placeholder="Sevdiğin şeylerden kısaca bahset..." /></label><button type="button" className="raffle-secondary" onClick={saveHint} disabled={busy}>İpucunu Kaydet</button>{event.status === "OPEN" && <button type="button" className="raffle-secondary" onClick={cancel} disabled={busy}>Katılımımı İptal Et</button>}{event.status === "MATCHED" && <button type="button" onClick={showResult} disabled={busy}>🎉 Sonucunu Gör</button>}</>
-                : event.status === "OPEN" ? <button type="button" onClick={() => setConfirming(true)} disabled={busy || (me?.availableXP ?? 0) < event.xpCost}>Kuraya Katıl</button>
+              {me?.joined ? <><div className="raffle-joined">Kuraya Katıldın ✓</div><label className="raffle-hint">Hediye ipucun<textarea value={giftHint} onChange={(e) => setGiftHint(e.target.value.slice(0, 240))} maxLength={240} placeholder="Örn. Kitapları, kahveyi ve masaüstü aksesuarlarını severim." /></label><button type="button" className="raffle-secondary" onClick={saveHint} disabled={busy}>İpucunu Kaydet</button>{event.status === "OPEN" && <button type="button" className="raffle-secondary" onClick={cancel} disabled={busy}>Katılımımı İptal Et</button>}</>
+                : event.status === "OPEN" ? <><button type="button" className="raffle-join__cta" onClick={() => setConfirming(true)} disabled={busy || (me?.availableXP ?? 0) < event.xpCost}>🎲 Kuraya Katıl</button><small>Katılım için {event.xpCost} XP gerekli • Kullanılabilir XP: {me?.availableXP ?? 0}</small></>
                   : <p>Katılım şu anda kapalı.</p>}
               {(me?.availableXP ?? 0) < event.xpCost && !me?.joined && <small>Katılım için yeterli kullanılabilir XP bulunmuyor.</small>}</>
               : <><p>Katılmak için hesabına giriş yapmalısın.</p><Link to="/login">Giriş Yap</Link></>}
           </aside>
-        </section>
+        </section>}
         {error && <p className="raffle-inline-error" role="alert">{error}</p>}
-        <section className="raffle-chat"><header><div><h2>💬 Kura Sohbeti</h2><p>Telefon, adres, e-posta veya sosyal medya bilgisi paylaşma.</p></div>{event.status === "MATCHED" && me?.joined && <button type="button" onClick={showResult}>🎉 Sonucunu Gör</button>}</header>
+        <section className="raffle-how"><header><p>KURA REHBERİ</p><h2>Nasıl Çalışır?</h2></header><div><article><span>1</span><b>⭐ 100 XP ile katıl</b></article><article><span>2</span><b>💡 Hediye ipucunu bırak</b></article><article><span>3</span><b>🎲 Kura çekilsin</b></article><article><span>4</span><b>🎁 Sana çıkan kişiye sürprizini hazırla</b></article></div></section>
+        <section className="raffle-chat"><header><div><h2>💬 Kura Sohbeti</h2><p>Katılımcılar burada etkinlik hakkında sohbet edebilir.</p><small>Telefon, adres, e-posta veya sosyal medya bilgisi paylaşma.</small></div></header>
           <div className="raffle-chat__messages">{messages.length ? messages.map((item) => <article key={item.id}><strong>{item.senderName}</strong><p>{item.message}</p><time>{item.createdAt ? new Date(item.createdAt).toLocaleString("tr-TR") : ""}</time></article>) : <p>Henüz mesaj yok. İlk sohbeti katılımcılar başlatabilir.</p>}</div>
           {me?.joined ? <form onSubmit={send}><input value={message} onChange={(e) => setMessage(e.target.value.slice(0, 500))} maxLength={500} placeholder="Kura hakkında bir şeyler yaz..." aria-label="Kura sohbet mesajı" /><button disabled={busy || !message.trim()}>Gönder</button></form> : <div className="raffle-chat__locked">Sohbete yazmak için Kuraya katılmalısın.</div>}
         </section>
       </>}
     {confirming && <div className="raffle-modal" role="presentation" onMouseDown={(e) => { if (e.target === e.currentTarget && !busy) setConfirming(false); }}><section role="dialog" aria-modal="true" aria-labelledby="raffle-confirm-title"><h2 id="raffle-confirm-title">Kuraya katılımını onayla</h2><ul><li>Katılım bedeli 100 XP’dir.</li><li>Kura çekilmeden önce vazgeçersen XP iade edilir.</li><li>Kura çekildikten sonra eşleşme kesindir.</li><li>Eşleştiğin kişiye hediye göndermeyi kabul edersin.</li><li>Sen de başka bir katılımcıdan hediye alırsın.</li></ul><label>Hediye ipucun (opsiyonel)<textarea value={giftHint} onChange={(e) => setGiftHint(e.target.value.slice(0, 240))} maxLength={240} placeholder="Kitap, kahve ve masaüstü aksesuarlarını severim." /></label><div><button type="button" className="raffle-secondary" onClick={() => setConfirming(false)} disabled={busy}>Vazgeç</button><button type="button" onClick={join} disabled={busy}>{busy ? "Katılım yapılıyor..." : "100 XP ile Katıl"}</button></div></section></div>}
-    {result && <div className="raffle-modal" role="presentation" onMouseDown={(e) => { if (e.target === e.currentTarget) setResult(null); }}><section role="dialog" aria-modal="true"><h2>🎉 Kura çekildi!</h2><p>Hediye göndereceğin kişi</p><strong className="raffle-result-name">{result.displayName}</strong><p>{result.giftHint || "Henüz hediye ipucu paylaşmamış."}</p><button type="button" onClick={() => setResult(null)}>Kapat</button></section></div>}
   </main><Footer /></>;
 }
 

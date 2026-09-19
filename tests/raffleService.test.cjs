@@ -1,7 +1,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const {
-  joinRaffle, cancelParticipation, deterministicOrder, drawRaffle, publicEvent
+  joinRaffle, cancelParticipation, deterministicOrder, drawRaffle, publicEvent, safeDisplayName
 } = require("../backend/services/raffleService");
 const { validateEventInput } = require("../backend/controllers/raffleController");
 
@@ -179,6 +179,18 @@ test("iki katılımcı karşılıklı eşleşir; tek katılımcıyla draw redded
   await assert.rejects(drawRaffle({ firestore: oneDb, FieldValue, eventId: "r1", adminUid: "admin", now }), (error) => error.code === "RAFFLE_NOT_ENOUGH_PARTICIPANTS");
 });
 
+test("üçten fazla katılımcıda herkes tam bir kişiye verir ve tam bir kişiden alır", async () => {
+  const seed = { "raffleEvents/r-many": { status: "OPEN", participantCount: 5, drawAt: new Date("2026-09-18") } };
+  for (const userUid of ["a", "b", "c", "d", "e"]) seed[`raffleParticipants/r-many_${userUid}`] = { eventId: "r-many", userUid, status: "ACTIVE" };
+  const db = memoryFirestore(seed);
+  const result = await drawRaffle({ firestore: db, FieldValue, eventId: "r-many", adminUid: "admin", now, seed: "fixed" });
+  const matches = [...db.data.entries()].filter(([key]) => key.startsWith("raffleMatches/r-many_" )).map(([, value]) => value);
+  assert.equal(result.count, 5);
+  assert.equal(new Set(matches.map((match) => match.giverUid)).size, 5);
+  assert.equal(new Set(matches.map((match) => match.recipientUid)).size, 5);
+  assert.equal(matches.every((match) => match.giverUid !== match.recipientUid), true);
+});
+
 test("draw zamanı gelmeden eşleştirme yapılamaz", async () => {
   const db = memoryFirestore({ "raffleEvents/r1": { status: "OPEN", participantCount: 2, drawAt: new Date("2026-09-20") }, "raffleParticipants/r1_a": { eventId: "r1", userUid: "a", status: "ACTIVE" }, "raffleParticipants/r1_b": { eventId: "r1", userUid: "b", status: "ACTIVE" } });
   await assert.rejects(drawRaffle({ firestore: db, FieldValue, eventId: "r1", adminUid: "admin", now }), (error) => error.code === "RAFFLE_DRAW_TOO_EARLY");
@@ -197,4 +209,7 @@ test("iki paralel draw aynı eşleşmeyi korur", async () => {
 test("hediye ipucu ve sohbet metni iletişim bilgisi sızdırmaz", async () => {
   const db = memoryFirestore(openSeed());
   await assert.rejects(joinRaffle({ firestore: db, FieldValue, eventId: "r1", user, giftHint: "Beni 0532 111 22 33 ara", now }), (error) => error.code === "RAFFLE_PRIVATE_DATA");
+  await assert.rejects(joinRaffle({ firestore: memoryFirestore(openSeed()), FieldValue, eventId: "r1", user, giftHint: "Bana @kullanici hesabından ulaş", now }), (error) => error.code === "RAFFLE_PRIVATE_DATA");
+  assert.equal(safeDisplayName("uye@example.com"), "HediyeAlSat Üyesi");
+  assert.equal(safeDisplayName("Ayşe T."), "Ayşe T.");
 });

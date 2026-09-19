@@ -2,6 +2,7 @@ const crypto = require("crypto");
 const raffleConfig = require("../../shared/raffleConfig.json");
 const xpConfig = require("../../shared/xpConfig.json");
 const { applyXpEventInTransaction } = require("./xpService");
+const PRIVATE_DATA_PATTERN = /(?:https?:\/\/|www\.|\b[\w.+-]+@[\w.-]+\.[a-z]{2,}\b|(?:\+?90\s*)?0?5\d{2}[\s.-]*\d{3}[\s.-]*\d{2}[\s.-]*\d{2}|(?:^|\s)@[a-z0-9_.]{2,})/i;
 
 class RaffleError extends Error {
     constructor(message, status = 400, code = "RAFFLE_ERROR") {
@@ -31,6 +32,7 @@ function publicEvent(id, data = {}) {
         joinStartAt: serialize(data.joinStartAt),
         joinEndAt: serialize(data.joinEndAt),
         drawAt: serialize(data.drawAt),
+        createdAt: serialize(data.createdAt),
         participantCount: Math.max(0, Number(data.participantCount) || 0),
         xpCost: xpConfig.events.RAFFLE_JOIN.amount,
         suggestedGiftBudget
@@ -40,10 +42,15 @@ function publicEvent(id, data = {}) {
 function validatePublicText(value, maxLength) {
     const text = String(value || "").trim().replace(/\s+/g, " ");
     if (text.length > maxLength) throw new RaffleError(`Metin en fazla ${maxLength} karakter olabilir.`, 400, "RAFFLE_TEXT_TOO_LONG");
-    if (/(?:https?:\/\/|www\.|\b[\w.+-]+@[\w.-]+\.[a-z]{2,}\b|(?:\+?90\s*)?0?5\d{2}[\s.-]*\d{3}[\s.-]*\d{2}[\s.-]*\d{2})/i.test(text)) {
+    if (PRIVATE_DATA_PATTERN.test(text)) {
         throw new RaffleError("Telefon, e-posta veya bağlantı paylaşmayın.", 400, "RAFFLE_PRIVATE_DATA");
     }
     return text;
+}
+
+function safeDisplayName(value) {
+    const name = String(value || "").trim().replace(/\s+/g, " ").slice(0, 80);
+    return !name || PRIVATE_DATA_PATTERN.test(name) ? "HediyeAlSat Üyesi" : name;
 }
 
 function assertJoinWindow(event, now = new Date()) {
@@ -78,7 +85,7 @@ async function joinRaffle({ firestore, FieldValue, eventId, user, giftHint = "",
         transaction.create(participantRef, {
             eventId,
             userUid: user.uid,
-            displayName: String(user.name || user.displayName || "HediyeAlSat Üyesi").trim().slice(0, 80),
+            displayName: safeDisplayName(user.name || user.displayName),
             giftHint: validatePublicText(giftHint, raffleConfig.giftHintMaxLength),
             status: "ACTIVE",
             joinedAt: FieldValue.serverTimestamp(),
@@ -170,6 +177,6 @@ async function drawRaffle({ firestore, FieldValue, eventId, adminUid, now = new 
 }
 
 module.exports = {
-    raffleConfig, RaffleError, toDate, publicEvent, validatePublicText, assertJoinWindow,
+    raffleConfig, RaffleError, toDate, publicEvent, validatePublicText, safeDisplayName, assertJoinWindow,
     joinRaffle, cancelParticipation, deterministicOrder, drawRaffle
 };
