@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { browserLocalPersistence, browserSessionPersistence, sendPasswordResetEmail, setPersistence, signInWithEmailAndPassword } from "firebase/auth";
+import { browserLocalPersistence, browserSessionPersistence, onAuthStateChanged, sendPasswordResetEmail, setPersistence, signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase";
 import { firebaseAuthErrorMessage } from "../utils/auth";
 import "../styles/pages/login.css";
@@ -13,6 +13,10 @@ function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
+
+  useEffect(() => onAuthStateChanged(auth, (currentUser) => {
+    if (currentUser) navigate("/", { replace: true });
+  }), [navigate]);
 
   async function handleLogin(event) {
     event.preventDefault();
@@ -51,10 +55,10 @@ function Login() {
     <section className="auth-card" aria-labelledby="login-title">
       <Link className="auth-brand" to="/" aria-label="HediyeAlSat ana sayfa"><span aria-hidden="true">🎁</span><strong>Hediye<span>AlSat</span></strong></Link>
       <header className="auth-heading"><h1 id="login-title">Tekrar hoş geldiniz</h1><p>Hesabınıza güvenle giriş yapın.</p></header>
-      <form className="auth-form" onSubmit={handleLogin} noValidate>
-        <label>E-posta<input type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="ornek@email.com" /></label>
-        <label>Şifre<span className="auth-password-field"><input type={showPassword ? "text" : "password"} autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Şifreniz" /><button type="button" onClick={() => setShowPassword((value) => !value)}>{showPassword ? "Gizle" : "Göster"}</button></span></label>
-        <div className="auth-options"><label className="auth-checkbox"><input type="checkbox" checked={rememberMe} onChange={(event) => setRememberMe(event.target.checked)} />Beni Hatırla</label><button className="auth-text-button" type="button" onClick={resetPassword}>Şifremi Unuttum</button></div>
+      <form className="auth-form" onSubmit={handleLogin} autoComplete="on" noValidate>
+        <label htmlFor="login-email">E-posta<input id="login-email" name="email" type="email" autoComplete="username" inputMode="email" autoCapitalize="none" spellCheck="false" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="ornek@email.com" /></label>
+        <label htmlFor="login-password">Şifre<span className="auth-password-field"><input id="login-password" name="password" type={showPassword ? "text" : "password"} autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Şifreniz" /><button type="button" onClick={() => setShowPassword((value) => !value)}>{showPassword ? "Gizle" : "Göster"}</button></span></label>
+        <div className="auth-options"><label className="auth-checkbox" htmlFor="login-remember"><input id="login-remember" name="rememberMe" type="checkbox" checked={rememberMe} onChange={(event) => setRememberMe(event.target.checked)} />Beni Hatırla</label><button className="auth-text-button" type="button" onClick={resetPassword}>Şifremi Unuttum</button></div>
         {message.text && <p className={`auth-message ${message.type}`} role={message.type === "error" ? "alert" : "status"}>{message.text}</p>}
         <button className="auth-submit" type="submit" disabled={submitting}>{submitting ? "Giriş yapılıyor..." : "Giriş Yap"}</button>
       </form>
