@@ -10,6 +10,7 @@ const sellerMarketplaceController = require("../controllers/sellerMarketplaceCon
 const sponsorStoreController = require("../controllers/sponsorStoreController");
 const adminOperationsController = require("../controllers/adminOperationsController");
 const adminOrderController = require("../controllers/adminOrderController");
+const systemStatusController = require("../controllers/systemStatusController");
 
 const router = express.Router();
 
@@ -18,6 +19,7 @@ router.use(authMiddleware, adminMiddleware);
 router.get("/me", adminListingController.me);
 router.get("/listings", adminListingController.list);
 router.get("/overview", adminOperationsController.overview);
+router.put("/system-status", systemStatusController.update);
 router.get("/users", adminOperationsController.listUsers);
 router.patch("/users/:uid/status", adminOperationsController.updateUserStatus);
 router.get("/audit-logs", adminOperationsController.auditLogs);

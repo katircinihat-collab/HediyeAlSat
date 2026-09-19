@@ -1021,3 +1021,22 @@ test("82 - normal kullanıcı canlı sohbet mesajını değiştiremez veya silem
     deleteDoc(doc(db, "publicChatMessages", "existing-message"))
   );
 });
+
+test("83 - public sistem durumu misafir ve giriş yapmış kullanıcı tarafından okunabilir", async () => {
+  await env.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), "systemSettings", "public"), {
+      announcement: { enabled: false },
+      maintenance: { enabled: false }
+    });
+  });
+  await assertSucceeds(getDoc(doc(dbFor(), "systemSettings", "public")));
+  await assertSucceeds(getDoc(doc(dbFor(ownerAuth), "systemSettings", "public")));
+});
+
+test("84 - normal kullanıcı ve admin client sistem durumunu değiştiremez", async () => {
+  for (const auth of [ownerAuth, adminAuth]) {
+    await assertFails(updateDoc(doc(dbFor(auth), "systemSettings", "public"), {
+      "maintenance.enabled": true
+    }));
+  }
+});

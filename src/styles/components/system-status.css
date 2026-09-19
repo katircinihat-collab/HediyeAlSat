@@ -1,0 +1,15 @@
+.system-status-loading { min-height:100vh; display:grid; place-items:center; padding:24px; background:#fff8f3; color:#7f1d1d; font-weight:800; }
+.system-announcement { position:relative; z-index:10000; display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:10px; width:100%; box-sizing:border-box; padding:10px clamp(14px,3vw,32px); color:#172033; font-weight:700; line-height:1.45; }
+.system-announcement p { margin:0; text-align:center; overflow-wrap:anywhere; }
+.system-announcement button { width:34px; height:34px; border:0; border-radius:9px; background:rgba(255,255,255,.72); color:inherit; font-size:22px; cursor:pointer; }
+.system-announcement-info { background:#e8f2ff; border-bottom:1px solid #bdd7f7; }
+.system-announcement-warning { background:#fff5d7; border-bottom:1px solid #f0d27c; }
+.system-announcement-maintenance { background:#f1eafe; border-bottom:1px solid #d7c5f6; }
+.system-announcement-payment { background:#e8f8ef; border-bottom:1px solid #b8e2ca; }
+.system-announcement-order { background:#fff0e6; border-bottom:1px solid #f2c5a8; }
+.maintenance-screen { min-height:100vh; min-height:100dvh; display:grid; place-items:center; box-sizing:border-box; padding:24px; overflow:hidden; background:radial-gradient(circle at 20% 10%,#fff 0,#fff7ed 38%,#fce7df 100%); }
+.maintenance-card { width:min(620px,100%); box-sizing:border-box; padding:clamp(28px,6vw,58px); border:1px solid rgba(153,27,55,.13); border-radius:28px; background:rgba(255,255,255,.94); text-align:center; box-shadow:0 24px 70px rgba(127,29,29,.12); }
+.maintenance-brand { display:inline-flex; align-items:center; gap:9px; color:#27272a; font-size:22px; }
+.maintenance-brand > span { font-size:30px; }.maintenance-brand strong span { color:#a61b3c; }
+.maintenance-icon { margin:28px 0 12px; font-size:54px; }.maintenance-card h1 { margin:0; color:#7f1d1d; font-size:clamp(30px,7vw,48px); }.maintenance-card p { margin:18px auto; max-width:520px; color:#52525b; font-size:clamp(16px,3vw,19px); line-height:1.7; white-space:pre-line; }.maintenance-card small { color:#7f1d1d; font-weight:700; }
+@media (max-width:480px) { .system-announcement { grid-template-columns:auto minmax(0,1fr) auto; padding:9px 10px; font-size:13px; }.system-announcement p { text-align:left; }.maintenance-screen { padding:14px; }.maintenance-card { padding:30px 18px; border-radius:20px; } }

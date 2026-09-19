@@ -360,6 +360,13 @@ service cloud.firestore {
       allow read, create, update, delete: if false;
     }
 
+    // Tek public operasyon belgesi herkesçe okunabilir; bütün yazımlar
+    // auth + admin middleware arkasındaki Admin SDK endpointinden yapılır.
+    match /systemSettings/{documentId} {
+      allow read: if documentId == "public";
+      allow create, update, delete: if false;
+    }
+
     match /magazalar/{storeId} {
       allow read: if true;
 

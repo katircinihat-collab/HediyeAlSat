@@ -52,6 +52,8 @@ import SpecialListingsPage from "./pages/SpecialListingsPage";
 import TopDesigns from "./pages/TopDesigns";
 import ScrollManager from "./components/ScrollManager";
 import RouteSeoPolicy from "./components/RouteSeoPolicy";
+import SystemStatusLayer from "./components/SystemStatusLayer";
+import SystemStatusProvider from "./context/SystemStatusProvider";
 import { lazy, Suspense } from "react";
 
 const Seller = lazy(() => import("./pages/Seller"));
@@ -106,10 +108,12 @@ import "./styles/pages/special-day.css";
 function App() {
   return (
     <BrowserRouter>
-      <ScrollManager />
-      <RouteSeoPolicy />
+      <SystemStatusProvider>
+        <ScrollManager />
+        <RouteSeoPolicy />
 
-      <Suspense fallback={
+        <SystemStatusLayer>
+        <Suspense fallback={
           <main className="route-loading" role="status">
             Sayfa yükleniyor...
           </main>
@@ -433,7 +437,9 @@ function App() {
             element={<NotFound />}
           />
         </Routes>
-      </Suspense>
+        </Suspense>
+        </SystemStatusLayer>
+      </SystemStatusProvider>
     </BrowserRouter>
   );
 }
