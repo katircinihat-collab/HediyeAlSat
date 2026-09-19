@@ -6,6 +6,7 @@ import { db } from "../firebase";
 import Navbar from "../components/Navbar";
 import ProductCard from "../components/ProductCard";
 import Footer from "../components/Footer";
+import SEO from "../components/SEO";
 import CategoryBar from "../components/CategoryBar";
 import categories, {
   getListingSubcategory,
@@ -126,6 +127,12 @@ function Listings() {
   return (
 
     <>
+
+      <SEO
+        title="Tüm Hediyeler ve İlanlar | HediyeAlSat"
+        description="HediyeAlSat'taki güncel, onaylı ve satıştaki hediye ürünlerini keşfedin."
+        canonical="https://hediyealsat.com/ilanlar"
+      />
 
       <Navbar />
 

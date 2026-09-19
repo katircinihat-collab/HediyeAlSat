@@ -6,6 +6,7 @@ import { auth, db } from "../firebase";
 import Navbar from "../components/Navbar";
 import ProductCard from "../components/ProductCard";
 import Footer from "../components/Footer";
+import SEO from "../components/SEO";
 import "../styles/pages/special-listings.css";
 import {
   isA4Listing,
@@ -178,6 +179,11 @@ function SpecialListingsPage({ tur }) {
 
   return (
     <>
+      <SEO
+        title={`${yuzTlSayfasi ? "100 TL ve Altı Hediyeler" : "A4 Tasarım Pazarı"} | HediyeAlSat`}
+        description={aciklama}
+        canonical={`https://hediyealsat.com/${yuzTlSayfasi ? "100-tl-alti" : "a4-tasarimlar"}`}
+      />
       <Navbar />
       <main className="special-listings-page">
         <header className="special-listings-header">

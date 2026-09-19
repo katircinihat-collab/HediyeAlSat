@@ -183,7 +183,7 @@ function Kategori() {
 
         description={`${bilgi.ad} kategorisindeki hediye ürünlerini HediyeAlSat'ta keşfedin.`}
 
-        canonical={`https://hediyealsat.com/kategori/${kategori}`}
+        canonical={`https://hediyealsat.com/kategori/${encodeURIComponent(kategori)}`}
 
         image="https://hediyealsat.com/logo192.png"
 

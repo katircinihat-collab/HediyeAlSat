@@ -1,5 +1,5 @@
 
-import { Helmet } from "react-helmet-async";
+import SEO from "../components/SEO";
 
 import ProductGallery from "../components/ProductGallery";
 import SellerCard from "../components/seller/SellerCard";
@@ -859,61 +859,28 @@ function DetailPage() {
 
     <>
 
-      <Helmet>
-
-        <title>
-          {ilan.baslik} | HediyeAlSat
-        </title>
-
-
-        <meta
-          name="description"
-          content={
-            ilan.aciklama ||
-            `${ilan.baslik} uygun fiyatla HediyeAlSat'ta`
+      <SEO
+        title={`${ilan.baslik} | HediyeAlSat`}
+        description={ilan.aciklama || `${ilan.baslik} uygun fiyatla HediyeAlSat'ta`}
+        canonical={`https://hediyealsat.com/ilan/${encodeURIComponent(id)}`}
+        image={ilan.resimler?.[0] || ilan.resim || undefined}
+        type="product"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "Product",
+          name: ilan.baslik,
+          description: ilan.aciklama || undefined,
+          image: (ilan.resimler?.length ? ilan.resimler : [ilan.resim]).filter(Boolean),
+          category: formatListingCategory(ilan),
+          offers: {
+            "@type": "Offer",
+            url: `https://hediyealsat.com/ilan/${encodeURIComponent(id)}`,
+            priceCurrency: "TRY",
+            price: fiyat,
+            availability: "https://schema.org/InStock"
           }
-        />
-
-
-        <meta
-          name="keywords"
-          content={
-            `${ilan.baslik}, ${formatListingCategory(ilan)}, hediye`
-          }
-        />
-
-
-        <meta
-          property="og:type"
-          content="product"
-        />
-
-
-        <meta
-          property="og:title"
-          content={ilan.baslik}
-        />
-
-
-        <meta
-          property="og:description"
-          content={
-            ilan.aciklama ||
-            ilan.baslik
-          }
-        />
-
-
-        <meta
-          property="og:image"
-          content={
-            ilan.resimler?.[0] ||
-            ilan.resim ||
-            ""
-          }
-        />
-
-      </Helmet>
+        }}
+      />
 
 
       <div className="page">

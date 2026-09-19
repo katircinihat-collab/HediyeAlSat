@@ -1,4 +1,4 @@
-import { Helmet } from "react-helmet-async";
+import SEO from "../components/SEO";
 import { Link, useParams } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, query, where } from "firebase/firestore";
@@ -236,15 +236,21 @@ function StoreDetail() {
           <div className="store-page-state store-closed-state"><span>🔒</span><h1>Bu mağaza şu anda aktif değil.</h1><p>Mağaza geçici olarak ziyaretçilere kapatılmıştır.</p><Link to="/magazalar">Aktif mağazaları keşfet</Link></div>
         ) : (
           <>
-            <Helmet>
-              <title>{magazaAdi} | HediyeAlSat</title>
-              <meta name="description" content={magaza.aciklama || `${magazaAdi} mağazasını ziyaret edin.`} />
-              <link rel="canonical" href={`https://hediyealsat.com/magaza/${id}`} />
-              <meta property="og:type" content="website" />
-              <meta property="og:title" content={magazaAdi} />
-              <meta property="og:description" content={magaza.aciklama || magazaAdi} />
-              {logo && <meta property="og:image" content={logo} />}
-            </Helmet>
+            <SEO
+              title={`${magazaAdi} | HediyeAlSat`}
+              description={magaza.aciklama || `${magazaAdi} mağazasındaki güncel ürünleri keşfedin.`}
+              canonical={`https://hediyealsat.com/magaza/${encodeURIComponent(id)}`}
+              image={logo || undefined}
+              jsonLd={{
+                "@context": "https://schema.org",
+                "@type": "BreadcrumbList",
+                itemListElement: [
+                  { "@type": "ListItem", position: 1, name: "Ana Sayfa", item: "https://hediyealsat.com/" },
+                  { "@type": "ListItem", position: 2, name: "Mağazalar", item: "https://hediyealsat.com/magazalar" },
+                  { "@type": "ListItem", position: 3, name: magazaAdi, item: `https://hediyealsat.com/magaza/${encodeURIComponent(id)}` }
+                ]
+              }}
+            />
 
             <Link to="/magazalar" className="store-back-link">← Mağazalara Dön</Link>
             <div className="store-content">

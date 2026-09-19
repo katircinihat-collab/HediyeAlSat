@@ -44,20 +44,6 @@
     <priority>0.9</priority>
   </url>
 
-  <!-- MAĞAZA OLUŞTUR -->
-  <url>
-    <loc>https://hediyealsat.com/magaza-olustur</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <!-- İLAN VER -->
-  <url>
-    <loc>https://hediyealsat.com/ilan-ver</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-
   <!-- SPONSOR MAĞAZA -->
   <url>
     <loc>https://hediyealsat.com/sponsor-magaza</loc>
@@ -65,11 +51,21 @@
     <priority>0.7</priority>
   </url>
 
-  <!-- SPONSOR BAŞVURU -->
+  <!-- ÜRÜN VİTRİNLERİ -->
   <url>
-    <loc>https://hediyealsat.com/sponsor-basvuru</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
+    <loc>https://hediyealsat.com/100-tl-alti</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://hediyealsat.com/a4-tasarimlar</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://hediyealsat.com/top-10-tasarim</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
   </url>
 
   <!-- HAKKIMIZDA -->

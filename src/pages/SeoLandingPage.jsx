@@ -10,6 +10,7 @@ import {
 import { db } from "../firebase";
 import seoPages from "../seo/seoPages";
 import ProductCard from "../components/ProductCard";
+import SEO from "../components/SEO";
 
 import {
   listingMatchesSearch,
@@ -587,105 +588,6 @@ function SeoLandingPage() {
 
   /*
   ==================================================
-  SEO META BİLGİLERİ
-  ==================================================
-  */
-
-  useEffect(() => {
-    if (!page) return;
-
-    const oldTitle =
-      document.title;
-
-    let metaDescription =
-      document.querySelector(
-        'meta[name="description"]'
-      );
-
-    const oldDescription =
-      metaDescription?.getAttribute(
-        "content"
-      ) || "";
-
-    if (!metaDescription) {
-      metaDescription =
-        document.createElement("meta");
-
-      metaDescription.name =
-        "description";
-
-      document.head.appendChild(
-        metaDescription
-      );
-    }
-
-    document.title =
-      page.title;
-
-    metaDescription.setAttribute(
-      "content",
-      page.description
-    );
-
-
-    let canonical =
-      document.querySelector(
-        'link[rel="canonical"]'
-      );
-
-    const oldCanonical =
-      canonical?.getAttribute("href") || "";
-
-    const canonicalWasCreated =
-      !canonical;
-
-    if (!canonical) {
-      canonical =
-        document.createElement("link");
-
-      canonical.rel =
-        "canonical";
-
-      document.head.appendChild(
-        canonical
-      );
-    }
-
-    canonical.setAttribute(
-      "href",
-      `https://hediyealsat.com/${slug}`
-    );
-
-
-    return () => {
-      document.title =
-        oldTitle;
-
-      if (oldDescription) {
-        metaDescription.setAttribute(
-          "content",
-          oldDescription
-        );
-      } else {
-        metaDescription.removeAttribute(
-          "content"
-        );
-      }
-
-      if (canonicalWasCreated) {
-        canonical.remove();
-      } else if (oldCanonical) {
-        canonical.setAttribute(
-          "href",
-          oldCanonical
-        );
-      }
-    };
-  }, [page, slug]);
-
-
-  /*
-  ==================================================
   GERÇEK İLANLARI FIRESTORE'DAN GETİR
   ==================================================
   */
@@ -817,7 +719,13 @@ function SeoLandingPage() {
 
   if (!page) {
     return (
-      <main className="page seo-landing-page">
+      <>
+        <SEO
+          title="Sayfa Bulunamadı | HediyeAlSat"
+          description="Aradığınız sayfa bulunamadı."
+          robots="noindex,follow"
+        />
+        <main className="page seo-landing-page">
 
         <section className="seo-content">
 
@@ -836,7 +744,8 @@ function SeoLandingPage() {
 
         </section>
 
-      </main>
+        </main>
+      </>
     );
   }
 
@@ -890,7 +799,21 @@ function SeoLandingPage() {
   */
 
   return (
-    <main className="page seo-landing-page">
+    <>
+      <SEO
+        title={page.title}
+        description={page.description}
+        canonical={`https://hediyealsat.com/${encodeURIComponent(slug)}`}
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          itemListElement: [
+            { "@type": "ListItem", position: 1, name: "Ana Sayfa", item: "https://hediyealsat.com/" },
+            { "@type": "ListItem", position: 2, name: page.h1, item: `https://hediyealsat.com/${encodeURIComponent(slug)}` }
+          ]
+        }}
+      />
+      <main className="page seo-landing-page">
 
       <section className="seo-hero">
 
@@ -1038,7 +961,8 @@ function SeoLandingPage() {
 
       </section>
 
-    </main>
+      </main>
+    </>
   );
 }
 

@@ -55,7 +55,7 @@ function TopDesigns() {
 
   return (
     <>
-      <SEO title="Top 10 Tasarım | HediyeAlSat" description="Bu haftanın en çok oy alan dijital tasarımlarını keşfedin." />
+      <SEO title="Top 10 Tasarım | HediyeAlSat" description="Bu haftanın en çok oy alan dijital tasarımlarını keşfedin." canonical="https://hediyealsat.com/top-10-tasarim" />
       <Navbar />
       <main className="top-designs-page">
         <header className="top-designs-hero">

@@ -6,6 +6,7 @@ import { db } from "../firebase";
 
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import SEO from "../components/SEO";
 
 import "../styles/pages/stores.css";
 import { activeStoreSponsorMap, sortStoresBySponsor, sponsorTierLabel } from "../utils/sponsoredContent";
@@ -62,6 +63,12 @@ function Stores() {
 
   return (
     <div className="stores-page">
+
+      <SEO
+        title="Hediye Mağazaları | HediyeAlSat"
+        description="HediyeAlSat'taki aktif mağazaları ve özgün hediye ürünlerini keşfedin."
+        canonical="https://hediyealsat.com/magazalar"
+      />
 
       <Navbar />
 

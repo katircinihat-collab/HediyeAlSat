@@ -51,6 +51,7 @@ import AdminRoute from "./components/AdminRoute";
 import SpecialListingsPage from "./pages/SpecialListingsPage";
 import TopDesigns from "./pages/TopDesigns";
 import ScrollManager from "./components/ScrollManager";
+import RouteSeoPolicy from "./components/RouteSeoPolicy";
 import { lazy, Suspense } from "react";
 
 const Seller = lazy(() => import("./pages/Seller"));
@@ -106,6 +107,7 @@ function App() {
   return (
     <BrowserRouter>
       <ScrollManager />
+      <RouteSeoPolicy />
 
       <Suspense fallback={
           <main className="route-loading" role="status">

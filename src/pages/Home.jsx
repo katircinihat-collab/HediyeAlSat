@@ -299,6 +299,10 @@ function Home() {
         description="El yapımı ürünleri, butik mağazaları ve farklı hediye seçeneklerini HediyeAlSat'ta keşfedin."
         canonical="https://hediyealsat.com/"
         image="https://hediyealsat.com/logo192.png"
+        jsonLd={[
+          { "@context": "https://schema.org", "@type": "Organization", name: "HediyeAlSat", url: "https://hediyealsat.com/" },
+          { "@context": "https://schema.org", "@type": "WebSite", name: "HediyeAlSat", url: "https://hediyealsat.com/" }
+        ]}
       />
 
       <Navbar />

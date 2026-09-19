@@ -8,9 +8,17 @@ function SEO({
 
   canonical,
 
-  image = "https://hediyealsat.com/og-image.svg"
+  image = "https://hediyealsat.com/og-image.svg",
+
+  robots = "index,follow",
+
+  type = "website",
+
+  jsonLd = []
 
 }){
+
+  const structuredData = Array.isArray(jsonLd) ? jsonLd : [jsonLd];
 
   return(
 
@@ -25,13 +33,10 @@ function SEO({
 
       <meta
         name="robots"
-        content="index,follow"
+        content={robots}
       />
 
-      <link
-        rel="canonical"
-        href={canonical}
-      />
+      {canonical && <link rel="canonical" href={canonical} />}
 
       <meta
         property="og:title"
@@ -43,10 +48,11 @@ function SEO({
         content={description}
       />
 
-      <meta
-        property="og:url"
-        content={canonical}
-      />
+      {canonical && <meta property="og:url" content={canonical} />}
+
+      <meta property="og:site_name" content="HediyeAlSat" />
+
+      <meta property="og:locale" content="tr_TR" />
 
       <meta
         property="og:image"
@@ -55,7 +61,7 @@ function SEO({
 
       <meta
         property="og:type"
-        content="website"
+        content={type}
       />
 
       <meta
@@ -77,6 +83,15 @@ function SEO({
         name="twitter:image"
         content={image}
       />
+
+      {structuredData.filter(Boolean).map((data, index) => (
+        <script
+          key={`${data["@type"] || "structured-data"}-${index}`}
+          type="application/ld+json"
+        >
+          {JSON.stringify(data).replace(/</g, "\\u003c")}
+        </script>
+      ))}
 
     </Helmet>
 
