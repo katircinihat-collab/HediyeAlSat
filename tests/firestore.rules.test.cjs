@@ -1040,3 +1040,54 @@ test("84 - normal kullanıcı ve admin client sistem durumunu değiştiremez", a
     }));
   }
 });
+
+test("85 - kullanıcı kendi XP özetini okuyabilir, başka kullanıcı okuyamaz", async () => {
+  await env.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), "userXpBalances", ownerAuth.uid), {
+      uid: ownerAuth.uid,
+      lifetimeXP: 25,
+      availableXP: 25
+    });
+  });
+  await assertSucceeds(getDoc(doc(dbFor(ownerAuth), "userXpBalances", ownerAuth.uid)));
+  await assertFails(getDoc(doc(dbFor(otherAuth), "userXpBalances", ownerAuth.uid)));
+});
+
+test("86 - kullanıcı XP bakiyesini doğrudan oluşturamaz veya değiştiremez", async () => {
+  const ownerDb = dbFor(ownerAuth);
+  await assertFails(setDoc(doc(ownerDb, "userXpBalances", "new-balance"), {
+    uid: ownerAuth.uid, lifetimeXP: 999, availableXP: 999
+  }));
+  await assertFails(updateDoc(doc(ownerDb, "userXpBalances", ownerAuth.uid), {
+    availableXP: 999
+  }));
+});
+
+test("87 - kullanıcı yalnız kendi XP hareketini okuyabilir", async () => {
+  await env.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), "userXpTransactions", "owner-event"), {
+      userUid: ownerAuth.uid,
+      type: "earn",
+      reason: "WELCOME_BONUS",
+      amount: 25
+    });
+  });
+  await assertSucceeds(getDoc(doc(dbFor(ownerAuth), "userXpTransactions", "owner-event")));
+  await assertFails(getDoc(doc(dbFor(otherAuth), "userXpTransactions", "owner-event")));
+});
+
+test("88 - client XP hareketi oluşturamaz, değiştiremez veya silemez", async () => {
+  const ownerDb = dbFor(ownerAuth);
+  const ref = doc(ownerDb, "userXpTransactions", "owner-event");
+  await assertFails(setDoc(doc(ownerDb, "userXpTransactions", "fake-event"), {
+    userUid: ownerAuth.uid, type: "earn", reason: "WELCOME_BONUS", amount: 500
+  }));
+  await assertFails(updateDoc(ref, { amount: 500 }));
+  await assertFails(deleteDoc(ref));
+});
+
+test("89 - günlük XP sayaçları bütün client erişimine kapalıdır", async () => {
+  const ref = doc(dbFor(ownerAuth), "userXpDaily", `${ownerAuth.uid}_2026-09-19_GIFT_BATTLE_VOTE`);
+  await assertFails(getDoc(ref));
+  await assertFails(setDoc(ref, { userUid: ownerAuth.uid, earned: 25 }));
+});

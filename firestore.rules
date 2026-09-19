@@ -470,6 +470,22 @@ service cloud.firestore {
       allow create, update, delete: if false;
     }
 
+    // XP bakiyesi ve hareketleri yalnız backend Admin SDK tarafından yazılır.
+    // Kullanıcı yalnız kendi özetini ve kendi hareket geçmişini okuyabilir.
+    match /userXpBalances/{userId} {
+      allow read: if signedIn() && request.auth.uid == userId;
+      allow create, update, delete: if false;
+    }
+
+    match /userXpTransactions/{transactionId} {
+      allow read: if signedIn() && resource.data.userUid == request.auth.uid;
+      allow create, update, delete: if false;
+    }
+
+    match /userXpDaily/{dailyId} {
+      allow read, create, update, delete: if false;
+    }
+
     match /bakiyeHareketleri/{movementId} {
       allow read: if isAdmin()
         || (hasEmail() && resource.data.satici == request.auth.token.email);

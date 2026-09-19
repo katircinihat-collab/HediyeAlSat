@@ -1,0 +1,16 @@
+{
+  "events": {
+    "WELCOME_BONUS": { "type": "earn", "amount": 25, "label": "Hoş geldin bonusu" },
+    "GIFT_BATTLE_VOTE": { "type": "earn", "amount": 5, "dailyCap": 25, "label": "Hediye Kapışmasında oy kullandın" },
+    "BATTLE_CREATE": { "type": "spend", "amount": 25, "label": "Kendi Hediye Kapışmanı oluşturdun" },
+    "RAFFLE_JOIN": { "type": "spend", "amount": 100, "label": "Büyük Hediye Kurasına katıldın" },
+    "RAFFLE_REFUND": { "type": "refund", "amount": 100, "refundOf": "RAFFLE_JOIN", "label": "Kura iptal edildi / XP iade edildi" }
+  },
+  "levels": [
+    { "level": 1, "minXP": 0, "maxXP": 99, "title": "Başlangıç", "icon": "🎁" },
+    { "level": 2, "minXP": 100, "maxXP": 299, "title": "Keşifçi", "icon": "🔎" },
+    { "level": 3, "minXP": 300, "maxXP": 749, "title": "Hediye Avcısı", "icon": "🏹" },
+    { "level": 4, "minXP": 750, "maxXP": 1499, "title": "Hediye Uzmanı", "icon": "⭐" },
+    { "level": 5, "minXP": 1500, "maxXP": null, "title": "Hediye Ustası", "icon": "👑" }
+  ]
+}

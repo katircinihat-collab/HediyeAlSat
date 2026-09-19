@@ -1,4 +1,5 @@
 const { firestore, FieldValue } = require("../config/firebase");
+const { applyXpEventInTransaction } = require("../services/xpService");
 
 const QUESTIONS = [
     "Sen hangisini hediye ederdin?",
@@ -230,6 +231,7 @@ exports.vote = async (req, res, next) => {
         const battleRef = firestore.collection("giftBattles").doc(dateKey);
         const voteRef = firestore.collection("giftBattleVotes").doc(voteDocumentId(dateKey, req.user.uid));
 
+        let xpResult = null;
         await withTimeout(firestore.runTransaction(async (transaction) => {
             const battleSnapshot = await transaction.get(battleRef);
             if (!battleSnapshot.exists) throw Object.assign(new Error("Bugünün kapışması bulunamadı."), { status: 404 });
@@ -254,6 +256,15 @@ exports.vote = async (req, res, next) => {
                 throw Object.assign(new Error("Bugünkü kapışmada oyunuzu zaten kullandınız."), { status: 409 });
             }
 
+            xpResult = await applyXpEventInTransaction({
+                firestore,
+                transaction,
+                FieldValue,
+                uid: req.user.uid,
+                reason: "GIFT_BATTLE_VOTE",
+                sourceId: voteRef.id
+            });
+
             transaction.create(voteRef, {
                 dateKey,
                 voterUid: req.user.uid,
@@ -270,6 +281,12 @@ exports.vote = async (req, res, next) => {
         return res.status(201).json({
             success: true,
             selectedListingId,
+            xp: xpResult ? {
+                awarded: xpResult.amount,
+                capped: xpResult.capped === true,
+                availableXP: xpResult.availableXP,
+                lifetimeXP: xpResult.lifetimeXP
+            } : null,
             battle: resultPayload(current.battle, current.leftSnapshot, current.rightSnapshot)
         });
     } catch (error) {

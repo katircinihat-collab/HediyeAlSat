@@ -4,6 +4,7 @@ import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { auth, db } from "../firebase";
 import { buildUserDocument, firebaseAuthErrorMessage, validateRegistration } from "../utils/auth";
+import { claimWelcomeXp } from "../services/xpApi";
 import "../styles/pages/login.css";
 
 function Register() {
@@ -26,6 +27,11 @@ function Register() {
       const displayName = form.name.trim();
       await updateProfile(credential.user, { displayName });
       await setDoc(doc(db, "users", credential.user.uid), buildUserDocument({ name: displayName, email: credential.user.email, createdAt: serverTimestamp() }));
+      try {
+        await claimWelcomeXp(credential.user);
+      } catch (xpError) {
+        console.warn("Hoş geldin XP bonusu daha sonra yeniden denenebilir:", xpError.message);
+      }
       navigate("/profil", { replace: true });
     } catch (firebaseError) {
       setError(firebaseAuthErrorMessage(firebaseError));

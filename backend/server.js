@@ -77,6 +77,8 @@ const buyerIdentityRoutes =
     require("./routes/buyerIdentityRoutes");
 const userLevelRoutes =
     require("./routes/userLevelRoutes");
+const xpRoutes =
+    require("./routes/xpRoutes");
 const listingRoutes =
     require("./routes/listingRoutes");
 const sellerMarketplaceRoutes =
@@ -108,6 +110,7 @@ app.use(
     buyerIdentityRoutes
 );
 app.use("/api/user-levels", userLevelRoutes);
+app.use("/api/xp", xpRoutes);
 app.use("/api/listings", listingRoutes);
 app.use("/api/seller/marketplace", sellerMarketplaceRoutes);
 app.use("/api/listing-boosts", listingBoostRoutes);

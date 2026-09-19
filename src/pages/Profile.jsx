@@ -7,8 +7,8 @@ import { apiUrl } from "../config/api";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import "../styles/pages/profile.css";
-import { getMyLevel } from "../services/userLevelApi";
-import levelDefinitions from "../../shared/userLevels.json";
+import { claimWelcomeXp, getMyXp } from "../services/xpApi";
+import xpConfig from "../../shared/xpConfig.json";
 
 function telefonFormatla(value) {
   const digits = String(value || "").replace(/\D/g, "").slice(0, 11);
@@ -56,7 +56,8 @@ function Profile() {
   const [kimlikNumarasi, setKimlikNumarasi] = useState("");
   const [maskeliKimlik, setMaskeliKimlik] = useState("");
   const [kimlikKaydediliyor, setKimlikKaydediliyor] = useState(false);
-  const [seviye, setSeviye] = useState(null);
+  const [xp, setXp] = useState(null);
+  const [xpHatasi, setXpHatasi] = useState("");
 
   const profilDegisti = useMemo(
     () => JSON.stringify(profilNormallestir(profil)) !== JSON.stringify(kayitliProfil),
@@ -85,9 +86,14 @@ function Profile() {
         }
 
         try {
-          setSeviye(await getMyLevel(user));
+          const creationTime = new Date(user.metadata?.creationTime || 0).getTime();
+          if (Number.isFinite(creationTime) && Date.now() - creationTime <= 24 * 60 * 60 * 1000) {
+            try { await claimWelcomeXp(user); } catch { /* Backend uygunluğu ve idempotency authoritative kalır. */ }
+          }
+          setXp(await getMyXp(user));
         } catch {
-          setSeviye({ level: 1, points: 0 });
+          setXpHatasi("XP bilgileriniz şu anda alınamıyor.");
+          setXp({ lifetimeXP: 0, availableXP: 0, level: xpConfig.levels[0], progress: { percent: 0, remaining: 100, next: xpConfig.levels[1] }, history: [] });
         }
 
         const snapshot = await getDoc(doc(db, "profiller", user.uid));
@@ -167,7 +173,6 @@ function Profile() {
 
       setProfil(kaydedilecekProfil);
       setKayitliProfil(kaydedilecekProfil);
-      try { setSeviye(await getMyLevel(user)); } catch { /* Seviye sonraki açılışta yenilenir. */ }
       setBasariMesaji("Bilgileriniz kaydedildi.");
     } catch (error) {
       console.error("Profil kaydedilemedi:", error);
@@ -230,18 +235,47 @@ function Profile() {
           <div className="profile-card profile-loading">Profil bilgileriniz yükleniyor...</div>
         ) : (
           <>
-          {seviye && (() => {
-            const current = levelDefinitions[seviye.level - 1] || levelDefinitions[0];
-            const next = levelDefinitions[seviye.level] || null;
-            const range = next ? next.minPoints - current.minPoints : 1;
-            const progress = next ? Math.min(100, Math.max(0, ((seviye.points - current.minPoints) / range) * 100)) : 100;
-            return <section className="profile-level-card">
-              <div className="profile-level-current"><span>{current.icon}</span><div><small>Seviyem</small><h2>{current.title}</h2><p>Seviye {current.level} / 30 · {seviye.points} Puan</p></div></div>
-              <div className="profile-level-progress"><span style={{ width: `${progress}%` }} /></div>
-              <p>{next ? <>Sonraki seviye: 🔒 {next.icon} {next.title} · {Math.max(0, next.minPoints - seviye.points)} puan kaldı</> : "En yüksek seviyeye ulaştınız."}</p>
-              <details><summary>Tüm Seviyeler</summary><div className="profile-level-grid">{levelDefinitions.map((item) => <div key={item.level} className={item.level <= current.level ? "unlocked" : "locked"}><span>{item.level <= current.level ? item.icon : "🔒"}</span><strong>{item.level}. {item.title}</strong><small>{item.minPoints} puan</small></div>)}</div></details>
-            </section>;
-          })()}
+          {xp && <section className="profile-xp-card" aria-labelledby="xp-title">
+            <div className="profile-xp-heading">
+              <span aria-hidden="true">{xp.level.icon}</span>
+              <div>
+                <small>⭐ XP &amp; Seviyem</small>
+                <h2 id="xp-title">{xp.level.title} — Seviye {xp.level.level}</h2>
+              </div>
+            </div>
+            <div className="profile-xp-totals">
+              <div><span>Kullanılabilir XP</span><strong>{xp.availableXP} XP ⭐</strong></div>
+              <div><span>Toplam kazandığın</span><strong>{xp.lifetimeXP} XP</strong></div>
+            </div>
+            <div className="profile-level-progress" role="progressbar" aria-label="Sonraki seviyeye ilerleme" aria-valuemin="0" aria-valuemax="100" aria-valuenow={Math.round(xp.progress.percent)}>
+              <span style={{ width: `${xp.progress.percent}%` }} />
+            </div>
+            <p>{xp.progress.next
+              ? <>{xp.progress.next.title} olmak için <strong>{xp.progress.remaining} XP</strong> daha</>
+              : "En yüksek seviyeye ulaştın."}</p>
+            {xpHatasi && <p className="profile-xp-error" role="status">{xpHatasi}</p>}
+
+            <details className="profile-xp-help">
+              <summary>XP Nasıl Kazanırım / Nerede Kullanırım?</summary>
+              <ul>
+                <li><span>🎁 Üye olduğunda</span><strong>+{xpConfig.events.WELCOME_BONUS.amount} XP</strong><small>Tek seferlik hoş geldin bonusu</small></li>
+                <li><span>⚔️ Hediye Kapışmasında geçerli oy</span><strong>+{xpConfig.events.GIFT_BATTLE_VOTE.amount} XP</strong></li>
+                <li><span>🛡️ Kapışma oylarından günlük</span><strong>En fazla +{xpConfig.events.GIFT_BATTLE_VOTE.dailyCap} XP</strong></li>
+                <li><span>⚔️ Kendi Hediye Kapışmanı oluştur</span><strong>-{xpConfig.events.BATTLE_CREATE.amount} XP</strong></li>
+                <li><span>🎲 Büyük Hediye Kurasına katıl</span><strong>-{xpConfig.events.RAFFLE_JOIN.amount} XP</strong></li>
+              </ul>
+              <p>XP para değildir; satın alınamaz veya nakde çevrilemez. HediyeAlSat etkinliklerine katılarak kazanılır ve belirli topluluk özelliklerinde kullanılır.</p>
+            </details>
+
+            <div className="profile-xp-history">
+              <h3>XP Hareketlerim</h3>
+              {xp.history.length === 0 ? <p>Henüz XP hareketin bulunmuyor.</p> : <ul>{xp.history.map((item) => {
+                const event = xpConfig.events[item.reason];
+                const sign = item.type === "spend" ? "-" : "+";
+                return <li key={item.id}><span><strong>{sign}{item.amount} XP</strong>{event?.label || "XP işlemi"}</span><time>{item.createdAt ? new Date(item.createdAt).toLocaleDateString("tr-TR") : ""}</time></li>;
+              })}</ul>}
+            </div>
+          </section>}
           <form className="profile-card profile-form" onSubmit={kaydet}>
             <header className="profile-card-header">
               <h1>👤 Profil Bilgilerim</h1>
