@@ -106,7 +106,7 @@ test("Hediye Kapışması geçici API hatasında kaybolmaz ve eski konumunu koru
   assert.match(giftBattle, /Kapışma geçici olarak yüklenemedi/);
   assert.match(giftBattle, /onClick=\{retryBattle\}>Tekrar Dene/);
   assert.match(giftBattle, /Bugünün kapışması kısa süre içinde burada olacak/);
-  assert.match(giftBattleApi, /controller\.abort\(\), 12000/);
+  assert.match(giftBattleApi, /controller\.abort\(\), 9000/);
   assert.match(giftBattleApi, /error\?\.name === "AbortError"/);
 });
 

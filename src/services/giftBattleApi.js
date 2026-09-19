@@ -4,7 +4,9 @@ import { apiUrl } from "../config/api";
 async function request(path, options = {}, tokenRequired = false) {
   const headers = { ...(options.headers || {}) };
   const controller = new AbortController();
-  const timeout = window.setTimeout(() => controller.abort(), 12000);
+  // Backend veri erişimini 7 saniyede sonlandırıyor. Ağ payı bırakırken
+  // kullanıcıyı ikinci kez uzun bir loader içinde bekletmemek için üst sınır.
+  const timeout = window.setTimeout(() => controller.abort(), 9000);
   if (tokenRequired) {
     const user = auth.currentUser;
     if (!user) throw new Error("Oy vermek için giriş yapmalısınız.");
@@ -14,11 +16,18 @@ async function request(path, options = {}, tokenRequired = false) {
   try {
     const response = await fetch(apiUrl(path), { ...options, headers, signal: controller.signal });
     const data = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(data.message || data.error || "Kapışma işlemi tamamlanamadı.");
+    if (!response.ok) {
+      const requestError = new Error(data.message || data.error || "Kapışma işlemi tamamlanamadı.");
+      requestError.code = data.code || "GIFT_BATTLE_REQUEST_FAILED";
+      requestError.status = response.status;
+      throw requestError;
+    }
     return data;
   } catch (error) {
     if (error?.name === "AbortError") {
-      throw new Error("Kapışma servisi geç yanıt verdi. Lütfen tekrar deneyin.", { cause: error });
+      const timeoutError = new Error("Kapışma servisi geç yanıt verdi. Lütfen tekrar deneyin.", { cause: error });
+      timeoutError.code = "GIFT_BATTLE_CLIENT_TIMEOUT";
+      throw timeoutError;
     }
     throw error;
   } finally {

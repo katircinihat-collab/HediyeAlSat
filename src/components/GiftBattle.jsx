@@ -64,12 +64,15 @@ function GiftBattle() {
         })
         .catch((requestError) => {
           if (!active) return;
-          if (attempt === 0) {
+          const transient = requestError.code === "GIFT_BATTLE_TEMPORARILY_UNAVAILABLE"
+            || requestError.code === "GIFT_BATTLE_CLIENT_TIMEOUT"
+            || requestError.name === "TypeError";
+          setError(requestError.message || "Kapışma geçici olarak yüklenemedi.");
+          setLoading(false);
+          if (attempt === 0 && transient) {
             retryTimer = window.setTimeout(() => loadBattle(1), 1200);
             return;
           }
-          setError(requestError.message);
-          setLoading(false);
         });
     };
 

@@ -6,6 +6,8 @@ const chat = fs.readFileSync("src/components/chat/PublicChat.jsx", "utf8");
 const app = fs.readFileSync("src/App.jsx", "utf8");
 const home = fs.readFileSync("src/pages/Home.jsx", "utf8");
 const battle = fs.readFileSync("src/components/GiftBattle.jsx", "utf8");
+const battleApi = fs.readFileSync("src/services/giftBattleApi.js", "utf8");
+const chatCss = fs.readFileSync("src/styles/components/public-chat.css", "utf8");
 
 test("HediyeCep tek sağ alt merkez olarak mevcut sohbeti içerir", () => {
   assert.equal((home.match(/<PublicChat \/>/g) || []).length, 1);
@@ -45,4 +47,18 @@ test("GiftBattle geçici hata ile gerçek boş günü ayrı gösterir ve yeniden
   assert.match(battle, /error \? \([\s\S]*Kapışma geçici olarak yüklenemedi[\s\S]*Tekrar Dene/);
   assert.match(battle, /setReloadKey\(\(current\) => current \+ 1\)/);
   assert.match(battle, /Bugünün kapışması kısa süre içinde burada olacak/);
+});
+
+test("HediyeCep paneli navbar üstünde ve kısa viewport içinde erişilebilir kalır", () => {
+  assert.match(chatCss, /\.public-chat\s*\{[\s\S]*z-index:\s*10000/);
+  assert.match(chatCss, /height:\s*min\(570px, calc\(100dvh - 32px\)\)/);
+  assert.match(chatCss, /max-height:\s*calc\(100dvh - 32px\)/);
+  assert.match(chatCss, /@media \(max-width: 600px\)[\s\S]*height:\s*100dvh/);
+});
+
+test("GiftBattle geçici hatada loaderı kapatır ve yalnız transient hatayı bir kez tekrarlar", () => {
+  assert.match(battleApi, /controller\.abort\(\), 9000/);
+  assert.match(battleApi, /GIFT_BATTLE_TEMPORARILY_UNAVAILABLE|GIFT_BATTLE_CLIENT_TIMEOUT/);
+  assert.match(battle, /setError\([\s\S]*setLoading\(false\);[\s\S]*attempt === 0 && transient/);
+  assert.match(battle, /setTimeout\(\(\) => loadBattle\(1\), 1200\)/);
 });
