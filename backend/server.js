@@ -67,6 +67,8 @@ const designVoteRoutes =
 
 const giftBattleRoutes =
     require("./routes/giftBattleRoutes");
+const raffleRoutes =
+    require("./routes/raffleRoutes");
 const orderStatusRoutes =
     require("./routes/orderStatusRoutes");
 const orderClaimRoutes =
@@ -179,6 +181,7 @@ app.use(
     "/api/gift-battle",
     giftBattleRoutes
 );
+app.use("/api/raffles", raffleRoutes);
 
 app.use(
     "/api/orders",

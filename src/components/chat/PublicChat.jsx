@@ -126,6 +126,7 @@ function PublicChat() {
           <button type="button" onClick={openChat}><span>💬</span><strong>Canlı Sohbet</strong><small>Toplulukla konuş</small></button>
           <button type="button" onClick={() => goTo("/#hediye-kapismasi")}><span>⚔️</span><strong>Hediye Kapışması</strong><small>Bugünün seçimini yap</small></button>
           <button type="button" onClick={() => goTo("/a4-tasarimlar")}><span>🎨</span><strong>A4 Tasarım</strong><small>Tasarımları keşfet</small></button>
+          <button type="button" onClick={() => goTo("/kura")}><span>🎲</span><strong>Kura</strong><small>Topluluk etkinliğine katıl</small></button>
           <button type="button" onClick={() => goTo("/hediye-fikirleri")}><span>💡</span><strong>Hediye Fikirleri</strong><small>İlhamını bul</small></button>
         </div>
       </div> : <>

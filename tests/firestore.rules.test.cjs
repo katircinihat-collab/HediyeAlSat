@@ -1091,3 +1091,33 @@ test("89 - günlük XP sayaçları bütün client erişimine kapalıdır", async
   await assertFails(getDoc(ref));
   await assertFails(setDoc(ref, { userUid: ownerAuth.uid, earned: 25 }));
 });
+
+test("90 - Kura event ve katılım kayıtları client tarafından yönetilemez", async () => {
+  await env.withSecurityRulesDisabled(async (context) => {
+    const db = context.firestore();
+    await setDoc(doc(db, "raffleEvents", "raffle-1"), { title: "Kura", status: "OPEN" });
+    await setDoc(doc(db, "raffleParticipants", `raffle-1_${ownerAuth.uid}`), { eventId: "raffle-1", userUid: ownerAuth.uid, status: "ACTIVE" });
+  });
+  for (const auth of [ownerAuth, adminAuth]) {
+    await assertFails(getDoc(doc(dbFor(auth), "raffleEvents", "raffle-1")));
+    await assertFails(setDoc(doc(dbFor(auth), "raffleParticipants", `fake_${auth.uid}`), { eventId: "raffle-1", userUid: auth.uid, status: "ACTIVE" }));
+  }
+});
+
+test("91 - kullanıcı başka eşleşmeyi okuyamaz ve hiçbir eşleşme yazamaz", async () => {
+  await env.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), "raffleMatches", `raffle-1_${ownerAuth.uid}`), { eventId: "raffle-1", giverUid: ownerAuth.uid, recipientUid: otherAuth.uid });
+  });
+  await assertFails(getDoc(doc(dbFor(ownerAuth), "raffleMatches", `raffle-1_${ownerAuth.uid}`)));
+  await assertFails(getDoc(doc(dbFor(otherAuth), "raffleMatches", `raffle-1_${ownerAuth.uid}`)));
+  await assertFails(setDoc(doc(dbFor(ownerAuth), "raffleMatches", "fake"), { giverUid: ownerAuth.uid, recipientUid: ownerAuth.uid }));
+});
+
+test("92 - Kura sohbeti client tarafından başka UID veya katılım bypass ile yazılamaz", async () => {
+  await assertFails(setDoc(doc(dbFor(ownerAuth), "raffleMessages", "fake-message"), {
+    eventId: "raffle-1", senderUid: otherAuth.uid, senderName: "Başka kişi", message: "Merhaba", createdAt: serverTimestamp()
+  }));
+  await assertFails(setDoc(doc(dbFor(otherAuth), "raffleMessages", "nonparticipant-message"), {
+    eventId: "raffle-1", senderUid: otherAuth.uid, senderName: "Üye", message: "Merhaba", createdAt: serverTimestamp()
+  }));
+});

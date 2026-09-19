@@ -17,6 +17,7 @@ import AdminOrders from "../components/admin/AdminOrders";
 import AdminArchive from "../components/admin/AdminArchive";
 import AdminExceptions from "../components/admin/AdminExceptions";
 import AdminSystemStatus from "../components/admin/AdminSystemStatus";
+import AdminRaffles from "../components/admin/AdminRaffles";
 import productFallback from "../assets/product-fallback.svg";
 
 import "../styles/pages/admin.css";
@@ -223,11 +224,12 @@ className="admin-action-btn admin-approve"
 </div>}
 
 <nav className="admin-section-nav" aria-label="Admin bölümleri">
-{[["dashboard","Dashboard"],["actions","İşlem Gerektirenler"],["orders","Siparişler"],["users","Kullanıcılar"],["listings","İlanlar"],["finance","Finans"],["system","Sistem Durumu"],["archive","Arşiv"]].map(([key,label]) => <button type="button" key={key} className={activeSection === key ? "active" : ""} onClick={() => setActiveSection(key)}>{label}</button>)}
+{[["dashboard","Dashboard"],["actions","İşlem Gerektirenler"],["orders","Siparişler"],["users","Kullanıcılar"],["listings","İlanlar"],["finance","Finans"],["raffles","Kura"],["system","Sistem Durumu"],["archive","Arşiv"]].map(([key,label]) => <button type="button" key={key} className={activeSection === key ? "active" : ""} onClick={() => setActiveSection(key)}>{label}</button>)}
 </nav>
 
 {activeSection === "dashboard" && <AdminOperationsOverview />}
 {activeSection === "system" && <AdminSystemStatus />}
+{activeSection === "raffles" && <AdminRaffles />}
 {activeSection === "actions" && <><AdminExceptions onInspectOrder={(orderId) => { setIncelenecekSiparisId(orderId); setActiveSection("orders"); }} /><AdminOrderClaims /></>}
 {activeSection === "orders" && <AdminOrders initialOrderId={incelenecekSiparisId} onInitialOrderHandled={() => setIncelenecekSiparisId("")} />}
 {activeSection === "finance" && <div className="admin-finance-split"><article><h2>Marketplace Settlement</h2><p>Marketplace satıcı kazançları iyzico settlement akışında izlenir. Bu bölümden manuel ödeme başlatılmaz.</p></article><article><h2>Legacy / İç Bakiye</h2><p>Eski iç bakiye ve para çekme kayıtları ayrı muhasebe alanıdır.</p></article></div>}

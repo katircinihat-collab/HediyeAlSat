@@ -1,0 +1,9 @@
+{
+  "statuses": ["UPCOMING", "OPEN", "DRAWING", "MATCHED", "COMPLETED", "CANCELLED"],
+  "joinableStatuses": ["OPEN"],
+  "xpReason": "RAFFLE_JOIN",
+  "refundReason": "RAFFLE_REFUND",
+  "maxParticipants": 200,
+  "giftHintMaxLength": 240,
+  "messageMaxLength": 500
+}

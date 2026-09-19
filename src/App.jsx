@@ -30,6 +30,7 @@ import Kiralik from "./pages/Kiralik";
 import AdminDetail from "./pages/AdminDetail";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import Raffle from "./pages/Raffle";
 
 import Listings from "./pages/Listings";
 
@@ -208,6 +209,8 @@ function App() {
             path="/hediye-fikirleri"
             element={<GiftIdeasPage />}
           />
+
+          <Route path="/kura" element={<Raffle />} />
 
           <Route
             path="/sponsor-magaza"

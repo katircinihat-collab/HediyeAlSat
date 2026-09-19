@@ -11,6 +11,7 @@ const sponsorStoreController = require("../controllers/sponsorStoreController");
 const adminOperationsController = require("../controllers/adminOperationsController");
 const adminOrderController = require("../controllers/adminOrderController");
 const systemStatusController = require("../controllers/systemStatusController");
+const raffleController = require("../controllers/raffleController");
 
 const router = express.Router();
 
@@ -20,6 +21,11 @@ router.get("/me", adminListingController.me);
 router.get("/listings", adminListingController.list);
 router.get("/overview", adminOperationsController.overview);
 router.put("/system-status", systemStatusController.update);
+router.get("/raffles", raffleController.adminList);
+router.post("/raffles", raffleController.adminCreate);
+router.patch("/raffles/:eventId", raffleController.adminUpdate);
+router.post("/raffles/:eventId/draw", raffleController.adminDraw);
+router.post("/raffles/:eventId/cancel", raffleController.adminCancel);
 router.get("/users", adminOperationsController.listUsers);
 router.patch("/users/:uid/status", adminOperationsController.updateUserStatus);
 router.get("/audit-logs", adminOperationsController.auditLogs);

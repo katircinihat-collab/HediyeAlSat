@@ -327,6 +327,24 @@ service cloud.firestore {
       allow read, create, update, delete: if false;
     }
 
+    // Kura etkinliği, katılım, gizli eşleşme ve sohbet mutationları yalnız
+    // auth/admin doğrulamalı backend üzerinden yapılır.
+    match /raffleEvents/{eventId} {
+      allow read, create, update, delete: if false;
+    }
+
+    match /raffleParticipants/{participantId} {
+      allow read, create, update, delete: if false;
+    }
+
+    match /raffleMatches/{matchId} {
+      allow read, create, update, delete: if false;
+    }
+
+    match /raffleMessages/{messageId} {
+      allow read, create, update, delete: if false;
+    }
+
     match /orderClaims/{claimId} {
       allow read: if isAdmin()
         || (signedIn() && (resource.data.buyerUid == request.auth.uid

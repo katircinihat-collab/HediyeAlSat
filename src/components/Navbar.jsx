@@ -646,6 +646,10 @@ function Navbar() {
             💡 <span>Hediye Fikirleri</span>
           </NavLink>
 
+          <NavLink to="/kura">
+            🎲 <span>Kura</span>
+          </NavLink>
+
           <Link to="/#ozel-gunler" onClick={ozelGunlereGit}>
             🎁 <span>Kime Hediye Arıyorsun?</span>
           </Link>

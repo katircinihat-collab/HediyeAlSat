@@ -18,13 +18,13 @@ test("HediyeCep tek sağ alt merkez olarak mevcut sohbeti içerir", () => {
 });
 
 test("HediyeCep yalnız gerçek uygulama route'larını kullanır", () => {
-  for (const route of ["/a4-tasarimlar", "/hediye-fikirleri"]) {
+  for (const route of ["/a4-tasarimlar", "/hediye-fikirleri", "/kura"]) {
     assert.match(app, new RegExp(`path="${route}"`));
     assert.match(chat, new RegExp(route.replace("/", "\\/")));
   }
   assert.match(home, /id="hediye-kapismasi"|<GiftBattle \/>/);
   assert.match(chat, /\/#hediye-kapismasi/);
-  assert.doesNotMatch(chat, /Kura/);
+  assert.match(chat, /Kura/);
 });
 
 test("misafir sorgu açmaz, önizleme üç ve açık sohbet elli mesajla sınırlıdır", () => {
