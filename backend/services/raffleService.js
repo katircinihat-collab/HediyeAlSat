@@ -20,6 +20,9 @@ function toDate(value) {
 
 function publicEvent(id, data = {}) {
     const serialize = (value) => toDate(value)?.toISOString() || null;
+    const suggestedGiftBudget = [data.suggestedGiftBudget, data.giftBudgetMin, data.minGiftBudget]
+        .map(Number)
+        .find((value) => Number.isFinite(value) && value > 0) || null;
     return {
         id,
         title: data.title || "Kura",
@@ -30,8 +33,7 @@ function publicEvent(id, data = {}) {
         drawAt: serialize(data.drawAt),
         participantCount: Math.max(0, Number(data.participantCount) || 0),
         xpCost: xpConfig.events.RAFFLE_JOIN.amount,
-        giftBudgetMin: Number(data.giftBudgetMin) || null,
-        giftBudgetMax: Number(data.giftBudgetMax) || null
+        suggestedGiftBudget
     };
 }
 

@@ -147,9 +147,17 @@ function validateEventInput(body, partial = false) {
         if (!["UPCOMING", "OPEN"].includes(body.status)) throw new RaffleError("Kura başlangıç durumu geçersiz.");
         data.status = body.status;
     }
-    if (body.giftBudgetMin !== undefined) data.giftBudgetMin = Math.max(0, Number(body.giftBudgetMin) || 0);
-    if (body.giftBudgetMax !== undefined) data.giftBudgetMax = Math.max(0, Number(body.giftBudgetMax) || 0);
-    if (data.giftBudgetMin && data.giftBudgetMax && data.giftBudgetMin > data.giftBudgetMax) throw new RaffleError("Hediye bütçe aralığı geçersiz.");
+    if (!partial || body.suggestedGiftBudget !== undefined) {
+        if (body.suggestedGiftBudget === "" || body.suggestedGiftBudget === null || body.suggestedGiftBudget === undefined) {
+            data.suggestedGiftBudget = null;
+        } else {
+            const suggestedGiftBudget = Number(body.suggestedGiftBudget);
+            if (!Number.isFinite(suggestedGiftBudget) || suggestedGiftBudget <= 0 || suggestedGiftBudget > 1000000) {
+                throw new RaffleError("Önerilen hediye bütçesi geçerli pozitif bir tutar olmalıdır.", 400, "RAFFLE_INVALID_SUGGESTED_BUDGET");
+            }
+            data.suggestedGiftBudget = suggestedGiftBudget;
+        }
+    }
     return data;
 }
 

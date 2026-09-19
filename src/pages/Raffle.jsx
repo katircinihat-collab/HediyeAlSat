@@ -117,7 +117,7 @@ function Raffle() {
       : <>
         <section className="raffle-card">
           <div className="raffle-card__main"><p className={`raffle-status raffle-status--${event.status.toLowerCase()}`}>{event.status === "OPEN" ? "Katılım Açık" : event.status === "MATCHED" ? "Kura Çekildi" : "Yakında"}</p><h2>{event.title}</h2><p>{event.description}</p>
-            <div className="raffle-metrics"><div><small>Kura çekimine</small><strong>{time?.done ? "Süre tamamlandı" : time?.text}</strong></div><div><small>Katılımcı</small><strong>{event.participantCount}</strong></div><div><small>Katılım</small><strong>⭐ {event.xpCost} XP</strong></div>{event.giftBudgetMin && <div><small>Önerilen bütçe</small><strong>{event.giftBudgetMin}–{event.giftBudgetMax || event.giftBudgetMin} TL</strong></div>}</div>
+            <div className="raffle-metrics"><div><small>Kura çekimine</small><strong>{time?.done ? "Süre tamamlandı" : time?.text}</strong></div><div><small>Katılımcı</small><strong>{event.participantCount}</strong></div><div><small>Katılım</small><strong>⭐ {event.xpCost} XP</strong></div>{event.suggestedGiftBudget && <div><small>🎁 Önerilen hediye bütçesi</small><strong>{event.suggestedGiftBudget.toLocaleString("tr-TR")} TL</strong><small>Bu tutar yalnızca öneridir; hediye değerinde alt veya üst sınır yoktur.</small></div>}</div>
           </div>
           <aside className="raffle-join">
             {user ? <><p>Kullanılabilir XP</p><strong>{me?.availableXP ?? 0} XP ⭐</strong>

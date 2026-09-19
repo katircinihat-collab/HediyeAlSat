@@ -15,6 +15,17 @@ test("Kura sayfası tagline, countdown, 100 XP taahhüt ve temel durumları gös
   assert.match(page, /countdown/);
 });
 
+test("Kura bütçesi tek opsiyonel öneridir ve boşken kullanıcı satırı render edilmez", () => {
+  const page = read("src/pages/Raffle.jsx");
+  const admin = read("src/components/admin/AdminRaffles.jsx");
+  assert.match(admin, /Önerilen Hediye Bütçesi \(Opsiyonel\)/);
+  assert.match(admin, /Boş bırakılırsa herhangi bir hediye tutarı sınırı uygulanmaz/);
+  assert.doesNotMatch(admin, /Min\. hediye bütçesi|Maks\. hediye bütçesi/);
+  assert.match(page, /event\.suggestedGiftBudget &&/);
+  assert.match(page, /Bu tutar yalnızca öneridir; hediye değerinde alt veya üst sınır yoktur/);
+  assert.doesNotMatch(page, /giftBudgetMin|giftBudgetMax/);
+});
+
 test("Kura sohbeti katılımcı olmayan kullanıcıya yazma alanı açmaz ve gizlilik uyarısı verir", () => {
   const page = read("src/pages/Raffle.jsx");
   assert.match(page, /me\?\.joined \? <form/);

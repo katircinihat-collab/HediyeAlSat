@@ -1,8 +1,9 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const {
-  joinRaffle, cancelParticipation, deterministicOrder, drawRaffle
+  joinRaffle, cancelParticipation, deterministicOrder, drawRaffle, publicEvent
 } = require("../backend/services/raffleService");
+const { validateEventInput } = require("../backend/controllers/raffleController");
 
 const FieldValue = {
   serverTimestamp: () => "server-time",
@@ -64,6 +65,30 @@ function openSeed(balance = 100) {
 
 const user = { uid: "u1", name: "Ayşe" };
 const now = new Date("2026-09-19T12:00:00Z");
+
+const eventInput = (overrides = {}) => ({
+  title: "Topluluk Kurası", description: "", status: "UPCOMING",
+  joinStartAt: "2026-09-20", joinEndAt: "2026-09-21", drawAt: "2026-09-22",
+  ...overrides
+});
+
+test("Kura bütçesiz veya tek opsiyonel önerilen bütçeyle oluşturulabilir", () => {
+  assert.equal(validateEventInput(eventInput()).suggestedGiftBudget, null);
+  assert.equal(validateEventInput(eventInput({ suggestedGiftBudget: "500" })).suggestedGiftBudget, 500);
+  assert.equal(validateEventInput(eventInput({ suggestedGiftBudget: "" })).suggestedGiftBudget, null);
+});
+
+test("geçersiz veya negatif önerilen bütçe reddedilir", () => {
+  for (const suggestedGiftBudget of [-1, 0, "geçersiz", 1000001]) {
+    assert.throws(() => validateEventInput(eventInput({ suggestedGiftBudget })), (error) => error.code === "RAFFLE_INVALID_SUGGESTED_BUDGET");
+  }
+});
+
+test("eski min bütçe alanları yalnız güvenli öneri fallback'i olarak okunur", () => {
+  assert.equal(publicEvent("legacy", { giftBudgetMin: 350, giftBudgetMax: 800 }).suggestedGiftBudget, 350);
+  assert.equal(publicEvent("legacy-2", { minGiftBudget: 400, maxGiftBudget: 900 }).suggestedGiftBudget, 400);
+  assert.equal(publicEvent("new", { suggestedGiftBudget: 500, giftBudgetMin: 350 }).suggestedGiftBudget, 500);
+});
 
 test("Kura katılımı 100 availableXP düşürür, lifetimeXP değişmez ve ipucunu kaydeder", async () => {
   const db = memoryFirestore(openSeed());

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { adminApi } from "../../config/adminApi";
 
-const emptyForm = { title: "", description: "", status: "UPCOMING", joinStartAt: "", joinEndAt: "", drawAt: "", giftBudgetMin: "", giftBudgetMax: "" };
+const emptyForm = { title: "", description: "", status: "UPCOMING", joinStartAt: "", joinEndAt: "", drawAt: "", suggestedGiftBudget: "" };
 const localDateTime = (value) => value ? new Date(value).toISOString().slice(0, 16) : "";
 
 function AdminRaffles() {
@@ -33,7 +33,7 @@ function AdminRaffles() {
 
   function edit(item) {
     setEditingId(item.id);
-    setForm({ title: item.title, description: item.description || "", status: item.status, joinStartAt: localDateTime(item.joinStartAt), joinEndAt: localDateTime(item.joinEndAt), drawAt: localDateTime(item.drawAt), giftBudgetMin: item.giftBudgetMin || "", giftBudgetMax: item.giftBudgetMax || "" });
+    setForm({ title: item.title, description: item.description || "", status: item.status, joinStartAt: localDateTime(item.joinStartAt), joinEndAt: localDateTime(item.joinEndAt), drawAt: localDateTime(item.drawAt), suggestedGiftBudget: item.suggestedGiftBudget || "" });
   }
 
   async function action(item, type) {
@@ -63,8 +63,7 @@ function AdminRaffles() {
       <label>Katılım başlangıcı<input required type="datetime-local" value={form.joinStartAt} onChange={(e) => setForm((v) => ({ ...v, joinStartAt: e.target.value }))} /></label>
       <label>Katılım bitişi<input required type="datetime-local" value={form.joinEndAt} onChange={(e) => setForm((v) => ({ ...v, joinEndAt: e.target.value }))} /></label>
       <label>Kura zamanı<input required type="datetime-local" value={form.drawAt} onChange={(e) => setForm((v) => ({ ...v, drawAt: e.target.value }))} /></label>
-      <label>Min. hediye bütçesi<input type="number" min="0" value={form.giftBudgetMin} onChange={(e) => setForm((v) => ({ ...v, giftBudgetMin: e.target.value }))} /></label>
-      <label>Maks. hediye bütçesi<input type="number" min="0" value={form.giftBudgetMax} onChange={(e) => setForm((v) => ({ ...v, giftBudgetMax: e.target.value }))} /></label>
+      <label>Önerilen Hediye Bütçesi (Opsiyonel)<input type="number" min="1" step="0.01" value={form.suggestedGiftBudget} onChange={(e) => setForm((v) => ({ ...v, suggestedGiftBudget: e.target.value }))} /><small>Boş bırakılırsa herhangi bir hediye tutarı sınırı uygulanmaz.</small></label>
       <button type="submit" disabled={Boolean(busy)}>{busy === "save" ? "Kaydediliyor..." : editingId ? "Değişiklikleri Kaydet" : "Yeni Kura Oluştur"}</button>
       {editingId && <button type="button" className="admin-reject" onClick={() => { setEditingId(""); setForm(emptyForm); }} disabled={Boolean(busy)}>Düzenlemeyi İptal Et</button>}
     </form>
