@@ -36,6 +36,17 @@
 
 .battle-flag { display: none; }
 
+.community-battle-empty {
+  display: grid;
+  justify-items: center;
+  gap: 16px;
+}
+
+.community-battle-empty h2,
+.community-battle-empty p { margin: 0; }
+
+.community-battle-empty a { display: inline-flex; align-items: center; justify-content: center; }
+
 .community-battle-image {
   position: relative;
   z-index: 1;

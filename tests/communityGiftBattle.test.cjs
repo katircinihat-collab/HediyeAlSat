@@ -31,8 +31,15 @@ test("frontend kırmızı-sol mavi-sağ, VS, paylaşım ve gizli sonuç sözleş
   const root = path.join(__dirname, "..");
   const arena = fs.readFileSync(path.join(root, "src/components/CommunityGiftBattleArena.jsx"), "utf8");
   const page = fs.readFileSync(path.join(root, "src/pages/GiftBattles.jsx"), "utf8");
+  const styles = fs.readFileSync(path.join(root, "src/styles/components/community-gift-battle.css"), "utf8");
   assert.match(arena, /side=\"A\"/); assert.match(arena, /side=\"B\"/); assert.match(arena, />VS</);
   assert.match(page, /WhatsApp'ta Paylaş/); assert.match(page, /Linki Kopyala/); assert.match(page, /from: location\.pathname/);
+  assert.match(arena, /ownerView \? "🔎 Ürünü İncele" : "🎁 Bunu Al"/);
+  assert.match(arena, /<b>\{percentage\}%<\/b>/);
+  assert.match(page, /<Link to="\/sepet">← Sepete Dön<\/Link>/);
+  assert.match(styles, /\.community-battle-empty\s*\{[^}]*display:\s*grid;[^}]*gap:\s*16px;/s);
+  assert.match(styles, /\.battle-flag\s*\{\s*display:\s*none;/);
+  assert.match(styles, /\.community-battle-vs::after\s*\{\s*content:\s*none;/);
 });
 
 test("sepet oluşturucu tam iki ürün, ücretsiz ve 150 karakter sözleşmesini taşır", () => {
