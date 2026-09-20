@@ -271,7 +271,7 @@ function ProductCard({ ilan, cardExtra = null, variant = "" }) {
 
           resim:
 
-            ilan.resim ||
+            ilan.resim || ilan.resimler?.[0] ||
 
             productFallback,
 
@@ -360,6 +360,12 @@ function ProductCard({ ilan, cardExtra = null, variant = "" }) {
           alt={
             ilan.baslik
           }
+
+          loading="lazy"
+
+          onError={(event) => {
+            if (event.currentTarget.src !== productFallback) event.currentTarget.src = productFallback;
+          }}
 
         />
 

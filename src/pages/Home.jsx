@@ -35,6 +35,7 @@ import SponsorBanner from "../components/SponsorBanner";
 import PublicChat from "../components/chat/PublicChat";
 import useSponsoredContent from "../hooks/useSponsoredContent";
 import { sortListingsByBoost } from "../utils/listingBoost";
+import { selectDailyProduct } from "../utils/dailyProduct";
 
 import "../styles/pages/home.css";
 
@@ -43,6 +44,7 @@ function Home() {
   const [ilanlar, setIlanlar] = useState([]);
   const [ilanlarYukleniyor, setIlanlarYukleniyor] = useState(true);
   const sponsored = useSponsoredContent();
+  const dailyProduct = selectDailyProduct(ilanlar);
 
   const [searchParams, setSearchParams] =
     useSearchParams();
@@ -305,7 +307,7 @@ function Home() {
         ]}
       />
 
-      <Navbar />
+      <Navbar dailyProduct={dailyProduct} />
 
       <FlashSale ilanlar={gosterTrend} />
 

@@ -13,6 +13,12 @@ const QUESTIONS = [
 
 const GIFT_BATTLE_TIMEOUT_MS = 7000;
 const GIFT_BATTLE_CANDIDATE_LIMIT = 100;
+const COMMUNITY_FEED_CACHE_MS = 15000;
+let communityFeedCache = { expiresAt: 0, battles: null };
+
+function clearCommunityFeedCache() {
+    communityFeedCache = { expiresAt: 0, battles: null };
+}
 
 function withTimeout(promise, timeoutMs = GIFT_BATTLE_TIMEOUT_MS) {
     let timer;
@@ -294,6 +300,7 @@ function communityError(error, res, next) {
 exports.createCommunityBattle = async (req, res, next) => {
     try {
         const battle = await communityService.createBattle({ firestore, FieldValue, user: req.user, productIds: req.body?.productIds, question: req.body?.question });
+        clearCommunityFeedCache();
         return res.status(201).json({ success: true, battle });
     } catch (error) { return communityError(error, res, next); }
 };
@@ -307,20 +314,26 @@ exports.getCommunityBattle = async (req, res, next) => {
 
 exports.feedCommunityBattles = async (req, res, next) => {
     try {
+        const requestedLimit = Math.min(12, Math.max(1, Number(req.query.limit) || 8));
+        if (communityFeedCache.battles && communityFeedCache.expiresAt > Date.now()) {
+            return res.json({ success: true, battles: communityFeedCache.battles.slice(0, requestedLimit) });
+        }
         const snapshot = await withTimeout(firestore.collection("communityGiftBattles").where("status", "==", communityService.STATUS.ACTIVE).limit(30).get());
         const now = Date.now();
         const battles = snapshot.docs.map((doc) => ({ id: doc.id, data: doc.data() }))
             .filter(({ data }) => data.expiresAt?.toDate?.().getTime() > now)
             .sort((a, b) => (Number(a.data.votesA || 0) + Number(a.data.votesB || 0)) - (Number(b.data.votesA || 0) + Number(b.data.votesB || 0)) || Math.random() - .5)
-            .slice(0, Math.min(12, Math.max(1, Number(req.query.limit) || 8)))
+            .slice(0, 12)
             .map(({ id, data }) => communityService.publicBattle(id, data));
-        return res.json({ success: true, battles });
+        communityFeedCache = { battles, expiresAt: Date.now() + COMMUNITY_FEED_CACHE_MS };
+        return res.json({ success: true, battles: battles.slice(0, requestedLimit) });
     } catch (error) { return communityError(error, res, next); }
 };
 
 exports.voteCommunityBattle = async (req, res, next) => {
     try {
         const result = await communityService.voteBattle({ firestore, FieldValue, user: req.user, battleId: req.params.battleId, choice: String(req.body?.choice || "").toUpperCase() });
+        clearCommunityFeedCache();
         return res.status(201).json({ success: true, ...result });
     } catch (error) { return communityError(error, res, next); }
 };
@@ -339,6 +352,7 @@ exports.endCommunityBattle = async (req, res, next) => {
             if (guardSnap.exists) tx.update(guardRef, { [`active.${req.params.battleId}`]: FieldValue.delete(), updatedAt: FieldValue.serverTimestamp() });
         });
         const context = await communityService.loadBattleContext({ firestore, battleId: req.params.battleId, user: req.user });
+        clearCommunityFeedCache();
         return res.json({ success: true, battle: context.battle });
     } catch (error) { return communityError(error, res, next); }
 };
@@ -361,6 +375,7 @@ exports.adminRemoveCommunityBattle = async (req, res, next) => {
             const guardRef = firestore.collection("communityGiftBattleOwnerGuards").doc(snap.data().ownerUid);
             if ((await guardRef.get()).exists) await guardRef.update({ [`active.${req.params.battleId}`]: FieldValue.delete(), updatedAt: FieldValue.serverTimestamp() });
         }
+        clearCommunityFeedCache();
         return res.json({ success: true });
     } catch (error) { return next(error); }
 };

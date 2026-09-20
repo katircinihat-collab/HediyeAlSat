@@ -1,7 +1,7 @@
 import { createContext } from "react";
 
 export const DEFAULT_SYSTEM_STATUS = Object.freeze({
-  announcement: { enabled: false, message: "", type: "info", dismissible: true },
+  announcement: { enabled: false, message: "", type: "info", dismissible: true, version: "" },
   maintenance: {
     enabled: false,
     title: "Kısa Bir Bakımdayız",
@@ -12,12 +12,21 @@ export const DEFAULT_SYSTEM_STATUS = Object.freeze({
 export function normalizeSystemStatus(value = {}) {
   const announcement = value.announcement || {};
   const maintenance = value.maintenance || {};
+  const updatedAt = value.updatedAt;
+  const version = typeof announcement.version === "string" && announcement.version.trim()
+    ? announcement.version.trim()
+    : typeof updatedAt?.toMillis === "function"
+      ? String(updatedAt.toMillis())
+      : updatedAt?.seconds !== undefined
+        ? `${updatedAt.seconds}:${updatedAt.nanoseconds || 0}`
+        : "";
   return {
     announcement: {
       enabled: announcement.enabled === true,
       message: typeof announcement.message === "string" ? announcement.message.trim() : "",
       type: ["info", "warning", "maintenance", "payment", "order"].includes(announcement.type) ? announcement.type : "info",
-      dismissible: announcement.dismissible !== false
+      dismissible: announcement.dismissible !== false,
+      version
     },
     maintenance: {
       enabled: maintenance.enabled === true,

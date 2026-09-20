@@ -77,8 +77,8 @@
 .gift-ideas-grid img {
   max-width: 100%;
   width: 100%;
-  height: 220px;
-  object-fit: cover;
+  height: 100%;
+  object-fit: contain;
   display: block;
 }
 
@@ -156,9 +156,7 @@
     font-size: 36px;
   }
 
-  .gift-ideas-grid img {
-    height: 170px;
-  }
+  .gift-ideas-grid img { height: 100%; }
 
 }
 
@@ -172,8 +170,6 @@
     grid-template-columns: 1fr;
   }
 
-  .gift-ideas-grid img {
-    height: 220px;
-  }
+  .gift-ideas-grid img { height: 100%; }
 
 }

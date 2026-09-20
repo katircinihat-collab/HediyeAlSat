@@ -6,7 +6,10 @@ import "../styles/components/system-status.css";
 const ICONS = { info: "ℹ️", warning: "⚠️", maintenance: "🛠️", payment: "💳", order: "📦" };
 
 function SystemAnnouncement({ announcement }) {
-  const fingerprint = useMemo(() => `${announcement.type}:${announcement.message}`, [announcement.message, announcement.type]);
+  const fingerprint = useMemo(
+    () => `${announcement.version || "legacy"}:${announcement.type}:${announcement.message}`,
+    [announcement.message, announcement.type, announcement.version]
+  );
   const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {

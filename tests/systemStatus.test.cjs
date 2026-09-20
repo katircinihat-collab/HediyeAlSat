@@ -50,3 +50,20 @@ test("duyuru, fail-open listener ve responsive bakım yapısı mevcuttur", () =>
   assert.match(css, /100dvh/);
   assert.match(css, /@media \(max-width:480px\)/);
 });
+
+test("duyuru kapatma tercihi yayın sürümüne bağlıdır", () => {
+  const model = fs.readFileSync("src/context/systemStatus.js", "utf8");
+  const layer = fs.readFileSync("src/components/SystemStatusLayer.jsx", "utf8");
+  assert.match(model, /updatedAt\?\.toMillis/);
+  assert.match(model, /announcement\.version/);
+  assert.match(layer, /announcement\.version \|\| "legacy"/);
+  assert.match(layer, /sessionStorage\.getItem\("hediyealsat-dismissed-announcement"\) === fingerprint/);
+});
+
+test("localhost ve production aynı Firebase projesini ve public belgeyi kullanır", () => {
+  const firebase = fs.readFileSync("src/firebase.js", "utf8");
+  const provider = fs.readFileSync("src/context/SystemStatusProvider.jsx", "utf8");
+  assert.match(firebase, /projectId: "hediyealsat-61160"/);
+  assert.match(provider, /doc\(db, "systemSettings", "public"\)/);
+  assert.doesNotMatch(provider, /import\.meta\.env\.DEV|localhost|hardcoded/i);
+});

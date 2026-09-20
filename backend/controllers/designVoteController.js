@@ -1,4 +1,10 @@
 const { firestore, FieldValue } = require("../config/firebase");
+const TOP_DESIGNS_CACHE_MS = 60000;
+let topDesignsCache = { periodKey: "", expiresAt: 0, designs: null };
+
+function clearTopDesignsCache() {
+    topDesignsCache = { periodKey: "", expiresAt: 0, designs: null };
+}
 
 function currentWeekKey(now = new Date()) {
     const parts = new Intl.DateTimeFormat("en-CA", {
@@ -31,6 +37,9 @@ exports.top = async (req, res, next) => {
         const requestedLimit = Number(req.query.limit || 10);
         const limit = Math.min(10, Math.max(1, Number.isFinite(requestedLimit) ? requestedLimit : 10));
         const periodKey = currentWeekKey();
+        if (topDesignsCache.designs && topDesignsCache.periodKey === periodKey && topDesignsCache.expiresAt > Date.now()) {
+            return res.json({ success: true, periodKey, designs: topDesignsCache.designs.slice(0, limit) });
+        }
         const [votes, eligibleListings] = await Promise.all([
             firestore.collection("tasarimOylari")
                 .where("periodKey", "==", periodKey)
@@ -57,7 +66,7 @@ exports.top = async (req, res, next) => {
             .filter(({ listing }) => validDesign(listing))
             .sort((a, b) => b.oySayisi - a.oySayisi || a.listingId.localeCompare(b.listingId));
         const designs = ranked
-            .slice(0, limit)
+            .slice(0, 10)
             .map(({ listingId, listing, oySayisi }, index) => {
                 return {
                     id: listingId,
@@ -70,7 +79,8 @@ exports.top = async (req, res, next) => {
                 };
             });
 
-        res.json({ success: true, periodKey, designs });
+        topDesignsCache = { periodKey, designs, expiresAt: Date.now() + TOP_DESIGNS_CACHE_MS };
+        res.json({ success: true, periodKey, designs: designs.slice(0, limit) });
     } catch (error) {
         next(error);
     }
@@ -140,6 +150,7 @@ exports.create = async (req, res, next) => {
             if (voteSnap.exists) throw Object.assign(new Error("Bu tasarıma bu hafta zaten oy verdiniz."), { status: 409 });
             transaction.create(ref, { listingId, voterUid: req.user.uid, periodKey, createdAt: FieldValue.serverTimestamp() });
         });
+        clearTopDesignsCache();
 
         res.status(201).json({ success: true, listingId, periodKey });
     } catch (error) {
@@ -159,6 +170,7 @@ exports.remove = async (req, res, next) => {
             if (snap.data().voterUid !== req.user.uid) throw Object.assign(new Error("Bu oyu geri alamazsınız."), { status: 403 });
             transaction.delete(ref);
         });
+        clearTopDesignsCache();
         res.json({ success: true, listingId, periodKey });
     } catch (error) {
         if (error.status) return res.status(error.status).json({ success: false, message: error.message });

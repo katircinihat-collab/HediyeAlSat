@@ -81,7 +81,7 @@ test("her bölümün Tümünü Gör bağlantısı mevcut ilanlar routeuna gider"
 });
 
 test("üst akış, Günün Fırsatları, mağazalar ve diğer özel alanlar korunur", () => {
-  assert.match(home, /<Navbar \/>[\s\S]*<FlashSale ilanlar=\{gosterTrend\} \/>/);
+  assert.match(home, /<Navbar dailyProduct=\{dailyProduct\} \/>[\s\S]*<FlashSale ilanlar=\{gosterTrend\} \/>/);
   assert.match(home, /<FeaturedStores/);
   assert.match(home, /<GiftBattle \/>/);
   assert.match(home, /<GiftAssistant \/>/);

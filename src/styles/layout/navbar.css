@@ -155,6 +155,8 @@
   min-width: 0;
 }
 
+.feature-visual-product{display:grid;place-items:center;padding:5px;box-sizing:border-box}.feature-visual-product img{display:block;width:100%;height:122px;object-fit:contain;border-radius:12px;background:#fff;box-shadow:0 8px 20px rgba(73,49,31,.13)}
+
 .feature-paper {
   position: absolute;
   top: 7px;

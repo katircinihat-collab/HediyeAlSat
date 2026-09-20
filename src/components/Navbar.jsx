@@ -38,10 +38,10 @@ const FEATURE_ITEMS = [
   },
   {
     eyebrow: "GÜNÜN SÜRPRİZİ",
-    title: "Kura / Günün Ürünü",
-    text: "Günün sürpriz ürününü keşfet ve özel seçkileri takip et.",
+    title: "Günün Ürünü",
+    text: "Bugünün sürpriz ürünü hazırlanıyor.",
     to: null,
-    cta: "Yakında",
+    cta: "Seçki Hazırlanıyor",
     art: ["🎲", "🎀", "⭐"],
     perks: ["🎁 Günlük Sürpriz", "1️⃣ Tek Ürün", "✨ Özel Seçki"]
   },
@@ -65,7 +65,7 @@ const FEATURE_ITEMS = [
   }
 ];
 
-function Navbar() {
+function Navbar({ dailyProduct = null }) {
   const navigate = useNavigate();
   const location = useLocation();
   const menuRef = useRef(null);
@@ -270,11 +270,25 @@ function Navbar() {
     );
   }
 
-  const activeFeature = FEATURE_ITEMS[featureIndex];
+  const featureItems = FEATURE_ITEMS.map((item) => item.eyebrow !== "GÜNÜN SÜRPRİZİ" || !dailyProduct ? item : {
+    ...item,
+    title: "Günün Ürünü",
+    text: dailyProduct.baslik || "Bugünün sürpriz ürününü keşfet.",
+    to: `/ilan/${dailyProduct.id}`,
+    cta: "🎁 Günün Ürününü Gör",
+    image: dailyProduct.resim || dailyProduct.resimler?.[0] || "",
+    perks: [
+      `${Number(dailyProduct.fiyat || 0).toLocaleString("tr-TR")} TL`,
+      "🎁 Gerçek Ürün",
+      "✨ Bugünün Seçkisi"
+    ]
+  });
+  const activeFeature = featureItems[featureIndex];
 
   const featureContent = (
     <>
-      <div className="feature-visual" aria-hidden="true">
+      <div className={`feature-visual${activeFeature.image ? " feature-visual-product" : ""}`} aria-hidden="true">
+        {activeFeature.image ? <img src={activeFeature.image} alt="" loading="lazy" /> : <>
         <div className="feature-paper feature-paper-one">
           <span>{activeFeature.art[0]}</span>
         </div>
@@ -286,6 +300,7 @@ function Navbar() {
         <div className="feature-paper feature-paper-three">
           <span>{activeFeature.art[2]}</span>
         </div>
+        </>}
       </div>
 
       <div className="feature-copy">
@@ -357,7 +372,7 @@ function Navbar() {
           </button>
 
           <div className="feature-dots" aria-label="Özellik seçimi">
-            {FEATURE_ITEMS.map((item, index) => (
+            {featureItems.map((item, index) => (
               <button
                 key={item.title}
                 type="button"

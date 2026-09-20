@@ -6,11 +6,19 @@ import "../styles/components/top-designs.css";
 
 function TopDesignShowcase() {
   const [designs, setDesigns] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  function load() {
+    setLoading(true); setError("");
+    return getTopDesigns(4)
+      .then((data) => setDesigns(data.designs || []))
+      .catch((requestError) => setError(requestError.message))
+      .finally(() => setLoading(false));
+  }
 
   useEffect(() => {
-    getTopDesigns(4)
-      .then((data) => setDesigns(data.designs || []))
-      .catch((error) => console.error("Top tasarımlar alınamadı:", error));
+    load();
   }, []);
 
   return (
@@ -23,7 +31,9 @@ function TopDesignShowcase() {
         <Link to="/top-10-tasarim">Tüm Top 10’u Gör →</Link>
       </header>
       <div className="top-design-grid">
-        {designs.length ? designs.map((design) => (
+        {loading ? Array.from({ length: 4 }, (_, index) => <span className="top-design-skeleton" key={index} aria-hidden="true" />) : error ? (
+          <div className="top-design-showcase-empty" role="alert">{error} <button type="button" onClick={load}>Tekrar Dene</button></div>
+        ) : designs.length ? designs.map((design) => (
           <TopDesignCard key={design.id} design={design} />
         )) : (
           <div className="top-design-showcase-empty">Bu hafta henüz oy alan tasarım bulunmuyor.</div>

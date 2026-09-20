@@ -14,15 +14,17 @@ function TopDesigns() {
   const [designs, setDesigns] = useState([]);
   const [votes, setVotes] = useState(new Set());
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [votingId, setVotingId] = useState("");
 
   const load = useCallback(async () => {
+    setError("");
     const data = await getTopDesigns(10);
     setDesigns(data.designs || []);
   }, []);
 
   useEffect(() => {
-    load().catch((error) => console.error(error)).finally(() => setLoading(false));
+    load().catch((requestError) => setError(requestError.message)).finally(() => setLoading(false));
     return onAuthStateChanged(auth, async (user) => {
       if (!user) return setVotes(new Set());
       try {
@@ -64,7 +66,9 @@ function TopDesigns() {
           <p>Bu haftanın en çok oy alan dijital tasarımlarını inceleyin ve favorinize oy verin.</p>
         </header>
         {loading ? (
-          <div className="top-design-state">Tasarımlar yükleniyor...</div>
+          <div className="top-design-ranking" aria-label="Tasarımlar yükleniyor" aria-busy="true">{Array.from({ length: 4 }, (_, index) => <span className="top-design-skeleton" key={index} aria-hidden="true" />)}</div>
+        ) : error ? (
+          <div className="top-design-state" role="alert">{error} <button type="button" onClick={() => { setLoading(true); load().catch((requestError) => setError(requestError.message)).finally(() => setLoading(false)); }}>Tekrar Dene</button></div>
         ) : designs.length ? (
           <div className="top-design-ranking">
             {designs.map((design) => (
