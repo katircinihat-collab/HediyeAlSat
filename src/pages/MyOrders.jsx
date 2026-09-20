@@ -53,10 +53,10 @@ function MyOrders() {
   }
 
   useEffect(() => {
-    let unsubscribeOrders = () => {};
+    let unsubscribeOrders = [];
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
-      unsubscribeOrders();
-      unsubscribeOrders = () => {};
+      unsubscribeOrders.forEach((unsubscribe) => unsubscribe());
+      unsubscribeOrders = [];
 
       if (!user?.email) {
         setSiparisler([]);
@@ -68,12 +68,16 @@ function MyOrders() {
       setLoading(true);
       setError("");
 
-      const q = query(
-        collection(db, "siparisler"),
-        where("kullanici", "==", user.email)
-      );
+      const sources = new Map();
+      const settled = new Set();
+      const failed = new Set();
+      const orderQueries = [
+        ["uid", query(collection(db, "siparisler"), where("aliciUid", "==", user.uid))],
+        ["email", query(collection(db, "siparisler"), where("alici", "==", user.email))],
+        ["legacy", query(collection(db, "siparisler"), where("kullanici", "==", user.email))]
+      ];
 
-      unsubscribeOrders = onSnapshot(q, (snap) => {
+      const publishOrders = () => {
         const timestamp = (order) => {
           const value = order.tarih || order.olusturmaTarihi;
           if (typeof value?.toMillis === "function") return value.toMillis();
@@ -81,20 +85,33 @@ function MyOrders() {
           const parsed = new Date(value || 0).getTime();
           return Number.isFinite(parsed) ? parsed : 0;
         };
-        const orders = snap.docs
-          .map((document) => ({ id: document.id, ...document.data() }))
-          .sort((left, right) => timestamp(right) - timestamp(left));
-        setSiparisler(orders);
+        const orders = [...sources.values()]
+          .flat()
+          .reduce((unique, order) => unique.set(order.id, order), new Map())
+          .values();
+        setSiparisler([...orders]
+          .sort((left, right) => timestamp(right) - timestamp(left)));
         setLoading(false);
+        setError("");
+      };
+
+      unsubscribeOrders = orderQueries.map(([key, orderQuery]) => onSnapshot(orderQuery, (snap) => {
+        sources.set(key, snap.docs.map((document) => ({ id: document.id, ...document.data() })));
+        settled.add(key);
+        publishOrders();
       }, () => {
-        setLoading(false);
-        setError("Siparişleriniz şu anda alınamıyor. Lütfen tekrar deneyin.");
-      });
+        settled.add(key);
+        failed.add(key);
+        if (settled.size === orderQueries.length && failed.size === orderQueries.length) {
+          setLoading(false);
+          setError("Siparişleriniz şu anda alınamıyor. Lütfen tekrar deneyin.");
+        }
+      }));
     });
 
     return () => {
       unsubscribeAuth();
-      unsubscribeOrders();
+      unsubscribeOrders.forEach((unsubscribe) => unsubscribe());
     };
 
   }, [retryVersion]);

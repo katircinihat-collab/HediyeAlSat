@@ -71,12 +71,15 @@ test("sipariş ekranları güvenli state ve gerçek aksiyonları kullanır", () 
   assert.match(seller, /!digital && canonicalDurum === "Hazırlanıyor"/);
 });
 
-test("Siparişlerim auth restore'u bekler ve composite index gerektirmeden kullanıcı siparişlerini sıralar", () => {
+test("Siparişlerim auth restore'u bekler ve modern/legacy kullanıcı siparişlerini index gerektirmeden birleştirir", () => {
   const list = read("src/pages/MyOrders.jsx");
   assert.match(list, /onAuthStateChanged\(auth/);
+  assert.match(list, /where\("aliciUid", "==", user\.uid\)/);
+  assert.match(list, /where\("alici", "==", user\.email\)/);
   assert.match(list, /where\("kullanici", "==", user\.email\)/);
   assert.doesNotMatch(list, /orderBy\("tarih"/);
+  assert.match(list, /reduce\(\(unique, order\) => unique\.set\(order\.id, order\), new Map\(\)\)/);
   assert.match(list, /\.sort\(\(left, right\) => timestamp\(right\) - timestamp\(left\)\)/);
   assert.match(list, /unsubscribeAuth\(\)/);
-  assert.match(list, /unsubscribeOrders\(\)/);
+  assert.match(list, /unsubscribeOrders\.forEach\(\(unsubscribe\) => unsubscribe\(\)\)/);
 });
