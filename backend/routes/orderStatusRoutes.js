@@ -4,6 +4,7 @@ const orderStatusController = require("../controllers/orderStatusController");
 const orderClaimController = require("../controllers/orderClaimController");
 
 const router = express.Router();
+router.get("/mine", authMiddleware, orderStatusController.listBuyerOrders);
 router.patch("/:orderId/status", authMiddleware, orderStatusController.updateSellerStatus);
 router.post("/:orderId/confirm-delivery", authMiddleware, orderStatusController.confirmDeliveryAsBuyer);
 router.post("/:orderId/claim", authMiddleware, orderClaimController.create);

@@ -1,12 +1,5 @@
 import { useEffect, useState } from "react";
-import { auth, db } from "../firebase";
-
-import {
-  collection,
-  query,
-  where,
-  onSnapshot
-} from "firebase/firestore";
+import { auth } from "../firebase";
 import { onAuthStateChanged } from "firebase/auth";
 
 import { Link } from "react-router-dom";
@@ -14,6 +7,7 @@ import { confirmOrderDelivery } from "../services/orderDeliveryApi";
 import OrderClaimForm from "../components/OrderClaimForm";
 import OrderTimeline from "../components/OrderTimeline";
 import { getDigitalDownload } from "../services/digitalDownloadApi";
+import { getBuyerOrders } from "../services/buyerOrdersApi";
 
 import { isDigitalOrder, normalizeOrderStatus } from "../utils/orderLifecycle";
 
@@ -53,10 +47,8 @@ function MyOrders() {
   }
 
   useEffect(() => {
-    let unsubscribeOrders = [];
-    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
-      unsubscribeOrders.forEach((unsubscribe) => unsubscribe());
-      unsubscribeOrders = [];
+    let active = true;
+    const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
 
       if (!user?.email) {
         setSiparisler([]);
@@ -67,51 +59,19 @@ function MyOrders() {
 
       setLoading(true);
       setError("");
-
-      const sources = new Map();
-      const settled = new Set();
-      const failed = new Set();
-      const orderQueries = [
-        ["uid", query(collection(db, "siparisler"), where("aliciUid", "==", user.uid))],
-        ["email", query(collection(db, "siparisler"), where("alici", "==", user.email))],
-        ["legacy", query(collection(db, "siparisler"), where("kullanici", "==", user.email))]
-      ];
-
-      const publishOrders = () => {
-        const timestamp = (order) => {
-          const value = order.tarih || order.olusturmaTarihi;
-          if (typeof value?.toMillis === "function") return value.toMillis();
-          if (typeof value?.toDate === "function") return value.toDate().getTime();
-          const parsed = new Date(value || 0).getTime();
-          return Number.isFinite(parsed) ? parsed : 0;
-        };
-        const orders = [...sources.values()]
-          .flat()
-          .reduce((unique, order) => unique.set(order.id, order), new Map())
-          .values();
-        setSiparisler([...orders]
-          .sort((left, right) => timestamp(right) - timestamp(left)));
-        setLoading(false);
-        setError("");
-      };
-
-      unsubscribeOrders = orderQueries.map(([key, orderQuery]) => onSnapshot(orderQuery, (snap) => {
-        sources.set(key, snap.docs.map((document) => ({ id: document.id, ...document.data() })));
-        settled.add(key);
-        publishOrders();
-      }, () => {
-        settled.add(key);
-        failed.add(key);
-        if (settled.size === orderQueries.length && failed.size === orderQueries.length) {
-          setLoading(false);
-          setError("Siparişleriniz şu anda alınamıyor. Lütfen tekrar deneyin.");
-        }
-      }));
+      try {
+        const orders = await getBuyerOrders();
+        if (active) setSiparisler(orders);
+      } catch (requestError) {
+        if (active) setError(requestError.message || "Siparişleriniz şu anda alınamıyor. Lütfen tekrar deneyin.");
+      } finally {
+        if (active) setLoading(false);
+      }
     });
 
     return () => {
       unsubscribeAuth();
-      unsubscribeOrders.forEach((unsubscribe) => unsubscribe());
+      active = false;
     };
 
   }, [retryVersion]);

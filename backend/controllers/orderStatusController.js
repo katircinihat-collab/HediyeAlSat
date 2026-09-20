@@ -1,6 +1,17 @@
 const { firestore, FieldValue } = require("../config/firebase");
 const { OrderStatusError, sellerOwnsOrder, buildSellerStatusUpdate } = require("../services/orderStatusService");
 const { DeliveryConfirmationError, confirmDelivery } = require("../services/deliveryConfirmationService");
+const { listBuyerOrders } = require("../services/buyerOrderService");
+
+exports.listBuyerOrders = async (req, res) => {
+    try {
+        const orders = await listBuyerOrders({ uid: req.user.uid, email: req.user.email });
+        return res.json({ success: true, orders });
+    } catch (error) {
+        console.error("Buyer sipariş listesi alınamadı:", error?.code || error?.message || "unknown");
+        return res.status(500).json({ success: false, message: "Siparişleriniz şu anda alınamıyor. Lütfen tekrar deneyin." });
+    }
+};
 
 exports.updateSellerStatus = async (req, res) => {
     try {

@@ -9,7 +9,11 @@ const {
 } = require("@firebase/rules-unit-testing");
 const {
   doc,
+  collection,
   getDoc,
+  getDocs,
+  query,
+  where,
   setDoc,
   updateDoc,
   deleteDoc,
@@ -113,6 +117,7 @@ before(async () => {
       }),
       setDoc(doc(db, "siparisler", "owner-order"), {
         ilanId: "published",
+        aliciUid: ownerAuth.uid,
         alici: ownerAuth.email,
         satici: otherAuth.email,
         fiyat: 100,
@@ -121,6 +126,7 @@ before(async () => {
       }),
       setDoc(doc(db, "siparisler", "other-order"), {
         ilanId: "published",
+        aliciUid: otherAuth.uid,
         alici: otherAuth.email,
         satici: "seller@example.com",
         fiyat: 100,
@@ -396,6 +402,16 @@ test("20 - admin ilan yönetimi yapabilir", async () => {
 test("21 - kullanıcı kendi siparişini okuyabilir, başkasının siparişini okuyamaz", async () => {
   await assertSucceeds(getDoc(doc(dbFor(ownerAuth), "siparisler", "owner-order")));
   await assertFails(getDoc(doc(dbFor(ownerAuth), "siparisler", "other-order")));
+});
+
+test("21q - production buyer ve seller list sorguları yalnız kendi siparişlerini döndürür", async () => {
+  const ownerDb = dbFor(ownerAuth);
+  const uidResult = await assertSucceeds(getDocs(query(collection(ownerDb, "siparisler"), where("aliciUid", "==", ownerAuth.uid))));
+  const emailResult = await assertSucceeds(getDocs(query(collection(ownerDb, "siparisler"), where("alici", "==", ownerAuth.email))));
+  const sellerResult = await assertSucceeds(getDocs(query(collection(dbFor(otherAuth), "siparisler"), where("satici", "==", otherAuth.email))));
+  assert.deepEqual(uidResult.docs.map((item) => item.id), ["owner-order"]);
+  assert.deepEqual(emailResult.docs.map((item) => item.id), ["owner-order"]);
+  assert.deepEqual(sellerResult.docs.map((item) => item.id), ["owner-order"]);
 });
 
 test("21a - satıcı sipariş durumunu Firestore'dan doğrudan değiştiremez", async () => {

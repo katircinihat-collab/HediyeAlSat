@@ -71,15 +71,13 @@ test("sipariş ekranları güvenli state ve gerçek aksiyonları kullanır", () 
   assert.match(seller, /!digital && canonicalDurum === "Hazırlanıyor"/);
 });
 
-test("Siparişlerim auth restore'u bekler ve modern/legacy kullanıcı siparişlerini index gerektirmeden birleştirir", () => {
+test("Siparişlerim auth restore'u bekler ve siparişleri güvenli backend endpointinden alır", () => {
   const list = read("src/pages/MyOrders.jsx");
+  const api = read("src/services/buyerOrdersApi.js");
   assert.match(list, /onAuthStateChanged\(auth/);
-  assert.match(list, /where\("aliciUid", "==", user\.uid\)/);
-  assert.match(list, /where\("alici", "==", user\.email\)/);
-  assert.match(list, /where\("kullanici", "==", user\.email\)/);
-  assert.doesNotMatch(list, /orderBy\("tarih"/);
-  assert.match(list, /reduce\(\(unique, order\) => unique\.set\(order\.id, order\), new Map\(\)\)/);
-  assert.match(list, /\.sort\(\(left, right\) => timestamp\(right\) - timestamp\(left\)\)/);
+  assert.match(list, /await getBuyerOrders\(\)/);
+  assert.doesNotMatch(list, /collection\(db, "siparisler"\)/);
+  assert.match(api, /getIdToken\(\)/);
+  assert.match(api, /\/api\/orders\/mine/);
   assert.match(list, /unsubscribeAuth\(\)/);
-  assert.match(list, /unsubscribeOrders\.forEach\(\(unsubscribe\) => unsubscribe\(\)\)/);
 });
