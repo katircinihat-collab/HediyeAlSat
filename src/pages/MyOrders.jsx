@@ -5,9 +5,9 @@ import {
   collection,
   query,
   where,
-  onSnapshot,
-  orderBy
+  onSnapshot
 } from "firebase/firestore";
+import { onAuthStateChanged } from "firebase/auth";
 
 import { Link } from "react-router-dom";
 import { confirmOrderDelivery } from "../services/orderDeliveryApi";
@@ -53,46 +53,49 @@ function MyOrders() {
   }
 
   useEffect(() => {
+    let unsubscribeOrders = () => {};
+    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+      unsubscribeOrders();
+      unsubscribeOrders = () => {};
 
-    if (!auth.currentUser) {
-      setLoading(false);
-      setError("Siparişlerinizi görmek için giriş yapmalısınız.");
-      return undefined;
-    }
+      if (!user?.email) {
+        setSiparisler([]);
+        setLoading(false);
+        setError("Siparişlerinizi görmek için giriş yapmalısınız.");
+        return;
+      }
 
-    setLoading(true);
-    setError("");
+      setLoading(true);
+      setError("");
 
-    const q = query(
-      collection(db, "siparisler"),
-      where(
-        "kullanici",
-        "==",
-        auth.currentUser.email
-      ),
-      orderBy("tarih", "desc")
-    );
-
-    const unsub = onSnapshot(q, (snap) => {
-
-      setSiparisler(
-
-        snap.docs.map((doc) => ({
-
-          id: doc.id,
-
-          ...doc.data()
-
-        }))
-
+      const q = query(
+        collection(db, "siparisler"),
+        where("kullanici", "==", user.email)
       );
-      setLoading(false);
-    }, () => {
-      setLoading(false);
-      setError("Siparişleriniz şu anda alınamıyor. Lütfen tekrar deneyin.");
+
+      unsubscribeOrders = onSnapshot(q, (snap) => {
+        const timestamp = (order) => {
+          const value = order.tarih || order.olusturmaTarihi;
+          if (typeof value?.toMillis === "function") return value.toMillis();
+          if (typeof value?.toDate === "function") return value.toDate().getTime();
+          const parsed = new Date(value || 0).getTime();
+          return Number.isFinite(parsed) ? parsed : 0;
+        };
+        const orders = snap.docs
+          .map((document) => ({ id: document.id, ...document.data() }))
+          .sort((left, right) => timestamp(right) - timestamp(left));
+        setSiparisler(orders);
+        setLoading(false);
+      }, () => {
+        setLoading(false);
+        setError("Siparişleriniz şu anda alınamıyor. Lütfen tekrar deneyin.");
+      });
     });
 
-    return () => unsub();
+    return () => {
+      unsubscribeAuth();
+      unsubscribeOrders();
+    };
 
   }, [retryVersion]);
 
