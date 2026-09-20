@@ -33,7 +33,7 @@ test("admin katılımcı listesi yalnız güvenli yönetim alanlarını döndür
     const res = response();
     await controller.adminParticipants({ params: { eventId: "r1" } }, res);
     assert.equal(res.statusCode, 200);
-    assert.deepEqual(Object.keys(res.payload.participants[0]).sort(), ["displayName", "giftHint", "joinedAt", "status"]);
+    assert.deepEqual(Object.keys(res.payload.participants[0]).sort(), ["deliveryReady", "displayName", "giftHint", "joinedAt", "status"]);
     assert.equal(JSON.stringify(res.payload).includes("userUid"), false);
   } finally { firestore.collection = original; }
 });

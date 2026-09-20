@@ -34,9 +34,25 @@ function publicEvent(id, data = {}) {
         drawAt: serialize(data.drawAt),
         createdAt: serialize(data.createdAt),
         participantCount: Math.max(0, Number(data.participantCount) || 0),
+        minimumParticipantCount: Math.max(2, Number(data.minimumParticipantCount) || 2),
         xpCost: xpConfig.events.RAFFLE_JOIN.amount,
         suggestedGiftBudget
     };
+}
+
+function normalizeDeliveryAddress(value = {}) {
+    const delivery = {
+        fullName: String(value.fullName || "").trim().replace(/\s+/g, " ").slice(0, 100),
+        phone: String(value.phone || "").replace(/\D/g, "").slice(0, 11),
+        address: String(value.address || "").trim().replace(/\s+/g, " ").slice(0, 500),
+        city: String(value.city || "").trim().replace(/\s+/g, " ").slice(0, 80),
+        district: String(value.district || "").trim().replace(/\s+/g, " ").slice(0, 80)
+    };
+    if (delivery.fullName.length < 3 || !/^05\d{9}$/.test(delivery.phone)
+        || delivery.address.length < 10 || !delivery.city || !delivery.district) {
+        throw new RaffleError("Kura'ya katılmak için geçerli teslimat adresini seçmelisin.", 400, "RAFFLE_DELIVERY_REQUIRED");
+    }
+    return delivery;
 }
 
 function validatePublicText(value, maxLength) {
@@ -61,7 +77,7 @@ function assertJoinWindow(event, now = new Date()) {
     if (end && now >= end) throw new RaffleError("Kura katılım süresi sona erdi.", 409, "RAFFLE_JOIN_CLOSED");
 }
 
-async function joinRaffle({ firestore, FieldValue, eventId, user, giftHint = "", now = new Date() }) {
+async function joinRaffle({ firestore, FieldValue, eventId, user, giftHint = "", deliveryAddress, now = new Date() }) {
     const eventRef = firestore.collection("raffleEvents").doc(eventId);
     const participantRef = firestore.collection("raffleParticipants").doc(`${eventId}_${user.uid}`);
     return firestore.runTransaction(async (transaction) => {
@@ -78,6 +94,7 @@ async function joinRaffle({ firestore, FieldValue, eventId, user, giftHint = "",
         if (Math.max(0, Number(event.participantCount) || 0) >= raffleConfig.maxParticipants) {
             throw new RaffleError("Kura katılımcı kapasitesi doldu.", 409, "RAFFLE_FULL");
         }
+        const normalizedDelivery = normalizeDeliveryAddress(deliveryAddress);
         const xp = await applyXpEventInTransaction({
             firestore, transaction, FieldValue, uid: user.uid,
             reason: raffleConfig.xpReason, sourceId: eventId, now
@@ -87,6 +104,8 @@ async function joinRaffle({ firestore, FieldValue, eventId, user, giftHint = "",
             userUid: user.uid,
             displayName: safeDisplayName(user.name || user.displayName),
             giftHint: validatePublicText(giftHint, raffleConfig.giftHintMaxLength),
+            deliveryAddress: normalizedDelivery,
+            deliveryReady: true,
             status: "ACTIVE",
             joinedAt: FieldValue.serverTimestamp(),
             updatedAt: FieldValue.serverTimestamp()
@@ -119,6 +138,8 @@ async function cancelParticipation({ firestore, FieldValue, eventId, uid, now = 
         });
         transaction.update(participantRef, {
             status: "CANCELLED",
+            deliveryAddress: null,
+            deliveryReady: false,
             cancelledAt: FieldValue.serverTimestamp(),
             updatedAt: FieldValue.serverTimestamp()
         });
@@ -152,7 +173,8 @@ async function drawRaffle({ firestore, FieldValue, eventId, adminUid, now = new 
         const drawAt = toDate(event.drawAt);
         if (!drawAt || now < drawAt) throw new RaffleError("Kura çekim zamanı henüz gelmedi.", 409, "RAFFLE_DRAW_TOO_EARLY");
         const participants = participantSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-        if (participants.length < 2) throw new RaffleError("Kura için en az iki katılımcı gerekir.", 409, "RAFFLE_NOT_ENOUGH_PARTICIPANTS");
+        const minimumParticipantCount = Math.max(2, Number(event.minimumParticipantCount) || 2);
+        if (participants.length < minimumParticipantCount) throw new RaffleError("Minimum katılımcı sayısına henüz ulaşılamadı.", 409, "RAFFLE_MINIMUM_NOT_REACHED");
         if (participants.length > raffleConfig.maxParticipants) throw new RaffleError("Kura güvenli katılımcı limitini aşıyor.", 409, "RAFFLE_TOO_MANY_PARTICIPANTS");
         const ordered = deterministicOrder(participants, eventId, seed);
         ordered.forEach((giver, index) => {
@@ -178,5 +200,5 @@ async function drawRaffle({ firestore, FieldValue, eventId, adminUid, now = new 
 
 module.exports = {
     raffleConfig, RaffleError, toDate, publicEvent, validatePublicText, safeDisplayName, assertJoinWindow,
-    joinRaffle, cancelParticipation, deterministicOrder, drawRaffle
+    joinRaffle, cancelParticipation, deterministicOrder, drawRaffle, normalizeDeliveryAddress
 };

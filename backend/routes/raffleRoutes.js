@@ -12,7 +12,10 @@ router.get("/:eventId/me", authMiddleware, controller.me);
 router.post("/:eventId/join", authMiddleware, controller.join);
 router.delete("/:eventId/join", authMiddleware, controller.cancel);
 router.patch("/:eventId/hint", authMiddleware, controller.updateHint);
+router.patch("/:eventId/delivery", authMiddleware, controller.updateDelivery);
 router.get("/:eventId/result", authMiddleware, controller.result);
+router.get("/:eventId/received-gift-status", authMiddleware, controller.receivedGiftStatus);
+router.get("/orders/:orderId/fulfillment", authMiddleware, controller.orderFulfillment);
 router.post("/:eventId/messages", authMiddleware, chatRateLimit, controller.sendMessage);
 
 module.exports = router;

@@ -24,6 +24,9 @@ function Cart() {
   const [kupon, setKupon] = useState("");
   const [urunler, setUrunler] = useState([]);
   const [sepetYukleniyor, setSepetYukleniyor] = useState(true);
+  const [raffleGiftActive, setRaffleGiftActive] = useState(() => {
+    try { return Boolean(window.sessionStorage.getItem("hediyealsat.raffleGiftEvent")); } catch { return false; }
+  });
 
   useEffect(() => {
 
@@ -223,6 +226,8 @@ function Cart() {
     <div className="page">
 
       <h1>🛒 Sepetim ({urunler.length})</h1>
+
+      {raffleGiftActive && <div className="order-claim-message" role="status"><strong>🎁 Kura hediyesi alışverişi</strong><p>Sepetindeki fiziksel ürünler sana çıkan kişi için gönderilecek. Açık teslimat adresi sana gösterilmez.</p><button type="button" onClick={() => { try { window.sessionStorage.removeItem("hediyealsat.raffleGiftEvent"); } catch { /* no-op */ } setRaffleGiftActive(false); }}>Normal alışverişe dön</button></div>}
 
       {
         sepetYukleniyor ? (

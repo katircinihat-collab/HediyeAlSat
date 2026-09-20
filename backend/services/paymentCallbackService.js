@@ -308,6 +308,18 @@ async function finalizePayment({ firestore, FieldValue, conversationId, paymentI
                         settlementStatus: payment.paymentGroup === "PRODUCT" ? "PROTECTED" : "NOT_APPLICABLE",
                         odemeTarihi: FieldValue.serverTimestamp(), guncellenmeTarihi: FieldValue.serverTimestamp()
                     });
+                    if (order.isRaffleGift === true && order.raffleEventId && order.aliciUid) {
+                        transaction.set(firestore.collection("raffleMatches").doc(`${order.raffleEventId}_${order.aliciUid}`), {
+                            giftOrderPaid: true,
+                            giftOrderId: order.id,
+                            giftOrderStatus: "PAID",
+                            updatedAt: FieldValue.serverTimestamp()
+                        }, { merge: true });
+                        transaction.set(firestore.collection("raffleOrderDeliveries").doc(order.id), {
+                            status: "PAID",
+                            updatedAt: FieldValue.serverTimestamp()
+                        }, { merge: true });
+                    }
                 } else if (digitalDelivery && order.teslimatDogrulandi !== true) {
                     transaction.update(order.ref, {
                         ...digitalDelivery,

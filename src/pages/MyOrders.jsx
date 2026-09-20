@@ -186,6 +186,8 @@ function MyOrders() {
 
   </div>
 
+  {siparis.isRaffleGift && <div className="order-claim-message">🎁 Kura Hediyesi · {siparis.raffleRecipientDisplayName || "Eşleşen kişi"} için</div>}
+
   <OrderTimeline order={siparis} />
 
   <div className="order-middle">

@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 
 function PaymentSuccess() {
@@ -5,6 +6,11 @@ function PaymentSuccess() {
   const [searchParams] = useSearchParams();
   const listingBoost = searchParams.get("type") === "listing-boost";
   const listingId = searchParams.get("listingId") || "";
+
+  useEffect(() => {
+    if (listingBoost) return;
+    try { window.sessionStorage.removeItem("hediyealsat.raffleGiftEvent"); } catch { /* storage unavailable */ }
+  }, [listingBoost]);
 
   return (
 

@@ -56,8 +56,10 @@ service cloud.firestore {
           "il", "ilce", "kargo", "siparisNotu", "durum", "odemeDurumu",
           "kargoNo", "teslimEdildi", "tarih", "olusturmaTarihi",
           "urunTipi", "fizikselKargo"
+          , "aliciUid", "isRaffleGift", "raffleEventId"
         ])
         && request.resource.data.alici == request.auth.token.email
+        && (!("aliciUid" in request.resource.data) || request.resource.data.aliciUid == request.auth.uid)
         && request.resource.data.ilanId is string
         && exists(/databases/$(database)/documents/ilanlar/$(request.resource.data.ilanId))
         && get(/databases/$(database)/documents/ilanlar/$(request.resource.data.ilanId)).data.onay == true
@@ -477,6 +479,10 @@ service cloud.firestore {
       allow read: if (hasEmail() && resource.data.kullanici == request.auth.token.email)
         || isAdmin();
       allow create, update, delete: if false;
+    }
+
+    match /raffleOrderDeliveries/{deliveryId} {
+      allow read, create, update, delete: if false;
     }
 
     match /wallets/{walletId} {

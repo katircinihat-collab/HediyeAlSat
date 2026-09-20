@@ -2,7 +2,7 @@ const { firestore, FieldValue } = require("../config/firebase");
 const xpConfig = require("../../shared/xpConfig.json");
 const {
     raffleConfig, RaffleError, toDate, publicEvent, validatePublicText, safeDisplayName,
-    joinRaffle, cancelParticipation, drawRaffle
+    joinRaffle, cancelParticipation, drawRaffle, normalizeDeliveryAddress
 } = require("../services/raffleService");
 
 function respondError(res, error) {
@@ -44,7 +44,9 @@ exports.me = async (req, res) => {
             joined: participant.exists && participant.data().status === "ACTIVE",
             participation: participant.exists ? {
                 status: participant.data().status,
-                giftHint: participant.data().giftHint || ""
+                giftHint: participant.data().giftHint || "",
+                deliveryReady: participant.data().deliveryReady === true,
+                deliveryAddress: participant.data().deliveryAddress || null
             } : null,
             availableXP: Math.max(0, Number(balanceData.availableXP) || 0)
         });
@@ -55,9 +57,29 @@ exports.join = async (req, res) => {
     try {
         const result = await joinRaffle({
             firestore, FieldValue, eventId: req.params.eventId,
-            user: { uid: req.user.uid, name: req.user.name }, giftHint: req.body?.giftHint
+            user: { uid: req.user.uid, name: req.user.name }, giftHint: req.body?.giftHint,
+            deliveryAddress: req.body?.deliveryAddress
         });
         return res.status(result.duplicate ? 200 : 201).json({ success: true, ...result });
+    } catch (error) { return respondError(res, error); }
+};
+
+exports.updateDelivery = async (req, res) => {
+    try {
+        const reference = firestore.collection("raffleParticipants").doc(`${req.params.eventId}_${req.user.uid}`);
+        const deliveryAddress = normalizeDeliveryAddress(req.body?.deliveryAddress);
+        await firestore.runTransaction(async (transaction) => {
+            const [participant, event] = await Promise.all([
+                transaction.get(reference),
+                transaction.get(firestore.collection("raffleEvents").doc(req.params.eventId))
+            ]);
+            if (!participant.exists || participant.data().status !== "ACTIVE") throw new RaffleError("Aktif Kura katılımı bulunamadı.", 403, "RAFFLE_PARTICIPANT_REQUIRED");
+            if (!event.exists || ["DRAWING", "MATCHED", "COMPLETED", "CANCELLED"].includes(event.data().status)) {
+                throw new RaffleError("Kura çekildikten sonra teslimat adresi değiştirilemez.", 409, "RAFFLE_DELIVERY_LOCKED");
+            }
+            transaction.update(reference, { deliveryAddress, deliveryReady: true, updatedAt: FieldValue.serverTimestamp() });
+        });
+        return res.json({ success: true, deliveryReady: true });
     } catch (error) { return respondError(res, error); }
 };
 
@@ -93,6 +115,54 @@ exports.result = async (req, res) => {
         if (!recipient.exists) throw new RaffleError("Eşleşme profili bulunamadı.", 404, "RAFFLE_RECIPIENT_NOT_FOUND");
         const data = recipient.data();
         return res.json({ success: true, recipient: { displayName: safeDisplayName(data.displayName), giftHint: data.giftHint || "" } });
+    } catch (error) { return respondError(res, error); }
+};
+
+exports.orderFulfillment = async (req, res) => {
+    try {
+        const [order, delivery] = await Promise.all([
+            firestore.collection("siparisler").doc(req.params.orderId).get(),
+            firestore.collection("raffleOrderDeliveries").doc(req.params.orderId).get()
+        ]);
+        if (!order.exists || !delivery.exists || order.data().isRaffleGift !== true || order.data().odemeDurumu !== true) throw new RaffleError("Kura teslimat kaydı bulunamadı.", 404, "RAFFLE_DELIVERY_NOT_FOUND");
+        const data = order.data();
+        const sellerOwns = data.saticiUid ? data.saticiUid === req.user.uid : data.satici === req.user.email;
+        if (!sellerOwns) throw new RaffleError("Bu teslimat bilgisine erişemezsiniz.", 403, "RAFFLE_DELIVERY_FORBIDDEN");
+        const value = delivery.data();
+        return res.json({ success: true, delivery: {
+            fullName: value.fullName, phone: value.phone, address: value.address,
+            city: value.city, district: value.district
+        } });
+    } catch (error) { return respondError(res, error); }
+};
+
+exports.receivedGiftStatus = async (req, res) => {
+    try {
+        const matches = await firestore.collection("raffleMatches")
+            .where("eventId", "==", req.params.eventId).limit(raffleConfig.maxParticipants).get();
+        const receivedMatch = matches.docs.map((doc) => doc.data())
+            .find((match) => match.recipientUid === req.user.uid);
+        const giftOrderIds = Array.isArray(receivedMatch?.giftOrderIds) && receivedMatch.giftOrderIds.length
+            ? receivedMatch.giftOrderIds
+            : receivedMatch?.giftOrderId ? [receivedMatch.giftOrderId] : [];
+        if (giftOrderIds.length === 0 || receivedMatch.giftOrderPaid !== true) {
+            return res.json({ success: true, gift: null });
+        }
+        const orders = (await Promise.all(giftOrderIds.map((orderId) => firestore.collection("siparisler").doc(orderId).get())))
+            .filter((order) => order.exists && order.data().isRaffleGift === true && order.data().raffleEventId === req.params.eventId)
+            .map((order) => order.data());
+        if (orders.length === 0) {
+            return res.json({ success: true, gift: null });
+        }
+        const delivered = orders.every((data) => data.teslimatDogrulandi === true || ["Teslim", "Teslim Edildi", "Tamamlandı"].includes(data.durum));
+        const shipped = orders.some((data) => ["Kargoda", "Kargoya Verildi"].includes(data.durum));
+        const singleOrder = orders.length === 1 ? orders[0] : null;
+        return res.json({ success: true, gift: {
+            status: delivered ? "Teslim Edildi" : shipped ? "Kargoda" : "Hazırlanıyor",
+            shippingCompany: singleOrder?.kargoFirma || null,
+            trackingNumber: singleOrder?.kargoNo || null,
+            delivered
+        } });
     } catch (error) { return respondError(res, error); }
 };
 
@@ -158,6 +228,13 @@ function validateEventInput(body, partial = false) {
             data.suggestedGiftBudget = suggestedGiftBudget;
         }
     }
+    if (!partial || body.minimumParticipantCount !== undefined) {
+        const minimum = Number(body.minimumParticipantCount ?? 2);
+        if (!Number.isInteger(minimum) || minimum < 2 || minimum > raffleConfig.maxParticipants) {
+            throw new RaffleError(`Minimum katılımcı sayısı 2-${raffleConfig.maxParticipants} arasında tam sayı olmalıdır.`, 400, "RAFFLE_INVALID_MINIMUM");
+        }
+        data.minimumParticipantCount = minimum;
+    }
     return data;
 }
 
@@ -180,6 +257,7 @@ exports.adminParticipants = async (req, res) => {
                 displayName: safeDisplayName(data.displayName),
                 status: data.status === "CANCELLED" ? "CANCELLED" : "ACTIVE",
                 giftHint: data.giftHint || "",
+                deliveryReady: data.deliveryReady === true,
                 joinedAt: serializeTimestamp(data.joinedAt)
             };
         });

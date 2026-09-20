@@ -154,6 +154,7 @@ return(
 📦 Sipariş Detayı
 
 </h1>
+{siparis.isRaffleGift && <p className="order-claim-message">🎁 Kura Hediyesi · {siparis.raffleRecipientDisplayName || "Eşleşen kişi"} için gönderiliyor. Teslimat adresi Kura sistemi tarafından güvenle kullanılır.</p>}
 
 <h3>
 
@@ -273,7 +274,7 @@ canonicalDurum
 
 </div>
 
-{!digital&&<div className="order-box">
+{!digital && !siparis.isRaffleGift && <div className="order-box">
 
 <h2>
 
@@ -298,6 +299,8 @@ canonicalDurum
 </p>
 
 </div>}
+
+{!digital && siparis.isRaffleGift && <div className="order-box"><h2>🏠 Kura Teslimatı</h2><p>Alıcının açık teslimat adresi gizlidir ve yalnızca satıcıya kargolama için güvenli biçimde iletilir.</p></div>}
 
 </div>
 

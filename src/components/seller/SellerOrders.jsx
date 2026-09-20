@@ -1,4 +1,6 @@
 import { Fragment, useState } from "react";
+import { auth } from "../../firebase";
+import { apiUrl } from "../../config/api";
 import { updateSellerOrderStatus } from "../../services/sellerOrderStatusApi";
 import { payoutDisplay } from "../../utils/orderDelivery";
 import SellerReturnStatus from "./SellerReturnStatus";
@@ -57,6 +59,21 @@ function SellerOrders({ siparisler, getir }) {
   const [acikSiparis, setAcikSiparis] = useState(null);
   const [aktifSekme, setAktifSekme] = useState("aktif");
   const [guncellenenSiparis, setGuncellenenSiparis] = useState(null);
+  const [raffleDeliveries, setRaffleDeliveries] = useState({});
+
+  async function toggleOrder(siparis, acik) {
+    setAcikSiparis(acik ? null : siparis.id);
+    if (acik || !siparis.isRaffleGift || raffleDeliveries[siparis.id]) return;
+    try {
+      const token = await auth.currentUser?.getIdToken();
+      const response = await fetch(apiUrl(`/api/raffles/orders/${siparis.id}/fulfillment`), { headers: { Authorization: `Bearer ${token}` } });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.message || "Teslimat bilgisi alınamadı.");
+      setRaffleDeliveries((current) => ({ ...current, [siparis.id]: result.delivery }));
+    } catch (error) {
+      setRaffleDeliveries((current) => ({ ...current, [siparis.id]: { error: error.message } }));
+    }
+  }
 
   async function durumGuncelle(siparis, payload) {
     if (guncellenenSiparis) return;
@@ -200,7 +217,7 @@ function SellerOrders({ siparisler, getir }) {
                     <button
                       type="button"
                       className="seller-order-detail-button"
-                      onClick={() => setAcikSiparis(acik ? null : siparis.id)}
+                      onClick={() => toggleOrder(siparis, acik)}
                       aria-expanded={acik}
                     >
                       {acik ? "Gizle" : "Detay"}
@@ -210,10 +227,13 @@ function SellerOrders({ siparisler, getir }) {
 
                 {acik && (
                   <div className="seller-order-detail-panel">
+                    {siparis.isRaffleGift && <div className="seller-order-guidance"><strong>🎁 Kura Hediyesi</strong><small>Yalnız kargolama için gerekli teslimat bilgileri gösterilir.</small></div>}
                     <div className="seller-order-detail-grid">
-                      <div><strong>Alıcı</strong><span>{siparis.alici || "—"}</span></div>
+                      {!siparis.isRaffleGift && <div><strong>Alıcı</strong><span>{siparis.alici || "—"}</span></div>}
                       <div><strong>Satıcı</strong><span>{siparis.satici || "—"}</span></div>
-                      <div><strong>Telefon</strong><span>{siparis.telefon || "—"}</span></div>
+                      {!siparis.isRaffleGift && <div><strong>Telefon</strong><span>{siparis.telefon || "—"}</span></div>}
+                      {siparis.isRaffleGift && raffleDeliveries[siparis.id]?.error && <div><strong>Teslimat</strong><span>{raffleDeliveries[siparis.id].error}</span></div>}
+                      {siparis.isRaffleGift && raffleDeliveries[siparis.id] && !raffleDeliveries[siparis.id].error && <><div><strong>Teslim alacak kişi</strong><span>{raffleDeliveries[siparis.id].fullName}</span></div><div><strong>Telefon</strong><span>{raffleDeliveries[siparis.id].phone}</span></div><div><strong>Adres</strong><span>{raffleDeliveries[siparis.id].address}, {raffleDeliveries[siparis.id].district} / {raffleDeliveries[siparis.id].city}</span></div></>}
                       <div><strong>Komisyon</strong><span>{tutarFormatla({ toplam: Number(siparis.toplam || 0) * 0.08 })}</span></div>
                       {!digital && canonicalDurum === "Hazırlanıyor" && <label>
                         <strong>Kargo firması</strong>
@@ -242,10 +262,10 @@ function SellerOrders({ siparisler, getir }) {
                       </label>}
                     </div>
 
-                    <div className="seller-order-contact-actions">
-                      <a href={`tel:${siparis.telefon || ""}`} className="phone-btn">📞 Ara</a>
-                      <a href={`https://wa.me/90${siparis.telefon || ""}`} target="_blank" rel="noreferrer" className="whatsapp-btn">💬 WhatsApp</a>
-                    </div>
+                    {(!siparis.isRaffleGift || raffleDeliveries[siparis.id]?.phone) && <div className="seller-order-contact-actions">
+                      <a href={`tel:${raffleDeliveries[siparis.id]?.phone || siparis.telefon || ""}`} className="phone-btn">📞 Ara</a>
+                      <a href={`https://wa.me/90${String(raffleDeliveries[siparis.id]?.phone || siparis.telefon || "").replace(/^0/, "")}`} target="_blank" rel="noreferrer" className="whatsapp-btn">💬 WhatsApp</a>
+                    </div>}
 
                     <div className="seller-order-status-actions">
                       {!digital && canonicalDurum === "Ödendi" && (

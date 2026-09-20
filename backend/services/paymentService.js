@@ -11,6 +11,7 @@ const walletService = require("./walletService");
 const { admin, firestore, FieldValue } = require("../config/firebase");
 const orderModel = require("../models/orderModel");
 const { PaymentValidationError, validateNormalPayment, buildIyzicoBasket } = require("./paymentValidationService");
+const { prepareRaffleGift, releaseRaffleGiftReservation } = require("./raffleGiftService");
 const { validateRetrievedPayment, mapPaymentItemTransactions, finalizePayment } = require("./paymentCallbackService");
 const { reserveStock, releaseReservation, releaseExpiredReservations } = require("./stockReservationService");
 const { resolveBuyerIdentity } = require("./buyerIdentityService");
@@ -81,8 +82,11 @@ async function createPayment(data, authenticatedUser, requestContext = {}) {
         sponsorBasvuruId = "",
         listingBoost = false,
         listingId = "",
-        packageId = ""
+        packageId = "",
+        raffleEventId = ""
     } = data;
+    let raffleGiftReservation = null;
+    let trustedRaffleGift = null;
 
 
     const conversationId =
@@ -203,7 +207,13 @@ async function createPayment(data, authenticatedUser, requestContext = {}) {
             expectedItemPrice: item.total,
             itemType: item.itemType
         }));
-        trustedBuyer = verified.verifiedItems[0]?.buyer || null;
+        const raffleGift = await prepareRaffleGift({
+            firestore, FieldValue, eventId: String(raffleEventId || "").trim(), giverUid: authenticatedUser.uid,
+            verifiedItems: verified.verifiedItems, conversationId
+        });
+        trustedRaffleGift = raffleGift;
+        raffleGiftReservation = raffleGift ? { eventId: String(raffleEventId || "").trim(), giverUid: authenticatedUser.uid, conversationId } : null;
+        trustedBuyer = raffleGift?.buyer || verified.verifiedItems[0]?.buyer || null;
         trustedBuyerPhone = normalizeIyzicoGsmNumber(trustedBuyer?.phone);
         if (!trustedBuyerPhone) {
             throw new PaymentValidationError(
@@ -225,7 +235,10 @@ async function createPayment(data, authenticatedUser, requestContext = {}) {
             {
                 kargoOdemeTipi: item.shippingPayer,
                 satici: item.sellerEmail,
-                saticiUid: item.sellerUid || null
+                saticiUid: item.sellerUid || null,
+                isRaffleGift: Boolean(trustedRaffleGift),
+                raffleEventId: trustedRaffleGift ? String(raffleEventId || "").trim() : "",
+                raffleRecipientDisplayName: trustedRaffleGift?.recipientDisplayName || ""
             }
         )));
     }
@@ -444,11 +457,10 @@ async function createPayment(data, authenticatedUser, requestContext = {}) {
     İYZİCO ÖDEME BAŞLAT
     ==============================================
     */
-if (!iyzipay) {
-    throw new Error("Iyzico henüz yapılandırılmadı.");
-}
-
     try {
+        if (!iyzipay) {
+            throw new Error("Iyzico henüz yapılandırılmadı.");
+        }
         return await new Promise((resolve, reject) => {
 
         iyzipay.checkoutFormInitialize.create(
@@ -486,6 +498,9 @@ if (!iyzipay) {
                 reservationId: stockReservation.id,
                 reason: "PAYMENT_INITIALIZATION_FAILED"
             }).catch(() => undefined);
+        }
+        if (raffleGiftReservation) {
+            await releaseRaffleGiftReservation({ firestore, FieldValue, ...raffleGiftReservation }).catch(() => undefined);
         }
         throw error;
     }

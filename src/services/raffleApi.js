@@ -15,9 +15,11 @@ async function request(path, { user, ...options } = {}) {
 
 export const getActiveRaffle = () => request("/active");
 export const getRaffleMe = (eventId, user) => request(`/${eventId}/me`, { user });
-export const joinRaffle = (eventId, user, giftHint) => request(`/${eventId}/join`, { user, method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ giftHint }) });
+export const joinRaffle = (eventId, user, giftHint, deliveryAddress) => request(`/${eventId}/join`, { user, method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ giftHint, deliveryAddress }) });
 export const cancelRaffle = (eventId, user) => request(`/${eventId}/join`, { user, method: "DELETE" });
 export const updateRaffleHint = (eventId, user, giftHint) => request(`/${eventId}/hint`, { user, method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ giftHint }) });
+export const updateRaffleDelivery = (eventId, user, deliveryAddress) => request(`/${eventId}/delivery`, { user, method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ deliveryAddress }) });
 export const getRaffleResult = (eventId, user) => request(`/${eventId}/result`, { user });
+export const getReceivedRaffleGiftStatus = (eventId, user) => request(`/${eventId}/received-gift-status`, { user });
 export const getRaffleMessages = (eventId) => request(`/${eventId}/messages`);
 export const sendRaffleMessage = (eventId, user, message) => request(`/${eventId}/messages`, { user, method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message }) });

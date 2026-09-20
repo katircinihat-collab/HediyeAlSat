@@ -1,7 +1,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const {
-  joinRaffle, cancelParticipation, deterministicOrder, drawRaffle, publicEvent, safeDisplayName
+  joinRaffle: joinRaffleService, cancelParticipation, deterministicOrder, drawRaffle, publicEvent, safeDisplayName
 } = require("../backend/services/raffleService");
 const { validateEventInput } = require("../backend/controllers/raffleController");
 
@@ -65,6 +65,8 @@ function openSeed(balance = 100) {
 
 const user = { uid: "u1", name: "Ayşe" };
 const now = new Date("2026-09-19T12:00:00Z");
+const deliveryAddress = { fullName: "Ayşe Test", phone: "05321112233", address: "Örnek Mahallesi Test Sokak No 1", city: "İstanbul", district: "Kadıköy" };
+const joinRaffle = (args) => joinRaffleService({ deliveryAddress, ...args });
 
 const eventInput = (overrides = {}) => ({
   title: "Topluluk Kurası", description: "", status: "UPCOMING",
@@ -82,6 +84,21 @@ test("geçersiz veya negatif önerilen bütçe reddedilir", () => {
   for (const suggestedGiftBudget of [-1, 0, "geçersiz", 1000001]) {
     assert.throws(() => validateEventInput(eventInput({ suggestedGiftBudget })), (error) => error.code === "RAFFLE_INVALID_SUGGESTED_BUDGET");
   }
+});
+
+test("minimum katılımcı sayısı legacy kayıtta 2 olur ve yönetici girdisi doğrulanır", () => {
+  assert.equal(publicEvent("legacy", {}).minimumParticipantCount, 2);
+  assert.equal(validateEventInput(eventInput({ minimumParticipantCount: 10 })).minimumParticipantCount, 10);
+  for (const minimumParticipantCount of [1, 2.5, 201]) {
+    assert.throws(() => validateEventInput(eventInput({ minimumParticipantCount })), (error) => error.code === "RAFFLE_INVALID_MINIMUM");
+  }
+});
+
+test("teslimat adresi doğrulanmadan XP düşmez", async () => {
+  const db = memoryFirestore(openSeed());
+  await assert.rejects(joinRaffleService({ firestore: db, FieldValue, eventId: "r1", user, now }), (error) => error.code === "RAFFLE_DELIVERY_REQUIRED");
+  assert.equal(db.data.get("userXpBalances/u1").availableXP, 100);
+  assert.equal(db.data.has("raffleParticipants/r1_u1"), false);
 });
 
 test("eski min bütçe alanları yalnız güvenli öneri fallback'i olarak okunur", () => {
@@ -176,7 +193,12 @@ test("iki katılımcı karşılıklı eşleşir; tek katılımcıyla draw redded
   assert.equal(twoDb.data.get("raffleMatches/r1_a").recipientUid, "b");
 
   const oneDb = memoryFirestore({ "raffleEvents/r1": { status: "OPEN", participantCount: 1, drawAt: new Date("2026-09-18") }, "raffleParticipants/r1_a": { eventId: "r1", userUid: "a", status: "ACTIVE" } });
-  await assert.rejects(drawRaffle({ firestore: oneDb, FieldValue, eventId: "r1", adminUid: "admin", now }), (error) => error.code === "RAFFLE_NOT_ENOUGH_PARTICIPANTS");
+  await assert.rejects(drawRaffle({ firestore: oneDb, FieldValue, eventId: "r1", adminUid: "admin", now }), (error) => error.code === "RAFFLE_MINIMUM_NOT_REACHED");
+});
+
+test("event minimumunun altında draw reddedilir", async () => {
+  const db = memoryFirestore({ "raffleEvents/r1": { status: "OPEN", participantCount: 2, minimumParticipantCount: 3, drawAt: new Date("2026-09-18") }, "raffleParticipants/r1_a": { eventId: "r1", userUid: "a", status: "ACTIVE" }, "raffleParticipants/r1_b": { eventId: "r1", userUid: "b", status: "ACTIVE" } });
+  await assert.rejects(drawRaffle({ firestore: db, FieldValue, eventId: "r1", adminUid: "admin", now }), (error) => error.code === "RAFFLE_MINIMUM_NOT_REACHED");
 });
 
 test("üçten fazla katılımcıda herkes tam bir kişiye verir ve tam bir kişiden alır", async () => {

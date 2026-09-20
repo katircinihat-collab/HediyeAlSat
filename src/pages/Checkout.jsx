@@ -57,6 +57,10 @@ function Checkout() {
     : null;
 
   const sponsorOdeme = Boolean(sponsorData);
+  const [raffleEventId] = useState(() => {
+    try { return window.sessionStorage.getItem("hediyealsat.raffleGiftEvent") || ""; } catch { return ""; }
+  });
+  const raffleGift = !sponsorOdeme && Boolean(raffleEventId);
 
   // ==================================================
   // NORMAL SEPET
@@ -491,7 +495,7 @@ function Checkout() {
       return;
     }
 
-    if (!adSoyad.trim()) {
+    if (!raffleGift && !adSoyad.trim()) {
 
       alert(
         "Lütfen Ad Soyad bilgilerinizi giriniz."
@@ -500,7 +504,7 @@ function Checkout() {
       return;
     }
 
-    if (!telefon.trim()) {
+    if (!raffleGift && !telefon.trim()) {
 
       alert(
         "Lütfen telefon numaranızı giriniz."
@@ -509,7 +513,7 @@ function Checkout() {
       return;
     }
 
-    if (fizikselUrunVar && !il.trim()) {
+    if (!raffleGift && fizikselUrunVar && !il.trim()) {
 
       alert(
         "Lütfen ilinizi giriniz."
@@ -518,7 +522,7 @@ function Checkout() {
       return;
     }
 
-    if (fizikselUrunVar && !ilce.trim()) {
+    if (!raffleGift && fizikselUrunVar && !ilce.trim()) {
 
       alert(
         "Lütfen ilçenizi giriniz."
@@ -527,12 +531,17 @@ function Checkout() {
       return;
     }
 
-    if (fizikselUrunVar && !adres.trim()) {
+    if (!raffleGift && fizikselUrunVar && !adres.trim()) {
 
       alert(
         "Lütfen teslimat adresinizi giriniz."
       );
 
+      return;
+    }
+
+    if (raffleGift && urunler.some(dijitalUrunMu)) {
+      alert("Kura hediyesi teslimatı şu anda fiziksel ürünler için kullanılabilir.");
       return;
     }
 
@@ -577,6 +586,7 @@ function Checkout() {
 
               alici:
                 auth.currentUser.email,
+              aliciUid: auth.currentUser.uid,
 
               ...((urun.sahipUid || urun.saticiUid)
                 ? { saticiUid: urun.sahipUid || urun.saticiUid }
@@ -600,13 +610,14 @@ function Checkout() {
 
               adSoyad,
 
-              telefon,
+              telefon: raffleGift ? "" : telefon,
 
-              adres,
+              adres: raffleGift ? "Kura sistemi tarafından güvenle iletilecek" : adres,
 
-              il,
+              il: raffleGift ? "" : il,
 
-              ilce,
+              ilce: raffleGift ? "" : ilce,
+              ...(raffleGift ? { isRaffleGift: true, raffleEventId } : {}),
 
               kargo:
                 dijitalUrunMu(urun)
@@ -659,6 +670,7 @@ function Checkout() {
             body: JSON.stringify({
 
               sponsor: false,
+              raffleEventId: raffleGift ? raffleEventId : "",
 
               siparisIds:
                 siparisler,
@@ -1007,7 +1019,9 @@ function Checkout() {
 
             <div className="checkout-left">
 
-              <div className="checkout-box">
+              {raffleGift && <div className="checkout-box checkout-raffle-gift" role="status"><h2>🎁 Kura Hediyesi</h2><p>Bu hediye sana çıkan kişi için gönderilecek.</p><p>Teslimat adresi Kura sistemi tarafından güvenli şekilde kullanılacaktır. Açık teslimat adresi sana gösterilmez.</p>{urunler.some(dijitalUrunMu) && <p className="checkout-identity-error">Kura hediyesi teslimatı şu anda fiziksel ürünler için kullanılabilir.</p>}</div>}
+
+              {!raffleGift && <div className="checkout-box">
 
                 <h2>
                   {fizikselUrunVar
@@ -1060,7 +1074,7 @@ function Checkout() {
                   </>
                 )}
 
-              </div>
+              </div>}
 
               <BuyerIdentityBox
                 checking={kimlikKontrolEdiliyor}

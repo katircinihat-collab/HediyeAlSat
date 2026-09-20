@@ -1121,3 +1121,18 @@ test("92 - Kura sohbeti client tarafından başka UID veya katılım bypass ile 
     eventId: "raffle-1", senderUid: otherAuth.uid, senderName: "Üye", message: "Merhaba", createdAt: serverTimestamp()
   }));
 });
+
+test("93 - Kura özel teslimat snapshotı client tarafından okunamaz veya yazılamaz", async () => {
+  await env.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), "raffleOrderDeliveries", "order-private"), {
+      orderId: "order-private", eventId: "raffle-1", giverUid: ownerAuth.uid,
+      recipientUid: otherAuth.uid, address: "Gizli teslimat adresi"
+    });
+  });
+  for (const auth of [ownerAuth, otherAuth, adminAuth]) {
+    await assertFails(getDoc(doc(dbFor(auth), "raffleOrderDeliveries", "order-private")));
+    await assertFails(setDoc(doc(dbFor(auth), "raffleOrderDeliveries", "client-write"), {
+      orderId: "client-write", address: "Sahte adres"
+    }));
+  }
+});

@@ -9,11 +9,11 @@ test("Kura sayfası tagline, countdown, 100 XP taahhüt ve temel durumları gös
   assert.match(page, /Hiç tanımadığın birine hediye al/);
   assert.match(page, /Katılım bedeli 100 XP/);
   assert.match(page, /Kura çekilmeden önce vazgeçersen XP iade edilir/);
-  assert.match(page, /Kuraya Katıldın/);
+  assert.match(page, /KURAYA KATILDIN/i);
   assert.match(page, /Şu anda aktif Kura yok/);
   assert.match(page, /Tekrar Dene/);
   assert.match(page, /countdown/);
-  assert.match(page, /HediyeAlSat topluluğuna katıl, sürpriz eşleşmeni keşfet/);
+  assert.match(page, /HediyeAlSat topluluğuna katıl, sana çıkan kişiyi keşfet/);
   assert.match(page, /Nasıl Çalışır/);
   assert.match(page, /🎲 Kuraya Katıl/);
   assert.match(page, /disabled=\{busy \|\| \(me\?\.availableXP \?\? 0\) < event\.xpCost\}/);
@@ -59,7 +59,7 @@ test("admin Kura işlemleri mevcut adminApi ve ayrı draw/cancel endpointlerini 
   assert.match(component, /Değişiklikleri Kaydet/);
   assert.match(routes, /router\.get\("\/raffles\/:eventId\/participants", raffleController\.adminParticipants\)/);
   assert.match(routes, /router\.get\("\/raffles\/:eventId\/results", raffleController\.adminResults\)/);
-  assert.match(component, /Kura çekmek için en az 2 aktif katılımcı gerekir/);
+  assert.match(component, /Minimum katılımcı sayısına ulaşmak için/);
   assert.match(component, /Kura çekildiğinde eşleşmeler kesinleşir/);
   assert.match(component, /Uygun katılımcıların 100 XP katılım bedelleri idempotent olarak iade edilecek/);
 });
@@ -75,13 +75,53 @@ test("eşleşme sonucu authenticated UID'den okunur ve bütün eşleşme listesi
 
 test("DRAWN kullanıcı görünümü yalnız güvenli ad ve hediye ipucunu gösterir", () => {
   const page = read("src/pages/Raffle.jsx");
+  const resultCard = read("src/components/raffle/RaffleResultCard.jsx");
   const controller = read("backend/controllers/raffleController.js");
-  assert.match(page, /Sürpriz eşleşmen hazır/);
-  assert.match(page, /Senin hediye alacağın kişi/);
-  assert.match(page, /Şimdi sıra sende! Ona güzel bir sürpriz seç/);
-  assert.match(page, /Henüz bir hediye ipucu bırakmamış/);
+  assert.match(page, /RaffleResultCard result=\{result\}/);
+  assert.match(resultCard, /Sürpriz eşleşmen hazır/);
+  assert.match(resultCard, /Sana çıkan kişi/);
+  assert.match(resultCard, /SANA ÇIKTI!/);
+  assert.match(resultCard, /için hediye hazırlayacaksın/);
+  assert.match(resultCard, /Şimdi sıra sende! Ona güzel bir sürpriz seç/);
+  assert.match(resultCard, /bu Kura için bir hediye notu bırakmamış/);
+  assert.match(resultCard, /to="\/ilanlar"/);
   assert.match(controller, /recipient: \{ displayName: safeDisplayName\(data\.displayName\)[^}]+giftHint: data\.giftHint/);
-  assert.doesNotMatch(page, /paymentTransactionId|recipientUid|giverUid/);
+  assert.doesNotMatch(`${page}${resultCard}`, /paymentTransactionId|recipientUid|giverUid/);
+});
+
+test("Kura kullanıcı dili isim çekimini ve opsiyonel Hediye Notum alanını doğru anlatır", () => {
+  const page = read("src/pages/Raffle.jsx");
+  const resultCard = read("src/components/raffle/RaffleResultCard.jsx");
+  assert.match(page, /💌 Hediye Notum/);
+  assert.match(page, /Sana çıkacak kişiye küçük bir not bırak/);
+  assert.match(page, /\{giftHint\.length\} \/ 240/);
+  assert.match(page, /maxLength=\{240\}/);
+  assert.match(page, /Hediye notun kaydedildi/);
+  assert.match(page, /İsimler çekilsin/);
+  assert.doesNotMatch(`${page}${resultCard}`, /Hediye çıktı|Hediyeler karıştırılıyor|Sürpriz hediye seçiliyor/);
+});
+
+test("production kullanıcı sonucu ortak kısa çekim deneyiminden sonra açılır", () => {
+  const page = read("src/pages/Raffle.jsx");
+  const draw = read("src/components/raffle/RaffleDrawExperience.jsx");
+  assert.match(page, /RaffleDrawExperience onComplete=\{\(\) => setResultRevealed\(true\)\}/);
+  assert.match(draw, /İsimler karıştırılıyor/);
+  assert.match(draw, /Kura çekiliyor/);
+  assert.match(draw, /Sürpriz eşleşmen hazırlanıyor/);
+  assert.match(draw, /prefers-reduced-motion: reduce/);
+  const delays = [...draw.matchAll(/delay: (\d+)/g)].map((match) => Number(match[1]));
+  assert.equal(delays.reduce((sum, delay) => sum + delay, 0), 10000);
+});
+
+test("Kura sayfası 0 XP, katılabilir ve katıldı durumlarını aynı deneyimde sunar", () => {
+  const page = read("src/pages/Raffle.jsx");
+  assert.match(page, /Bu Kura için biraz daha XP gerekiyor/);
+  assert.match(page, /Kuraya Katılmaya Hazırsın/);
+  assert.match(page, /Katılım için .* kullanılabilir XP gerekiyor/);
+  assert.match(page, /to="\/profil">XP Nasıl Kazanılır/);
+  assert.match(page, /✓ KURAYA KATILDIN!/);
+  assert.match(page, /Artık Kura listesindesin/);
+  assert.match(page, /raffle-steps/);
 });
 
 test("admin katılımcı ve sonuç görünümü yalnız güvenli alanları kullanır", () => {
