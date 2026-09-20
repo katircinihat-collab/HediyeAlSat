@@ -650,6 +650,10 @@ function Navbar() {
             🎲 <span>Kura</span>
           </NavLink>
 
+          <NavLink to="/kapismalar">
+            ⚔️ <span>Kapışmalar</span>
+          </NavLink>
+
           <Link to="/#ozel-gunler" onClick={ozelGunlereGit}>
             🎁 <span>Kime Hediye Arıyorsun?</span>
           </Link>

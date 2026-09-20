@@ -12,6 +12,8 @@
 .gift-battle-heading { text-align: center; }
 .gift-battle-heading > span { color: #a54a1e; font-size: 12px; font-weight: 800; letter-spacing: 1.5px; }
 .gift-battle-heading h2 { margin: 8px 0; color: #28170f; font-size: clamp(25px, 3vw, 34px); }
+.gift-battle-community-feature{display:grid;justify-items:center;gap:14px;margin-top:24px;padding:30px;border-radius:22px;background:linear-gradient(90deg,#fff0ee,#fff 50%,#edf6ff);text-align:center}.gift-battle-community-feature p{margin:0;font-size:clamp(17px,2vw,23px);font-weight:800}.gift-battle-community-feature>div{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:16px;width:min(760px,100%)}.gift-battle-community-feature>div strong{padding:18px;border-radius:15px;background:#fff;box-shadow:0 6px 18px #432e2420}.gift-battle-community-feature>div b{display:grid;place-items:center;width:46px;height:46px;border-radius:50%;background:#30221d;color:#fff}.gift-battle-community-feature>a{padding:10px 18px;border-radius:999px;background:#6c3441;color:#fff;text-decoration:none;font-weight:800}.gift-battle-community-feature>a:last-child{padding:0;background:none;color:#6c3441}
+@media(max-width:520px){.gift-battle-community-feature{padding:20px 10px}.gift-battle-community-feature>div{gap:6px}.gift-battle-community-feature>div strong{padding:11px 7px;font-size:13px}.gift-battle-community-feature>div b{width:36px;height:36px;font-size:12px}}
 
 .gift-battle-arena {
   position: relative;

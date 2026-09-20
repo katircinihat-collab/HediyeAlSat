@@ -926,6 +926,12 @@ function SeoLandingPage() {
 
       </section>
 
+      <section className="seo-battle-cta">
+        <h2>⚔️ İki hediye arasında mı kaldın?</h2>
+        <p>Beğendiğin iki ürünü sepete ekle. HediyeAlSat topluluğu hangisinin daha iyi hediye olduğunu oylasın.</p>
+        <Link to="/ilanlar">🎁 Hediyeleri Seç</Link>
+      </section>
+
 
       <section className="seo-related">
 

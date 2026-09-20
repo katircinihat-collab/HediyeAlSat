@@ -83,14 +83,13 @@ test("aynı event için paralel istek çift XP üretmez", async () => {
   assert.equal(database.data.get("userXpBalances/user-1").availableXP, 25);
 });
 
-test("kapışma oyları İstanbul gününde 25 XP ile sınırlanır, altıncı oy geçerli ama XP vermez", async () => {
+test("legacy kapışma oyları yeni topluluk ödülüyle çifte XP üretmez", async () => {
   const database = memoryFirestore();
   const now = new Date("2026-09-19T12:00:00.000Z");
   const results = [];
   for (let index = 1; index <= 6; index += 1) results.push(await apply(database, "GIFT_BATTLE_VOTE", `vote-${index}`, now));
-  assert.deepEqual(results.map((result) => result.amount), [5, 5, 5, 5, 5, 0]);
-  assert.equal(results[5].capped, true);
-  assert.deepEqual([results[5].lifetimeXP, results[5].availableXP], [25, 25]);
+  assert.deepEqual(results.map((result) => result.amount), [0, 0, 0, 0, 0, 0]);
+  assert.deepEqual([results[5].lifetimeXP, results[5].availableXP], [0, 0]);
 });
 
 test("Europe/Istanbul gün anahtarı gece sınırını client saatinden bağımsız hesaplar", () => {

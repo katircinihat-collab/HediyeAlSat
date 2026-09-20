@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../firebase";
-import { getMyGiftBattleVote, getTodayGiftBattle, voteGiftBattle } from "../services/giftBattleApi";
+import { getCommunityBattles, getMyGiftBattleVote, getTodayGiftBattle, voteGiftBattle } from "../services/giftBattleApi";
 import redWarrior from "../assets/gift-battle/red-warrior.png";
 import blueWarrior from "../assets/gift-battle/blue-warrior.png";
 import "../styles/components/gift-battle.css";
@@ -47,6 +47,7 @@ function GiftBattle() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
+  const [communityBattle, setCommunityBattle] = useState(null);
 
   useEffect(() => onAuthStateChanged(auth, setUser), []);
 
@@ -55,8 +56,15 @@ function GiftBattle() {
     let retryTimer;
 
     const loadBattle = (attempt = 0) => {
-      getTodayGiftBattle()
+      getCommunityBattles(1).then((data) => {
+        if (!active) return;
+        const featured = data.battles?.[0] || null;
+        setCommunityBattle(featured);
+        if (featured) { setError(""); setLoading(false); return null; }
+        return getTodayGiftBattle();
+      })
         .then((data) => {
+          if (!data) return;
           if (!active) return;
           setBattle(data.battle || null);
           setError("");
@@ -130,12 +138,19 @@ function GiftBattle() {
       style={{ scrollMarginTop: "70px" }}
     >
       <header className="gift-battle-heading">
-        <span>GÜNÜN KARŞILAŞMASI</span>
+        <span>{communityBattle ? "🔥 ŞU ANDA OYLANIYOR" : "GÜNÜN KARŞILAŞMASI"}</span>
         <h2 id="gift-battle-title">⚔️ Hediye Kapışması</h2>
       </header>
 
       {loading ? (
         <div className="gift-battle-loading">Kapışma hazırlanıyor...</div>
+      ) : communityBattle ? (
+        <div className="gift-battle-community-feature">
+          <p>💬 “{communityBattle.question}”</p>
+          <div><strong>{communityBattle.productA.title}</strong><b>VS</b><strong>{communityBattle.productB.title}</strong></div>
+          <Link to={`/kapisma/${communityBattle.id}`}>⚔️ Oyunu Ver</Link>
+          <Link to="/kapismalar">Tüm Kapışmaları Gör →</Link>
+        </div>
       ) : battle ? (
         <>
           <div className="gift-battle-arena">

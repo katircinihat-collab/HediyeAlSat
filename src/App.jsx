@@ -31,6 +31,7 @@ import AdminDetail from "./pages/AdminDetail";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Raffle from "./pages/Raffle";
+import GiftBattles from "./pages/GiftBattles";
 
 import Listings from "./pages/Listings";
 
@@ -211,6 +212,8 @@ function App() {
           />
 
           <Route path="/kura" element={<Raffle />} />
+          <Route path="/kapismalar" element={<GiftBattles />} />
+          <Route path="/kapisma/:battleId" element={<GiftBattles />} />
 
           <Route
             path="/sponsor-magaza"

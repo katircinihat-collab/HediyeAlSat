@@ -259,9 +259,8 @@ function Profile() {
               <summary>XP Nasıl Kazanırım / Nerede Kullanırım?</summary>
               <ul>
                 <li><span>🎁 Üye olduğunda</span><strong>+{xpConfig.events.WELCOME_BONUS.amount} XP</strong><small>Tek seferlik hoş geldin bonusu</small></li>
-                <li><span>⚔️ Hediye Kapışmasında geçerli oy</span><strong>+{xpConfig.events.GIFT_BATTLE_VOTE.amount} XP</strong></li>
-                <li><span>🛡️ Kapışma oylarından günlük</span><strong>En fazla +{xpConfig.events.GIFT_BATTLE_VOTE.dailyCap} XP</strong></li>
-                <li><span>⚔️ Kendi Hediye Kapışmanı oluştur</span><strong>-{xpConfig.events.BATTLE_CREATE.amount} XP</strong></li>
+                <li><span>⚔️ Günde 3 farklı Hediye Kapışmasına oy ver</span><strong>+{xpConfig.events.GIFT_BATTLE_DAILY_3_VOTES.amount} XP</strong><small>Günde bir kez</small></li>
+                <li><span>⚔️ Kendi Hediye Kapışmanı oluştur</span><strong>Ücretsiz</strong></li>
                 <li><span>🎲 Büyük Hediye Kurasına katıl</span><strong>-{xpConfig.events.RAFFLE_JOIN.amount} XP</strong></li>
               </ul>
               <p>XP para değildir; satın alınamaz veya nakde çevrilemez. HediyeAlSat etkinliklerine katılarak kazanılır ve belirli topluluk özelliklerinde kullanılır.</p>

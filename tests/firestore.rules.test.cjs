@@ -741,6 +741,15 @@ test("40 - client giftBattleVotes belgesini okuyamaz, değiştiremez veya sileme
   await assertFails(deleteDoc(ref));
 });
 
+test("40a - community GiftBattle belgeleri ve özel oy/günlük kayıtları client erişimine kapalıdır", async () => {
+  const ownerDb = dbFor(ownerAuth);
+  for (const [collectionName, id] of [["communityGiftBattles", "battle"], ["communityGiftBattleVotes", "vote"], ["communityGiftBattleDaily", "daily"], ["communityGiftBattleOwnerGuards", ownerAuth.uid]]) {
+    const ref = doc(ownerDb, collectionName, id);
+    await assertFails(getDoc(ref));
+    await assertFails(setDoc(ref, { ownerUid: ownerAuth.uid, votesA: 999 }));
+  }
+});
+
 test("45 - buyer orderClaims belgesini doğrudan oluşturamaz", async () => {
   await assertFails(setDoc(doc(dbFor(ownerAuth), "orderClaims", "client-claim"), { orderId: "owner-order", buyerUid: ownerAuth.uid, sellerUid: otherAuth.uid, durum: "acik" }));
 });

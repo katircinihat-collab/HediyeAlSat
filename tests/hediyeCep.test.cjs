@@ -18,12 +18,12 @@ test("HediyeCep tek sağ alt merkez olarak mevcut sohbeti içerir", () => {
 });
 
 test("HediyeCep yalnız gerçek uygulama route'larını kullanır", () => {
-  for (const route of ["/a4-tasarimlar", "/hediye-fikirleri", "/kura"]) {
+  for (const route of ["/a4-tasarimlar", "/hediye-fikirleri", "/kura", "/kapismalar"]) {
     assert.match(app, new RegExp(`path="${route}"`));
     assert.match(chat, new RegExp(route.replace("/", "\\/")));
   }
   assert.match(home, /id="hediye-kapismasi"|<GiftBattle \/>/);
-  assert.match(chat, /\/#hediye-kapismasi/);
+  assert.match(chat, /\/kapismalar/);
   assert.match(chat, /Kura/);
 });
 

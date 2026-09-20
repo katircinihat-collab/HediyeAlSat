@@ -1,5 +1,5 @@
 const { firestore, FieldValue } = require("../config/firebase");
-const { applyXpEventInTransaction } = require("../services/xpService");
+const communityService = require("../services/communityGiftBattleService");
 
 const QUESTIONS = [
     "Sen hangisini hediye ederdin?",
@@ -231,7 +231,6 @@ exports.vote = async (req, res, next) => {
         const battleRef = firestore.collection("giftBattles").doc(dateKey);
         const voteRef = firestore.collection("giftBattleVotes").doc(voteDocumentId(dateKey, req.user.uid));
 
-        let xpResult = null;
         await withTimeout(firestore.runTransaction(async (transaction) => {
             const battleSnapshot = await transaction.get(battleRef);
             if (!battleSnapshot.exists) throw Object.assign(new Error("Bugünün kapışması bulunamadı."), { status: 404 });
@@ -256,15 +255,6 @@ exports.vote = async (req, res, next) => {
                 throw Object.assign(new Error("Bugünkü kapışmada oyunuzu zaten kullandınız."), { status: 409 });
             }
 
-            xpResult = await applyXpEventInTransaction({
-                firestore,
-                transaction,
-                FieldValue,
-                uid: req.user.uid,
-                reason: "GIFT_BATTLE_VOTE",
-                sourceId: voteRef.id
-            });
-
             transaction.create(voteRef, {
                 dateKey,
                 voterUid: req.user.uid,
@@ -281,12 +271,7 @@ exports.vote = async (req, res, next) => {
         return res.status(201).json({
             success: true,
             selectedListingId,
-            xp: xpResult ? {
-                awarded: xpResult.amount,
-                capped: xpResult.capped === true,
-                availableXP: xpResult.availableXP,
-                lifetimeXP: xpResult.lifetimeXP
-            } : null,
+            xp: null,
             battle: resultPayload(current.battle, current.leftSnapshot, current.rightSnapshot)
         });
     } catch (error) {
@@ -300,3 +285,82 @@ exports.eligibleListing = eligibleListing;
 exports.selectPair = selectPair;
 exports.withTimeout = withTimeout;
 exports.GIFT_BATTLE_CANDIDATE_LIMIT = GIFT_BATTLE_CANDIDATE_LIMIT;
+
+function communityError(error, res, next) {
+    if (error?.status) return res.status(error.status).json({ success: false, code: error.code, message: error.message });
+    return next(error);
+}
+
+exports.createCommunityBattle = async (req, res, next) => {
+    try {
+        const battle = await communityService.createBattle({ firestore, FieldValue, user: req.user, productIds: req.body?.productIds, question: req.body?.question });
+        return res.status(201).json({ success: true, battle });
+    } catch (error) { return communityError(error, res, next); }
+};
+
+exports.getCommunityBattle = async (req, res, next) => {
+    try {
+        const context = await communityService.loadBattleContext({ firestore, battleId: req.params.battleId, user: req.user || null });
+        return res.json({ success: true, battle: context.battle });
+    } catch (error) { return communityError(error, res, next); }
+};
+
+exports.feedCommunityBattles = async (req, res, next) => {
+    try {
+        const snapshot = await withTimeout(firestore.collection("communityGiftBattles").where("status", "==", communityService.STATUS.ACTIVE).limit(30).get());
+        const now = Date.now();
+        const battles = snapshot.docs.map((doc) => ({ id: doc.id, data: doc.data() }))
+            .filter(({ data }) => data.expiresAt?.toDate?.().getTime() > now)
+            .sort((a, b) => (Number(a.data.votesA || 0) + Number(a.data.votesB || 0)) - (Number(b.data.votesA || 0) + Number(b.data.votesB || 0)) || Math.random() - .5)
+            .slice(0, Math.min(12, Math.max(1, Number(req.query.limit) || 8)))
+            .map(({ id, data }) => communityService.publicBattle(id, data));
+        return res.json({ success: true, battles });
+    } catch (error) { return communityError(error, res, next); }
+};
+
+exports.voteCommunityBattle = async (req, res, next) => {
+    try {
+        const result = await communityService.voteBattle({ firestore, FieldValue, user: req.user, battleId: req.params.battleId, choice: String(req.body?.choice || "").toUpperCase() });
+        return res.status(201).json({ success: true, ...result });
+    } catch (error) { return communityError(error, res, next); }
+};
+
+exports.endCommunityBattle = async (req, res, next) => {
+    try {
+        const ref = firestore.collection("communityGiftBattles").doc(req.params.battleId);
+        await firestore.runTransaction(async (tx) => {
+            const snap = await tx.get(ref);
+            if (!snap.exists) throw new communityService.GiftBattleError("Kapışma bulunamadı.", 404, "NOT_FOUND");
+            if (snap.data().ownerUid !== req.user.uid) throw new communityService.GiftBattleError("Bu kapışmayı bitirme yetkiniz yok.", 403, "FORBIDDEN");
+            if (snap.data().status !== communityService.STATUS.ACTIVE) throw new communityService.GiftBattleError("Kapışma zaten sona ermiş.", 409, "NOT_ACTIVE");
+            const guardRef = firestore.collection("communityGiftBattleOwnerGuards").doc(req.user.uid);
+            const guardSnap = await tx.get(guardRef);
+            tx.update(ref, { status: communityService.STATUS.ENDED, endedAt: FieldValue.serverTimestamp(), endReason: "OWNER_ENDED", updatedAt: FieldValue.serverTimestamp() });
+            if (guardSnap.exists) tx.update(guardRef, { [`active.${req.params.battleId}`]: FieldValue.delete(), updatedAt: FieldValue.serverTimestamp() });
+        });
+        const context = await communityService.loadBattleContext({ firestore, battleId: req.params.battleId, user: req.user });
+        return res.json({ success: true, battle: context.battle });
+    } catch (error) { return communityError(error, res, next); }
+};
+
+exports.adminListCommunityBattles = async (_req, res, next) => {
+    try {
+        const snap = await firestore.collection("communityGiftBattles").limit(100).get();
+        const battles = snap.docs.map((doc) => communityService.publicBattle(doc.id, doc.data(), { reveal: true }));
+        return res.json({ success: true, battles });
+    } catch (error) { return next(error); }
+};
+
+exports.adminRemoveCommunityBattle = async (req, res, next) => {
+    try {
+        const ref = firestore.collection("communityGiftBattles").doc(req.params.battleId);
+        const snap = await ref.get();
+        if (!snap.exists) return res.status(404).json({ success: false, message: "Kapışma bulunamadı." });
+        await ref.update({ status: communityService.STATUS.REMOVED, endedAt: FieldValue.serverTimestamp(), endReason: "ADMIN_REMOVED", updatedAt: FieldValue.serverTimestamp() });
+        if (snap.data().ownerUid) {
+            const guardRef = firestore.collection("communityGiftBattleOwnerGuards").doc(snap.data().ownerUid);
+            if ((await guardRef.get()).exists) await guardRef.update({ [`active.${req.params.battleId}`]: FieldValue.delete(), updatedAt: FieldValue.serverTimestamp() });
+        }
+        return res.json({ success: true });
+    } catch (error) { return next(error); }
+};

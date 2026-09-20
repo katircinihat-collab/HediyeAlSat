@@ -35,6 +35,15 @@ async function request(path, options = {}, tokenRequired = false) {
   }
 }
 
+async function optionalAuthRequest(path, options = {}) {
+  const headers = { ...(options.headers || {}) };
+  if (auth.currentUser) headers.Authorization = `Bearer ${await auth.currentUser.getIdToken()}`;
+  const response = await fetch(apiUrl(path), { ...options, headers });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw Object.assign(new Error(data.message || "Kapışma yüklenemedi."), { status: response.status, code: data.code });
+  return data;
+}
+
 export function getTodayGiftBattle() {
   return request("/api/gift-battle/today");
 }
@@ -50,3 +59,9 @@ export function voteGiftBattle(selectedListingId) {
     body: JSON.stringify({ selectedListingId })
   }, true);
 }
+
+export const getCommunityBattles = (limit = 8) => request(`/api/gift-battle/community?limit=${limit}`);
+export const getCommunityBattle = (battleId) => optionalAuthRequest(`/api/gift-battle/community/${encodeURIComponent(battleId)}`);
+export const createCommunityBattle = (productIds, question) => request("/api/gift-battle/community", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ productIds, question }) }, true);
+export const voteCommunityBattle = (battleId, choice) => request(`/api/gift-battle/community/${encodeURIComponent(battleId)}/vote`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ choice }) }, true);
+export const endCommunityBattle = (battleId) => request(`/api/gift-battle/community/${encodeURIComponent(battleId)}/end`, { method: "POST" }, true);

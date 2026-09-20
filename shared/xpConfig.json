@@ -1,7 +1,8 @@
 {
   "events": {
     "WELCOME_BONUS": { "type": "earn", "amount": 25, "label": "Hoş geldin bonusu" },
-    "GIFT_BATTLE_VOTE": { "type": "earn", "amount": 5, "dailyCap": 25, "label": "Hediye Kapışmasında oy kullandın" },
+    "GIFT_BATTLE_VOTE": { "type": "earn", "amount": 0, "dailyCap": 0, "label": "Eski günlük Hediye Kapışması oyu" },
+    "GIFT_BATTLE_DAILY_3_VOTES": { "type": "earn", "amount": 5, "label": "3 farklı Hediye Kapışmasına oy verdin" },
     "BATTLE_CREATE": { "type": "spend", "amount": 25, "label": "Kendi Hediye Kapışmanı oluşturdun" },
     "RAFFLE_JOIN": { "type": "spend", "amount": 100, "label": "Büyük Hediye Kurasına katıldın" },
     "RAFFLE_REFUND": { "type": "refund", "amount": 100, "refundOf": "RAFFLE_JOIN", "label": "Kura iptal edildi / XP iade edildi" }

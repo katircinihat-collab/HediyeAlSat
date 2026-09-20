@@ -329,6 +329,21 @@ service cloud.firestore {
       allow read, create, update, delete: if false;
     }
 
+    // Kullanıcı Kapışmaları yalnız backend Admin SDK üzerinden okunur/yazılır.
+    // Public API güvenli alan projeksiyonu döndürür; owner UID ve oy kayıtları açılmaz.
+    match /communityGiftBattles/{battleId} {
+      allow read, create, update, delete: if false;
+    }
+    match /communityGiftBattleVotes/{voteId} {
+      allow read, create, update, delete: if false;
+    }
+    match /communityGiftBattleDaily/{dailyId} {
+      allow read, create, update, delete: if false;
+    }
+    match /communityGiftBattleOwnerGuards/{ownerId} {
+      allow read, create, update, delete: if false;
+    }
+
     // Kura etkinliği, katılım, gizli eşleşme ve sohbet mutationları yalnız
     // auth/admin doğrulamalı backend üzerinden yapılır.
     match /raffleEvents/{eventId} {

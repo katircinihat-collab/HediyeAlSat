@@ -19,7 +19,7 @@ test("profil XP sayıları merkezi configden gelir ve responsive yapı korunur",
   const profile = read("src/pages/Profile.jsx");
   const styles = read("src/styles/pages/profile.css");
   assert.match(profile, /xpConfig\.events\.WELCOME_BONUS\.amount/);
-  assert.match(profile, /xpConfig\.events\.GIFT_BATTLE_VOTE\.dailyCap/);
+  assert.match(profile, /xpConfig\.events\.GIFT_BATTLE_DAILY_3_VOTES\.amount/);
   assert.match(styles, /\.profile-xp-card/);
   assert.match(styles, /@media \(max-width: 640px\)/);
 });
@@ -30,9 +30,9 @@ test("kayıt akışı backend hoş geldin bonusunu çağırır; client XP alanı
   assert.doesNotMatch(register, /(?:lifetimeXP|availableXP)\s*:/);
 });
 
-test("GiftBattle geçerli oyla XP'yi aynı backend transactionında uygular", () => {
-  const controller = read("backend/controllers/giftBattleController.js");
-  assert.match(controller, /applyXpEventInTransaction/);
-  assert.match(controller, /reason: "GIFT_BATTLE_VOTE"/);
-  assert.match(controller, /sourceId: voteRef\.id/);
+test("topluluk GiftBattle üçüncü geçerli oyla XP'yi aynı backend transactionında uygular", () => {
+  const service = read("backend/services/communityGiftBattleService.js");
+  assert.match(service, /applyXpEventInTransaction/);
+  assert.match(service, /reason: "GIFT_BATTLE_DAILY_3_VOTES"/);
+  assert.match(service, /count === 3/);
 });

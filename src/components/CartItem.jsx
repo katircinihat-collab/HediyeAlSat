@@ -12,6 +12,12 @@ function CartItem({
 
   favorilereTasi
 
+  ,battleMode,
+
+  battleSelected,
+
+  onBattleSelect
+
 }) {
 
   const fiyat =
@@ -45,7 +51,9 @@ function CartItem({
 
   return (
 
-    <div className="cart-card">
+    <div className={`cart-card ${battleSelected ? "cart-card-battle-selected" : ""}`}>
+
+      {battleMode && <label className="cart-battle-select"><input type="checkbox" checked={battleSelected} onChange={() => onBattleSelect(urun)} /><span>Kapışmaya seç</span></label>}
 
       {/* SOL */}
 

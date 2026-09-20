@@ -124,7 +124,7 @@ function PublicChat() {
         <div className="hediye-cep__welcome"><span aria-hidden="true">📱</span><div><strong>Bugün ne yapmak istersin?</strong><small>Hediye dünyasına tek yerden katıl.</small></div></div>
         <div className="hediye-cep__apps" aria-label="HediyeCep uygulamaları">
           <button type="button" onClick={openChat}><span>💬</span><strong>Canlı Sohbet</strong><small>Toplulukla konuş</small></button>
-          <button type="button" onClick={() => goTo("/#hediye-kapismasi")}><span>⚔️</span><strong>Hediye Kapışması</strong><small>Bugünün seçimini yap</small></button>
+            <button type="button" onClick={() => goTo("/kapismalar")}><span>⚔️</span><strong>Hediye Kapışması</strong><small>Topluluğun seçimine katıl</small></button>
           <button type="button" onClick={() => goTo("/a4-tasarimlar")}><span>🎨</span><strong>A4 Tasarım</strong><small>Tasarımları keşfet</small></button>
           <button type="button" onClick={() => goTo("/kura")}><span>🎲</span><strong>Kura</strong><small>Topluluk etkinliğine katıl</small></button>
           <button type="button" onClick={() => goTo("/hediye-fikirleri")}><span>💡</span><strong>Hediye Fikirleri</strong><small>İlhamını bul</small></button>
