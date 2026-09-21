@@ -24,6 +24,10 @@ export default function OnboardingTour() {
     let cancelled = false;
     let attempts = 0;
     let timer;
+    if (step.prepare === "page-top" && window.scrollY > 20) {
+      const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      window.scrollTo({ top: 0, behavior: reduced ? "auto" : "smooth" });
+    }
     const seek = () => {
       if (cancelled) return;
       const element = findVisibleTourTarget(step.target);
@@ -41,7 +45,7 @@ export default function OnboardingTour() {
     setLayout(null);
     seek();
     return () => { cancelled = true; window.clearTimeout(timer); };
-  }, [advancePastMissingTarget, step]);
+  }, [advancePastMissingTarget, step, tour?.runId]);
 
   const updateLayout = useCallback(() => {
     if (!target || !bubbleRef.current) return;

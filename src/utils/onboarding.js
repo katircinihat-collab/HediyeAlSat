@@ -9,6 +9,7 @@ export const WELCOME_TOUR_STEPS = Object.freeze([
   { target: "gift-battle", title: "⚔️ Kararsızsan Kapıştır", body: "İki ürünü kapıştır, topluluğun oyları karar vermene yardım etsin." },
   {
     target: "xp",
+    prepare: "page-top",
     title: "⭐ XP Kazan, Seviye Atla",
     guestBody: "Üye olduğunda +25 XP ile başla. Katıldıkça XP kazan ve seviyeni yükselt.",
     authBody: "Etkinliklere katıldıkça XP kazanabilir ve seviyeni yükseltebilirsin."

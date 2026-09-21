@@ -11,12 +11,14 @@ export default function OnboardingProvider({ children }) {
   const [user, setUser] = useState(auth.currentUser);
   const [tour, setTour] = useState(null);
   const attemptedRef = useRef(new Set());
+  const runIdRef = useRef(0);
 
   useEffect(() => onAuthStateChanged(auth, setUser), []);
 
   const startWelcomeTour = useCallback((manual = true) => {
     if (pathname !== "/") navigate("/");
-    setTour({ id: "welcome", steps: WELCOME_TOUR_STEPS, index: 0, manual });
+    runIdRef.current += 1;
+    setTour({ id: "welcome", steps: WELCOME_TOUR_STEPS, index: 0, manual, runId: runIdRef.current });
   }, [navigate, pathname]);
 
   const closeTour = useCallback((completed = false) => {
@@ -38,7 +40,8 @@ export default function OnboardingProvider({ children }) {
     if (!candidate || attemptedRef.current.has(candidate.id)) return;
     attemptedRef.current.add(candidate.id);
     if (safeReadOnboarding(window.localStorage, ONBOARDING_STORAGE_KEYS[candidate.id])) return;
-    setTour({ ...candidate, index: 0, manual: false });
+    runIdRef.current += 1;
+    setTour({ ...candidate, index: 0, manual: false, runId: runIdRef.current });
   }, [pathname, tour]);
 
   const value = useMemo(() => ({ tour, user, startWelcomeTour, closeTour, goToStep }), [closeTour, goToStep, startWelcomeTour, tour, user]);

@@ -117,7 +117,7 @@ function Footer() {
             Satıcı Paneli
           </Link>
 
-          <Link to="/ilan-ver">
+          <Link to="/ilan-ver" data-tour="create-listing">
             Ürün Yayınla
           </Link>
 

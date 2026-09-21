@@ -17,6 +17,7 @@ test("welcome turu yalnız istenen dört gerçek özelliği içerir", () => {
   assert.equal(WELCOME_TOUR_STEPS.some((step) => /kura|a4/i.test(step.target)), false);
   assert.match(WELCOME_TOUR_STEPS[3].guestBody, /\+25 XP/);
   assert.doesNotMatch(WELCOME_TOUR_STEPS[3].authBody, /üye ol/i);
+  assert.equal(WELCOME_TOUR_STEPS[3].prepare, "page-top");
 });
 
 test("A4 tanıtımı welcome turundan bağımsız ve sürümlüdür", () => {
@@ -60,6 +61,21 @@ test("provider otomatik tekrar, manuel replay ve route duplicate davranışını
   assert.match(footer, /HediyeAlSat’ı Tanı/);
 });
 
+test("manuel replay eski adım durumunu taşımadan her zaman 1/4 başlatır", () => {
+  const provider = read("src/context/OnboardingProvider.jsx");
+  assert.match(provider, /runIdRef\.current \+= 1/);
+  assert.match(provider, /index: 0, manual, runId: runIdRef\.current/);
+});
+
+test("3/4 sonrası navbar hazırlanır ve guest/auth XP hedefi çözülür", () => {
+  const tour = read("src/components/OnboardingTour.jsx");
+  const navbar = read("src/components/Navbar.jsx");
+  assert.match(tour, /step\.prepare === "page-top"/);
+  assert.match(tour, /window\.scrollTo\(\{ top: 0/);
+  assert.match(tour, /tour\?\.runId/);
+  assert.ok((navbar.match(/data-tour="xp"/g) || []).length >= 3);
+});
+
 test("target eksikliği sınırlı retry ile fail-open olur", () => {
   const tour = read("src/components/OnboardingTour.jsx");
   assert.match(tour, /TARGET_MAX_ATTEMPTS = 25/);
@@ -70,6 +86,7 @@ test("target eksikliği sınırlı retry ile fail-open olur", () => {
 
 test("targetlar metin yerine stabil data attribute kullanır", () => {
   assert.match(read("src/components/Navbar.jsx"), /data-tour="create-listing"/);
+  assert.match(read("src/components/Footer.jsx"), /to="\/ilan-ver" data-tour="create-listing"/);
   assert.match(read("src/components/Footer.jsx"), /data-tour="open-store"/);
   assert.match(read("src/components/GiftBattle.jsx"), /data-tour="gift-battle"/);
   assert.match(read("src/components/Navbar.jsx"), /data-tour="xp"/);
