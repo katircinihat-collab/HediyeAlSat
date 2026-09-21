@@ -39,7 +39,7 @@ function HeroBanner() {
 
           <div className="hero-buttons">
 
-            <Link to="/ilan-ver">
+            <Link to="/ilan-ver" data-tour="create-listing">
 
               <button className="hero-primary">
 

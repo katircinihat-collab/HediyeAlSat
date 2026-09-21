@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
 import useSystemStatus from "../hooks/useSystemStatus";
+import OnboardingProvider from "../context/OnboardingProvider";
+import OnboardingTour from "./OnboardingTour";
 import "../styles/components/system-status.css";
 
 const ICONS = { info: "ℹ️", warning: "⚠️", maintenance: "🛠️", payment: "💳", order: "📦" };
@@ -61,8 +63,9 @@ export default function SystemStatusLayer({ children }) {
   if (!managementRoute && status.maintenance.enabled) {
     return <MaintenanceScreen maintenance={status.maintenance} />;
   }
-  return <>
+  return <OnboardingProvider>
     <SystemAnnouncement announcement={status.announcement} />
     {children}
-  </>;
+    <OnboardingTour />
+  </OnboardingProvider>;
 }

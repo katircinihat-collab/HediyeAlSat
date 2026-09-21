@@ -395,7 +395,7 @@ function Navbar({ dailyProduct = null }) {
               gridTemplateColumns: `repeat(${user?.email === ADMIN_EMAIL ? 6 : 5}, minmax(0, 1fr))`
             }}
           >
-            <Link to="/ilan-ver" className="header-action header-action-primary">
+            <Link to="/ilan-ver" className="header-action header-action-primary" data-tour="create-listing">
               <span aria-hidden="true">＋</span>
               <strong>İlan Ver</strong>
               <small>Hemen Başla</small>
@@ -431,6 +431,7 @@ function Navbar({ dailyProduct = null }) {
               <div className="navbar-user" ref={menuRef}>
                 <button
                   className={`user-btn ${menuAcik ? "user-btn-active" : ""}`}
+                  data-tour="xp"
                   onClick={() => setMenuAcik(!menuAcik)}
                   aria-expanded={menuAcik}
                 >
@@ -550,7 +551,7 @@ function Navbar({ dailyProduct = null }) {
                 )}
               </div>
             ) : (
-              <div className="guest-auth-actions" aria-label="Üyelik işlemleri">
+              <div className="guest-auth-actions" aria-label="Üyelik işlemleri" data-tour="xp">
                 <Link to="/login" className="guest-auth-btn guest-login-btn">
                   Giriş Yap
                 </Link>
@@ -617,6 +618,7 @@ function Navbar({ dailyProduct = null }) {
         <Link
           to={user ? "/profil" : "/login"}
           className="mobile-navbar-action"
+          data-tour="xp"
           aria-label={user ? "Hesabım" : "Giriş yap"}
         >
           👤

@@ -195,7 +195,7 @@ function SpecialListingsPage({ tur }) {
         </header>
 
         {!yuzTlSayfasi && (
-          <section className="a4-market-intro" aria-labelledby="a4-intro-title">
+          <section className="a4-market-intro" aria-labelledby="a4-intro-title" data-tour="a4">
             <div className="a4-market-copy">
               <h2 id="a4-intro-title">
                 Hayalindeki tasarımı hazırla, HediyeAlSat&apos;ta satışa sun.

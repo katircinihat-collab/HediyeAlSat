@@ -134,6 +134,7 @@ function GiftBattle() {
     <section
       id="hediye-kapismasi"
       className="gift-battle"
+      data-tour="gift-battle"
       aria-labelledby="gift-battle-title"
       style={{ scrollMarginTop: "70px" }}
     >
