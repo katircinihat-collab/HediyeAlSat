@@ -207,6 +207,16 @@ after(async () => {
   if (env) await env.cleanup();
 });
 
+test("taxonomy - owner stores valid choices, foreign writes and arbitrary values denied", async () => {
+  const ref = doc(dbFor(ownerAuth), 'ilanlar', 'published');
+  await assertSucceeds(updateDoc(ref, { hedefKisiler: ['sevgili'], ozelGunler: ['dogum-gunu'], giftStyles: ['dekoratif'] }));
+  await assertFails(updateDoc(ref, { giftStyles: ['<script>'] }));
+  await assertFails(updateDoc(ref, { giftStyles: ['dekoratif', 'dekoratif'] }));
+  await assertFails(updateDoc(ref, { hedefKisiler: ['arbitrary-seo-slug'] }));
+  await assertFails(updateDoc(ref, { ozelGunler: 'dogum-gunu' }));
+  await assertFails(updateDoc(doc(dbFor(otherAuth), 'ilanlar', 'published'), { giftStyles: ['romantik'] }));
+});
+
 test("1 - oturumsuz kullanıcı onaylı ilanı okuyabilir", async () => {
   await assertSucceeds(getDoc(doc(dbFor(), "ilanlar", "published")));
 });

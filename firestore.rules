@@ -242,15 +242,22 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    function validGiftAttributes(data) {
+      return (!("hedefKisiler" in data) || (data.hedefKisiler is list && data.hedefKisiler.size() <= 10 && data.hedefKisiler.toSet().size() == data.hedefKisiler.size() && data.hedefKisiler.hasOnly(["kadin","erkek","sevgili","anne","baba","arkadas","cocuk","ogretmen","es","is-arkadasi"])))
+        && (!("ozelGunler" in data) || (data.ozelGunler is list && data.ozelGunler.size() <= 15 && data.ozelGunler.toSet().size() == data.ozelGunler.size() && data.ozelGunler.hasOnly(["dogum-gunu","yildonumu","sevgililer-gunu","anneler-gunu","babalar-gunu","ogretmenler-gunu","yeni-ev","yeni-is","mezuniyet","yilbasi","surpriz","dugun","nisan","gecmis-olsun","tesekkur"])))
+        && (!("giftStyles" in data) || (data.giftStyles is list && data.giftStyles.size() <= 8 && data.giftStyles.toSet().size() == data.giftStyles.size() && data.giftStyles.hasOnly(["dekoratif","romantik","eglenceli","kisiye-ozel","sanatsal","el-yapimi","ev-yasam","dijital"])));
+    }
+
     match /ilanlar/{listingId} {
       allow read: if resource.data.onay == true || listingOwner() || isAdmin();
 
       allow create: if signedIn()
+        && validGiftAttributes(request.resource.data)
         && request.resource.data.keys().hasOnly([
           "ilanNo", "baslik", "fiyat", "eskiFiyat", "kategori",
           "altKategori", "tip", "sehir", "adet", "stok",
           "marka", "renk", "aciklama", "resim", "resimler", "video",
-          "ozelGunler", "hedefKisiler", "sahipUid", "magazaId", "magazaAdi",
+          "ozelGunler", "hedefKisiler", "giftStyles", "sahipUid", "magazaId", "magazaAdi",
           "paraBirimi", "puan", "yorumSayisi", "favoriSayisi",
           "satisSayisi", "goruntulenme", "onay", "oneCikan", "trend",
           "kampanyali", "indirim", "ucretsizKargo", "ayniGunKargo",
@@ -287,7 +294,7 @@ service cloud.firestore {
             && request.resource.data.hakOnayiSurumu == "digital-rights-v1"
             && request.resource.data.dijitalDosyaDurumu == "bekleniyor"));
 
-      allow update: if (isAdmin()
+      allow update: if ((isAdmin()
           && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
             "boostActive", "boostStartAt", "boostEndAt", "boostPackageId",
             "boostPaymentId", "boostUpdatedAt"
@@ -295,12 +302,14 @@ service cloud.firestore {
         || (listingOwner() && onlyChanged([
           "baslik", "fiyat", "telefon", "aciklama", "kategori",
           "altKategori", "renk", "marka", "resim", "resimler",
-          "video", "ozelGunler", "hedefKisiler", "tip", "sehir", "adet", "stok",
+          "video", "ozelGunler", "hedefKisiler", "giftStyles", "tip", "sehir", "adet", "stok",
           "eskiFiyat", "indirim", "ucretsizKargo", "ayniGunKargo",
           "kargoUcreti", "teslimatSuresi", "aktif", "paraBirimi"
         ]) && !("telefon" in request.resource.data)
           && (!("aciklama" in request.resource.data)
-            || publicTextIsSafe(request.resource.data.aciklama)));
+            || publicTextIsSafe(request.resource.data.aciklama))))
+        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(["hedefKisiler", "ozelGunler", "giftStyles"])
+          || validGiftAttributes(request.resource.data));
 
       allow delete: if listingOwner() || isAdmin();
     }

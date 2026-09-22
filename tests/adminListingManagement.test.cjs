@@ -15,6 +15,12 @@ test("Detay doğru admin ilan routeuna gider ve bulunamayan ilan boş ekranda ka
   assert.match(detailPage, /setError\("İlan bulunamadı\."\)/);
   assert.match(detailPage, /error \|\| "Yükleniyor\.\.\."/);
 });
+
+test('admin taxonomy validates allowlists and normalizes duplicates', () => {
+  const body = { baslik: 'Vazo', fiyat: 100, kategori: 'Hediyelik Ürünler', giftStyles: ['dekoratif', 'dekoratif'] };
+  assert.deepEqual(_test.buildAdminEditUpdate({}, body, 'now', 'admin').giftStyles, ['dekoratif']);
+  assert.throws(() => _test.buildAdminEditUpdate({}, { ...body, giftStyles: ['<script>'] }, 'now', 'admin'), /geçersiz/);
+});
 test("yayından kaldırma canonical kalıcı state üretir, yeniden yayın yalnız onaylı ilana açıktır", () => {
   const closed = availability.buildUnpublishedListingState({ timestamp: "now", adminUid: "admin" });
   assert.deepEqual({ aktif: closed.aktif, yayinda: closed.yayinda, durum: closed.durum }, {

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { onAuthStateChanged } from "firebase/auth";
+import { onAuthStateChanged, signOut } from "firebase/auth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { auth, db } from "../firebase";
 import { apiUrl } from "../config/api";
@@ -48,6 +48,10 @@ function profilNormallestir(profil = {}) {
 
 function Profile() {
   const navigate = useNavigate();
+  const logout = async () => {
+    try { await signOut(auth); navigate('/login'); }
+    catch { window.alert('Çıkış yapılamadı. Lütfen tekrar deneyin.'); }
+  };
   const [profil, setProfil] = useState(bosProfil);
   const [kayitliProfil, setKayitliProfil] = useState(bosProfil);
   const [yukleniyor, setYukleniyor] = useState(true);
@@ -226,6 +230,7 @@ function Profile() {
           <Link className="profile-link" to="/mesajlar">💬 Mesajlarım</Link>
           <Link className="profile-link" to="/magazalar">🏪 Mağazalar</Link>
           <Link className="profile-link" to="/ayarlar">⚙️ Ayarlar</Link>
+          <button type="button" className="profile-link" onClick={logout}>🚪 Çıkış Yap</button>
           <Link className="profile-link" to="/satici-siparisleri">
             📦 Satıcı Siparişleri
           </Link>

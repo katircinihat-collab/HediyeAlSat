@@ -10,6 +10,8 @@ deleteField
 import {db} from "../firebase";
 
 import { auth } from "../firebase";
+import GiftAttributes from "../components/GiftAttributes";
+import { normalizeGiftTaxonomy } from "../seo/giftTaxonomy";
 import { validatePublicContent } from "../utils/publicContentModeration";
 import { adminApi } from "../config/adminApi";
 
@@ -112,6 +114,7 @@ return;
 }
 
 const update = {
+...normalizeGiftTaxonomy(ilan),
 baslik:ilan.baslik,
 fiyat:ilan.fiyat,
 aciklama:guvenliAciklama,
@@ -252,6 +255,7 @@ alert("Yeni fotoğraflar hazır ✅");
 
 </div>
 <form onSubmit={kaydet}>
+<GiftAttributes value={ilan} onChange={attributes => setIlan(previous => ({ ...previous, ...attributes }))} />
 
 
 <input

@@ -1,3 +1,4 @@
+import { buildShowcaseConfig } from './showcaseConfig.js';
 const seoPages = {
   "sevgiliye-hediye": {
     title: "Sevgiliye Hediye Fikirleri | HediyeAlSat",
@@ -927,4 +928,5 @@ const seoPages = {
   }
 };
 
+for (const [slug, page] of Object.entries(seoPages)) Object.assign(page, buildShowcaseConfig(slug));
 export default seoPages;

@@ -1,0 +1,5 @@
+{
+  "hedefKisiler": {"kadin":"Kadına","erkek":"Erkeğe","sevgili":"Sevgiliye","anne":"Anneye","baba":"Babaya","arkadas":"Arkadaşa","cocuk":"Çocuğa","ogretmen":"Öğretmene","es":"Eşe","is-arkadasi":"İş Arkadaşına"},
+  "ozelGunler": {"dogum-gunu":"Doğum Günü","yildonumu":"Yıldönümü","sevgililer-gunu":"Sevgililer Günü","anneler-gunu":"Anneler Günü","babalar-gunu":"Babalar Günü","ogretmenler-gunu":"Öğretmenler Günü","yeni-ev":"Yeni Ev","yeni-is":"Yeni İş","mezuniyet":"Mezuniyet","yilbasi":"Yılbaşı","surpriz":"Sürpriz","dugun":"Düğün","nisan":"Nişan","gecmis-olsun":"Geçmiş Olsun","tesekkur":"Teşekkür"},
+  "giftStyles": {"dekoratif":"Dekoratif","romantik":"Romantik","eglenceli":"Eğlenceli","kisiye-ozel":"Kişiye Özel","sanatsal":"Sanatsal","el-yapimi":"El Yapımı","ev-yasam":"Ev & Yaşam","dijital":"Dijital"}
+}

@@ -566,6 +566,9 @@
 ========================================================= */
 
 .user-dropdown {
+  max-height: min(620px, 65dvh);
+  overflow-y: auto;
+  overscroll-behavior: contain;
   position: absolute;
   top: calc(100% + 10px);
   right: 0;

@@ -1,10 +1,8 @@
 
 import "../styles/layout/footer.css";
 import { Link } from "react-router-dom";
-import { useOnboarding } from "../context/onboardingContext";
 
 function Footer() {
-  const { startWelcomeTour } = useOnboarding();
 
   return (
 
@@ -71,9 +69,9 @@ function Footer() {
             Mesafeli Satış Sözleşmesi
           </Link>
 
-          <button type="button" className="onboarding-replay" onClick={() => startWelcomeTour(true)}>
+          <Link to="/hediyealsati-tani" className="onboarding-replay">
             ❓ HediyeAlSat’ı Tanı
-          </button>
+          </Link>
 
         </div>
 

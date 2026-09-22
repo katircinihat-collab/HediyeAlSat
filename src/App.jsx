@@ -8,6 +8,7 @@ import AdminWithdraw from "./pages/AdminWithdraw";
 import MyOrders from "./pages/MyOrders";
 import OrderDetail from "./pages/OrderDetail";
 import SeoLandingPage from "./pages/SeoLandingPage";
+import MeetHediyeAlSat from "./pages/MeetHediyeAlSat";
 import Cart from "./pages/Cart";
 import SellerOrders from "./pages/SellerOrders";
 import Kategori from "./pages/Kategori";
@@ -212,6 +213,7 @@ function App() {
           />
 
           <Route path="/kura" element={<Raffle />} />
+          <Route path="/hediyealsati-tani" element={<MeetHediyeAlSat />} />
           <Route path="/kapismalar" element={<GiftBattles />} />
           <Route path="/kapisma/:battleId" element={<GiftBattles />} />
 

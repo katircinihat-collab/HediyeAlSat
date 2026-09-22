@@ -18,68 +18,14 @@ import cities from "../data/cities";
 import { apiUrl } from "../config/api";
 import { validatePublicContent } from "../utils/publicContentModeration";
 
+import GiftAttributes from "./GiftAttributes";
+import { normalizeGiftTaxonomy } from "../seo/giftTaxonomy";
 import "../App.css";
 
 const CLOUD_NAME = "dsncigidz";
 const UPLOAD_PRESET = "zcqdaoum";
 const DIGITAL_RIGHTS_VERSION = "digital-rights-v1";
 const MAX_DIGITAL_FILE_SIZE = 15 * 1024 * 1024;
-
-const ozelGunListesi = [
-  {
-    id: "dogum-gunu",
-    icon: "🎂",
-    ad: "Doğum Günü"
-  },
-  {
-    id: "sevgililer-gunu",
-    icon: "❤️",
-    ad: "Sevgililer Günü"
-  },
-  {
-    id: "anneler-gunu",
-    icon: "🌹",
-    ad: "Anneler Günü"
-  },
-  {
-    id: "babalar-gunu",
-    icon: "👔",
-    ad: "Babalar Günü"
-  },
-  {
-    id: "mezuniyet",
-    icon: "🎓",
-    ad: "Mezuniyet"
-  },
-  {
-    id: "yilbasi",
-    icon: "🎄",
-    ad: "Yılbaşı"
-  },
-  {
-    id: "yildonumu",
-    icon: "💍",
-    ad: "Yıldönümü"
-  },
-  {
-    id: "surpriz",
-    icon: "🎉",
-    ad: "Sürpriz"
-  }
-];
-
-const hedefKisiListesi = [
-  { id: "sevgili", icon: "❤️", ad: "Sevgili" },
-  { id: "kadin", icon: "👩", ad: "Kadın" },
-  { id: "erkek", icon: "👨", ad: "Erkek" },
-  { id: "anne", icon: "🌷", ad: "Anne" },
-  { id: "baba", icon: "👔", ad: "Baba" },
-  { id: "es", icon: "💍", ad: "Eş" },
-  { id: "arkadas", icon: "🤝", ad: "Arkadaş" },
-  { id: "cocuk", icon: "🧸", ad: "Çocuk" },
-  { id: "ogretmen", icon: "📚", ad: "Öğretmen" },
-  { id: "is-arkadasi", icon: "💼", ad: "İş Arkadaşı" }
-];
 
 function AddListing() {
 
@@ -373,72 +319,6 @@ function AddListing() {
      ÖZEL GÜN SEÇ
   =========================== */
 
-  function ozelGunSec(id) {
-
-    setIlan((onceki) => {
-
-      const secili =
-        onceki.ozelGunler.includes(id);
-
-      return {
-
-        ...onceki,
-
-        ozelGunler: secili
-
-          ? onceki.ozelGunler.filter(
-              (gun) => gun !== id
-            )
-
-          : [
-              ...onceki.ozelGunler,
-              id
-            ]
-
-      };
-
-    });
-
-  }
-
-
-  /* ===========================
-     HEDEF KİŞİ SEÇ
-  =========================== */
-
-  function hedefKisiSec(id) {
-
-    setIlan((onceki) => {
-
-      const secili =
-        onceki.hedefKisiler.includes(id);
-
-      return {
-
-        ...onceki,
-
-        hedefKisiler: secili
-
-          ? onceki.hedefKisiler.filter(
-              (kisi) => kisi !== id
-            )
-
-          : [
-              ...onceki.hedefKisiler,
-              id
-            ]
-
-      };
-
-    });
-
-  }
-
-
-  /* ===========================
-     İLAN KAYDET
-  =========================== */
-
   async function kaydet(e) {
 
     e.preventDefault();
@@ -655,13 +535,7 @@ function AddListing() {
       video:
         ilan.video,
 
-      /* ⭐ ÖZEL GÜNLER */
-      ozelGunler:
-        ilan.ozelGunler,
-
-      /* 🎯 HEDİYE KİME UYGUN */
-      hedefKisiler:
-        ilan.hedefKisiler,
+      ...normalizeGiftTaxonomy(ilan),
 
       sahipUid:
         auth.currentUser.uid,
@@ -771,7 +645,8 @@ function AddListing() {
         resimler: [],
         video: "",
         ozelGunler: [],
-        hedefKisiler: []
+        hedefKisiler: [],
+        giftStyles: []
 
       });
 
@@ -1049,172 +924,7 @@ function AddListing() {
             ÖZEL GÜNLER
         =========================== */}
 
-        <div
-          className="ozel-gunler"
-          style={{
-            marginTop: "20px",
-            marginBottom: "20px"
-          }}
-        >
-
-          <label
-            style={{
-              display: "block",
-              marginBottom: "12px",
-              fontWeight: "700"
-            }}
-          >
-            🎁 Bu ürün hangi özel günler için uygun?
-          </label>
-
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns:
-                "repeat(2, minmax(0, 1fr))",
-              gap: "10px"
-            }}
-          >
-
-            {
-              ozelGunListesi.map(
-                (gun) => {
-
-                  const secili =
-                    ilan.ozelGunler.includes(
-                      gun.id
-                    );
-
-                  return (
-
-                    <label
-                      key={gun.id}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "8px",
-                        padding: "12px",
-                        border:
-                          secili
-                            ? "2px solid #ff4d5a"
-                            : "1px solid #ddd",
-                        borderRadius: "10px",
-                        cursor: "pointer",
-                        background:
-                          secili
-                            ? "#fff3f4"
-                            : "#fff"
-                      }}
-                    >
-
-                      <input
-                        type="checkbox"
-                        checked={secili}
-                        onChange={() =>
-                          ozelGunSec(
-                            gun.id
-                          )
-                        }
-                      />
-
-                      <span>
-                        {gun.icon} {gun.ad}
-                      </span>
-
-                    </label>
-
-                  );
-
-                }
-              )
-            }
-
-          </div>
-
-        </div>
-
-
-        {/* ===========================
-            HEDİYE KİME UYGUN
-        =========================== */}
-
-        <div
-          className="hedef-kisiler"
-          style={{
-            marginTop: "20px",
-            marginBottom: "20px"
-          }}
-        >
-
-          <label
-            style={{
-              display: "block",
-              marginBottom: "12px",
-              fontWeight: "700"
-            }}
-          >
-            🎯 Bu hediye kime uygun?
-          </label>
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns:
-                "repeat(2, minmax(0, 1fr))",
-              gap: "10px"
-            }}
-          >
-
-            {hedefKisiListesi.map((kisi) => {
-
-              const secili =
-                ilan.hedefKisiler.includes(kisi.id);
-
-              return (
-
-                <label
-                  key={kisi.id}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    padding: "12px",
-                    border:
-                      secili
-                        ? "2px solid #ff4d5a"
-                        : "1px solid #ddd",
-                    borderRadius: "10px",
-                    cursor: "pointer",
-                    background:
-                      secili
-                        ? "#fff3f4"
-                        : "#fff"
-                  }}
-                >
-
-                  <input
-                    type="checkbox"
-                    checked={secili}
-                    onChange={() =>
-                      hedefKisiSec(kisi.id)
-                    }
-                  />
-
-                  <span>
-                    {kisi.icon} {kisi.ad}
-                  </span>
-
-                </label>
-
-              );
-
-            })}
-
-          </div>
-
-        </div>
-
+        <GiftAttributes value={ilan} onChange={attributes => setIlan(previous => ({ ...previous, ...attributes }))} />
 
         {a4Tasarlaniyor ? (
           <div className="a4-upload-intro">

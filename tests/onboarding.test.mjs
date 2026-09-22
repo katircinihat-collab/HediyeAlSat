@@ -57,7 +57,8 @@ test("provider otomatik tekrar, manuel replay ve route duplicate davranışını
   assert.match(provider, /attemptedRef\.current\.has/);
   assert.match(provider, /!current\.manual/);
   assert.match(provider, /pathname === "\/a4-tasarimlar"/);
-  assert.match(footer, /startWelcomeTour\(true\)/);
+  assert.match(footer, /to="\/hediyealsati-tani"/);
+  assert.match(read("src/pages/MeetHediyeAlSat.jsx"), /startWelcomeTour\(true\)/);
   assert.match(footer, /HediyeAlSat’ı Tanı/);
 });
 

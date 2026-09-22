@@ -47,6 +47,16 @@ function text(value, label, maxLength) {
 }
 
 function buildAdminEditUpdate(listing, body, timestamp, adminUid) {
+    const taxonomy = require("../../shared/giftTaxonomy.json");
+    const attributes = {};
+    for (const [field, allowed] of Object.entries(taxonomy)) {
+        if (!(field in body)) continue;
+        if (!Array.isArray(body[field]) || body[field].length > Object.keys(allowed).length
+            || body[field].some(value => typeof value !== "string" || !Object.hasOwn(allowed, value))) {
+            throw actionError("Hediye seçenekleri geçersiz.");
+        }
+        attributes[field] = [...new Set(body[field])];
+    }
     if (listing?.silindi === true) throw actionError("Arşivlenmiş ilan düzenlenemez.", 409, "LISTING_ARCHIVED");
     const price = Number(body.fiyat);
     if (!Number.isFinite(price) || price <= 0) throw actionError("Fiyat sıfırdan büyük olmalıdır.");
@@ -54,6 +64,7 @@ function buildAdminEditUpdate(listing, body, timestamp, adminUid) {
         ? body.resimler.filter((item) => typeof item === "string" && item.trim()).slice(0, 10)
         : listing.resimler || [];
     return {
+        ...attributes,
         baslik: text(body.baslik, "İlan başlığı", 160),
         fiyat: price,
         aciklama: validatePublicContent(body.aciklama || ""),

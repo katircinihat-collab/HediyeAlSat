@@ -176,7 +176,12 @@ function Navbar({ dailyProduct = null }) {
     }
 
     document.addEventListener("mousedown", closeMenus);
-    return () => document.removeEventListener("mousedown", closeMenus);
+    const escape = event => { if (event.key === "Escape") setMenuAcik(false); };
+    document.addEventListener("keydown", escape);
+    return () => {
+      document.removeEventListener("mousedown", closeMenus);
+      document.removeEventListener("keydown", escape);
+    };
   }, []);
 
   useEffect(() => {
@@ -319,7 +324,7 @@ function Navbar({ dailyProduct = null }) {
   );
 
   return (
-    <header className={`navbar ${scrollY > 20 ? "navbar-scrolled" : ""} ${isHome ? "navbar-home" : "navbar-inner-page"}`}>
+    <header className={`navbar ${scrollY > 20 && !menuAcik ? "navbar-scrolled" : ""} ${isHome ? "navbar-home" : "navbar-inner-page"}`}>
       <div className="navbar-top">
         <div className="brand-block">
           <Link to="/" className="navbar-logo" aria-label="HediyeAlSat Ana Sayfa">

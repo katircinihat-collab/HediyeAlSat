@@ -1,571 +1,23 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import {
-  collection,
-  getDocs,
-  query,
-  where
-} from "firebase/firestore";
+import { getSeoListings } from "../services/seoListings";
+import { uniqueShowcaseListings } from "../seo/listingMatcher";
 
-import { db } from "../firebase";
+
 import seoPages from "../seo/seoPages";
 import ProductCard from "../components/ProductCard";
 import SEO from "../components/SEO";
 
-import {
-  listingMatchesSearch,
-  normalizeSearchText
-} from "../utils/search";
-
-import { isListingPublished } from "../utils/listingAvailability";
 import { sortListingsByBoost } from "../utils/listingBoost";
-
-import {
-  getListingSubcategory,
-  isLegacySecondHandListing
-} from "../data/categories";
 
 import "../styles/pages/seo-landing.css";
 import "../styles/pages/product.css";
 
 
-/*
-==================================================
-SEO SAYFASI -> İLAN ARAMA KELİMELERİ
-==================================================
-*/
-
-const SEO_SEARCH_TERMS = {
-  "sevgiliye-hediye": [
-    "sevgili",
-    "romantik",
-    "kişiye özel"
-  ],
-
-  "kadina-hediye": [
-    "kadın",
-    "kadına",
-    "bayan"
-  ],
-
-  "erkege-hediye": [
-    "erkek",
-    "erkeğe"
-  ],
-
-  "anneye-hediye": [
-    "anne",
-    "anneye"
-  ],
-
-  "babaya-hediye": [
-    "baba",
-    "babaya"
-  ],
-
-  "ese-hediye": [
-    "eş",
-    "eşe",
-    "romantik"
-  ],
-
-  "arkadasa-hediye": [
-    "arkadaş",
-    "arkadaşa"
-  ],
-
-  "kiz-arkadasa-hediye": [
-    "kız arkadaş",
-    "sevgili",
-    "romantik"
-  ],
-
-  "erkek-arkadasa-hediye": [
-    "erkek arkadaş",
-    "sevgili"
-  ],
-
-  "cocuga-hediye": [
-    "çocuk",
-    "çocuğa"
-  ],
-
-  "ogretmene-hediye": [
-    "öğretmen",
-    "öğretmene"
-  ],
-
-  "is-arkadasina-hediye": [
-    "iş arkadaşı",
-    "ofis"
-  ],
-
-  "dogum-gunu-hediyeleri": [
-    "doğum günü"
-  ],
-
-  "yil-donumu-hediyeleri": [
-    "yıl dönümü",
-    "yıldönümü",
-    "romantik"
-  ],
-
-  "sevgililer-gunu-hediyeleri": [
-    "sevgililer günü",
-    "sevgili",
-    "romantik"
-  ],
-
-  "anneler-gunu-hediyeleri": [
-    "anneler günü",
-    "anne"
-  ],
-
-  "babalar-gunu-hediyeleri": [
-    "babalar günü",
-    "baba"
-  ],
-
-  "ogretmenler-gunu-hediyeleri": [
-    "öğretmenler günü",
-    "öğretmen"
-  ],
-
-  "yeni-yil-hediyeleri": [
-    "yeni yıl",
-    "yılbaşı"
-  ],
-
-  "mezuniyet-hediyeleri": [
-    "mezuniyet"
-  ],
-
-  "dugun-hediyeleri": [
-    "düğün",
-    "evlilik"
-  ],
-
-  "nisan-hediyeleri": [
-    "nişan"
-  ],
-
-  "yeni-ev-hediyesi": [
-    "yeni ev",
-    "ev hediyesi",
-    "dekorasyon"
-  ],
-
-  "gecmis-olsun-hediyesi": [
-    "geçmiş olsun"
-  ],
-
-  "tesekkur-hediyesi": [
-    "teşekkür"
-  ],
-
-  "uygun-fiyatli-hediyeler": [
-    "uygun fiyat",
-    "hediye"
-  ],
-
-  "kisiye-ozel-hediyeler": [
-    "kişiye özel",
-    "kişiselleştirilmiş"
-  ],
-
-  "romantik-hediyeler": [
-    "romantik",
-    "sevgili"
-  ],
-
-  "anlamli-hediyeler": [
-    "anlamlı",
-    "kişiye özel"
-  ],
-
-  "ilginc-hediyeler": [
-    "ilginç",
-    "farklı"
-  ],
-
-  "eglenceli-hediyeler": [
-    "eğlenceli"
-  ],
-
-  "el-yapimi-hediyeler": [
-    "el yapımı",
-    "handmade"
-  ],
-
-  "dijital-hediyeler": [
-    "dijital",
-    "tasarım",
-    "poster"
-  ],
-
-  "son-dakika-hediyeleri": [
-    "dijital",
-    "hızlı teslimat"
-  ],
-
-  "sevgiliye-dogum-gunu-hediyesi": [
-    "sevgili",
-    "romantik"
-  ],
-
-  "kadina-dogum-gunu-hediyesi": [
-    "kadın",
-    "kadına",
-    "bayan"
-  ],
-
-  "erkege-dogum-gunu-hediyesi": [
-    "erkek",
-    "erkeğe"
-  ],
-
-  "anneye-dogum-gunu-hediyesi": [
-    "anne",
-    "anneye"
-  ],
-
-  "babaya-dogum-gunu-hediyesi": [
-    "baba",
-    "babaya"
-  ],
-
-  "sevgiliye-yil-donumu-hediyesi": [
-    "sevgili",
-    "romantik"
-  ],
-
-  "ese-yil-donumu-hediyesi": [
-    "eş",
-    "eşe",
-    "romantik"
-  ],
-
-  "kadina-kisiye-ozel-hediye": [
-    "kadın",
-    "kadına",
-    "kişiye özel"
-  ],
-
-  "erkege-kisiye-ozel-hediye": [
-    "erkek",
-    "erkeğe",
-    "kişiye özel"
-  ],
-
-  "sevgiliye-uygun-fiyatli-hediye": [
-    "sevgili",
-    "romantik"
-  ],
-
-  "arkadasa-dogum-gunu-hediyesi": [
-    "arkadaş",
-    "arkadaşa"
-  ]
-};
-
-
-/*
-==================================================
-FİYAT SAYFALARI
-==================================================
-*/
-
-const PRICE_LIMITS = {
-  "100-tl-alti-hediyeler": 100,
-  "200-tl-alti-hediyeler": 200,
-  "300-tl-alti-hediyeler": 300,
-  "500-tl-alti-hediyeler": 500,
-  "1000-tl-alti-hediyeler": 1000,
-  "uygun-fiyatli-hediyeler": 500
-};
-
-
-/*
-==================================================
-SEO SAYFASI -> HEDEF KİŞİ EŞLEŞMESİ
-==================================================
-*/
-
-const TARGET_PERSON_BY_SLUG = {
-  "sevgiliye-hediye": "sevgili",
-  "kadina-hediye": "kadin",
-  "erkege-hediye": "erkek",
-  "anneye-hediye": "anne",
-  "babaya-hediye": "baba",
-  "ese-hediye": "es",
-  "arkadasa-hediye": "arkadas",
-  "kiz-arkadasa-hediye": "sevgili",
-  "erkek-arkadasa-hediye": "sevgili",
-  "cocuga-hediye": "cocuk",
-  "ogretmene-hediye": "ogretmen",
-  "is-arkadasina-hediye": "is-arkadasi",
-  "sevgiliye-dogum-gunu-hediyesi": "sevgili",
-  "kadina-dogum-gunu-hediyesi": "kadin",
-  "erkege-dogum-gunu-hediyesi": "erkek",
-  "anneye-dogum-gunu-hediyesi": "anne",
-  "babaya-dogum-gunu-hediyesi": "baba",
-  "arkadasa-dogum-gunu-hediyesi": "arkadas",
-  "sevgiliye-yil-donumu-hediyesi": "sevgili",
-  "ese-yil-donumu-hediyesi": "es",
-  "kadina-kisiye-ozel-hediye": "kadin",
-  "erkege-kisiye-ozel-hediye": "erkek",
-  "sevgiliye-uygun-fiyatli-hediye": "sevgili"
-};
-
-
-/*
-==================================================
-SEO SAYFASI -> ÖZEL GÜN EŞLEŞMESİ
-==================================================
-*/
-
-const SPECIAL_DAY_BY_SLUG = {
-  "dogum-gunu-hediyeleri": "dogum-gunu",
-  "sevgililer-gunu-hediyeleri": "sevgililer-gunu",
-  "anneler-gunu-hediyeleri": "anneler-gunu",
-  "babalar-gunu-hediyeleri": "babalar-gunu",
-  "mezuniyet-hediyeleri": "mezuniyet",
-  "yeni-yil-hediyeleri": "yilbasi",
-  "yil-donumu-hediyeleri": "yildonumu",
-
-  "sevgiliye-dogum-gunu-hediyesi": "dogum-gunu",
-  "kadina-dogum-gunu-hediyesi": "dogum-gunu",
-  "erkege-dogum-gunu-hediyesi": "dogum-gunu",
-  "anneye-dogum-gunu-hediyesi": "dogum-gunu",
-  "babaya-dogum-gunu-hediyesi": "dogum-gunu",
-  "arkadasa-dogum-gunu-hediyesi": "dogum-gunu",
-
-  "sevgiliye-yil-donumu-hediyesi": "yildonumu",
-  "ese-yil-donumu-hediyesi": "yildonumu"
-};
-
-
-/*
-==================================================
-SADECE ÖZEL GÜNE GÖRE FİLTRELENECEK SAYFALAR
-==================================================
-*/
-
-const SPECIAL_DAY_ONLY_SLUGS = new Set([
-  "dogum-gunu-hediyeleri",
-  "yil-donumu-hediyeleri",
-  "sevgililer-gunu-hediyeleri",
-  "anneler-gunu-hediyeleri",
-  "babalar-gunu-hediyeleri",
-  "mezuniyet-hediyeleri",
-  "yeni-yil-hediyeleri"
-]);
-
-
-/*
-==================================================
-İLAN FİYATINI GÜVENLİ ŞEKİLDE AL
-==================================================
-*/
-
-function getListingPrice(ilan) {
-  const rawPrice =
-    ilan?.fiyat ??
-    ilan?.price ??
-    ilan?.urunFiyati ??
-    0;
-
-  if (typeof rawPrice === "number") {
-    return rawPrice;
-  }
-
-  const normalized = String(rawPrice)
-    .replace(/\s/g, "")
-    .replace("₺", "")
-    .replace(/\./g, "")
-    .replace(",", ".");
-
-  const value = Number(normalized);
-
-  return Number.isFinite(value) ? value : 0;
-}
-
-
-/*
-==================================================
-İLANIN ÖZEL GÜN BİLGİLERİNİ AL
-==================================================
-*/
-
-function getListingSpecialDays(ilan) {
-  const values = [];
-
-  if (Array.isArray(ilan?.ozelGunler)) {
-    values.push(...ilan.ozelGunler);
-  }
-
-  if (ilan?.ozelGun) {
-    values.push(ilan.ozelGun);
-  }
-
-  return values
-    .map((value) => normalizeSearchText(value))
-    .filter(Boolean);
-}
-
-
-/*
-==================================================
-İLAN ÖZEL GÜNE UYGUN MU?
-==================================================
-*/
-
-function matchesSpecialDay(ilan, specialDay) {
-  if (!specialDay) {
-    return true;
-  }
-
-  const listingSpecialDays =
-    getListingSpecialDays(ilan);
-
-  const normalizedSpecialDay =
-    normalizeSearchText(specialDay);
-
-  return listingSpecialDays.includes(
-    normalizedSpecialDay
-  );
-}
-
-
-/*
-==================================================
-İLANIN HEDEF KİŞİ BİLGİLERİNİ AL
-==================================================
-*/
-
-function getListingTargetPeople(ilan) {
-  const values = Array.isArray(ilan?.hedefKisiler)
-    ? ilan.hedefKisiler
-    : [];
-
-  return values
-    .map((value) => normalizeSearchText(value))
-    .filter(Boolean);
-}
-
-
-/*
-==================================================
-İLAN HEDEF KİŞİYE UYGUN MU?
-==================================================
-*/
-
-function matchesTargetPerson(ilan, targetPerson) {
-  if (!targetPerson) {
-    return true;
-  }
-
-  const listingTargetPeople = getListingTargetPeople(ilan);
-  const normalizedTargetPerson = normalizeSearchText(targetPerson);
-
-  return listingTargetPeople.includes(normalizedTargetPerson);
-}
-
-
-/*
-==================================================
-SEO ARAMA KELİMELERİNE UYGUN MU?
-==================================================
-*/
-
-function matchesSearchTerms(ilan, slug) {
-  const searchTerms =
-    SEO_SEARCH_TERMS[slug] || [];
-
-  if (searchTerms.length === 0) {
-    return false;
-  }
-
-  const extraValues =
-    getListingSubcategory(ilan);
-
-  return searchTerms.some((term) =>
-    listingMatchesSearch(
-      ilan,
-      term,
-      extraValues
-    )
-  );
-}
-
-
-/*
-==================================================
-SEO SAYFASINA UYGUN İLAN MI?
-==================================================
-*/
-
-function matchesSeoPage(ilan, slug) {
-  const priceLimit = PRICE_LIMITS[slug];
-
-  if (priceLimit) {
-    const fiyat = getListingPrice(ilan);
-    return fiyat > 0 && fiyat <= priceLimit;
-  }
-
-  const specialDay = SPECIAL_DAY_BY_SLUG[slug];
-  const targetPerson = TARGET_PERSON_BY_SLUG[slug];
-
-  if (
-    specialDay &&
-    SPECIAL_DAY_ONLY_SLUGS.has(slug)
-  ) {
-    return matchesSpecialDay(ilan, specialDay);
-  }
-
-  if (specialDay && targetPerson) {
-    return (
-      matchesSpecialDay(ilan, specialDay) &&
-      matchesTargetPerson(ilan, targetPerson)
-    );
-  }
-
-  if (
-    targetPerson &&
-    (
-      slug === "kadina-kisiye-ozel-hediye" ||
-      slug === "erkege-kisiye-ozel-hediye"
-    )
-  ) {
-    return (
-      matchesTargetPerson(ilan, targetPerson) &&
-      matchesSearchTerms(ilan, slug)
-    );
-  }
-
-  if (
-    slug === "sevgiliye-uygun-fiyatli-hediye" &&
-    targetPerson
-  ) {
-    const fiyat = getListingPrice(ilan);
-
-    return (
-      fiyat > 0 &&
-      fiyat <= 500 &&
-      matchesTargetPerson(ilan, targetPerson)
-    );
-  }
-
-  if (targetPerson) {
-    return matchesTargetPerson(ilan, targetPerson);
-  }
-
-  return matchesSearchTerms(ilan, slug);
-}
-
-
 function SeoLandingPage() {
   const location = useLocation();
+  const [error, setError] = useState("");
+  const [retry, setRetry] = useState(0);
 
   const [ilanlar, setIlanlar] =
     useState([]);
@@ -593,7 +45,7 @@ function SeoLandingPage() {
   */
 
   useEffect(() => {
-    if (!page) {
+    if (!page?.showcaseEnabled) {
       setIlanlarYukleniyor(false);
       return;
     }
@@ -605,32 +57,9 @@ function SeoLandingPage() {
       try {
         setIlanlarYukleniyor(true);
 
-        const snapshot =
-          await getDocs(
-            query(
-              collection(
-                db,
-                "ilanlar"
-              ),
-              where(
-                "onay",
-                "==",
-                true
-              )
-            )
-          );
-
+        setError("");
+        const veriler = await getSeoListings();
         if (!aktif) return;
-
-
-        const veriler =
-          snapshot.docs.map(
-            (belge) => ({
-              id: belge.id,
-              ...belge.data()
-            })
-          );
-
         setIlanlar(veriler);
 
       } catch (error) {
@@ -641,6 +70,7 @@ function SeoLandingPage() {
 
         if (aktif) {
           setIlanlar([]);
+          setError("Ürünler şu anda alınamıyor. Lütfen tekrar deneyin.");
         }
 
       } finally {
@@ -658,7 +88,7 @@ function SeoLandingPage() {
       aktif = false;
     };
 
-  }, [page]);
+  }, [page, retry]);
 
 
   /*
@@ -672,33 +102,7 @@ function SeoLandingPage() {
       if (!page) return [];
 
 
-      const uygunIlanlar =
-        ilanlar.filter(
-          (ilan) => {
-
-            if (
-              !isListingPublished(ilan)
-            ) {
-              return false;
-            }
-
-
-            if (
-              isLegacySecondHandListing(
-                ilan
-              )
-            ) {
-              return false;
-            }
-
-
-            return matchesSeoPage(
-              ilan,
-              slug
-            );
-          }
-        );
-
+      const uygunIlanlar = uniqueShowcaseListings(ilanlar, page);
 
       return sortListingsByBoost(
         uygunIlanlar
@@ -706,8 +110,7 @@ function SeoLandingPage() {
 
     }, [
       ilanlar,
-      page,
-      slug
+      page
     ]);
 
 
@@ -850,7 +253,7 @@ function SeoLandingPage() {
       </section>
 
 
-      <section className="seo-products">
+      {page.showcaseEnabled && <section className="seo-products">
 
         <div className="seo-products-heading">
 
@@ -879,7 +282,7 @@ function SeoLandingPage() {
         </div>
 
 
-        {ilanlarYukleniyor ? (
+        {error ? <div role="alert">{error} <button type="button" onClick={() => setRetry(value => value + 1)}>Tekrar Dene</button></div> : ilanlarYukleniyor ? (
 
           <div className="seo-products-status">
             ⏳ Ürünler yükleniyor...
@@ -907,8 +310,7 @@ function SeoLandingPage() {
           <div className="seo-products-empty">
 
             <h3>
-              Bu hediye türünde yeni ürünler
-              hazırlanıyor.
+              Şu anda bu seçime uygun ürün bulunmuyor.
             </h3>
 
             <p>
@@ -924,7 +326,7 @@ function SeoLandingPage() {
 
         )}
 
-      </section>
+      </section>}
 
       <section className="seo-battle-cta">
         <h2>⚔️ İki hediye arasında mı kaldın?</h2>

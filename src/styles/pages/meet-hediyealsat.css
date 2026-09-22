@@ -1,0 +1,19 @@
+.meet-page { max-width: 1120px; margin: 0 auto; padding: 1.5rem clamp(1rem, 4vw, 3rem) 3rem; color: #322832; }
+.meet-page nav { font-size: .85rem; margin-bottom: 1.5rem; }
+.meet-page section { margin-bottom: 3rem; }
+.meet-page h1 { font-size: clamp(2rem, 5vw, 3.5rem); line-height: 1.15; }
+.meet-page p { line-height: 1.75; max-width: 70ch; }
+.meet-hero { padding: clamp(1.5rem, 5vw, 4rem); background: #fff3ed; border-radius: 28px; border: 1px solid #f0ded4; }
+.meet-eyebrow { color: #8c3757; font-weight: 700; font-size: .8rem; letter-spacing: .12em; }
+.meet-motto { font-size: clamp(1.3rem, 3vw, 2rem); font-weight: 600; }
+.meet-actions { display: flex; flex-wrap: wrap; gap: .75rem; margin: 1.5rem 0; }
+.meet-actions a { display: inline-flex; align-items: center; justify-content: center; padding: .9rem 1.2rem; background: #8f2853; color: white; border-radius: 12px; text-decoration: none; font-weight: 600; }
+.meet-actions a + a { background: white; color: #782346; border: 1px solid #c18ba0; }
+.meet-tour { padding: .75rem 0; background: transparent; border: 0; text-decoration: underline; color: #782346; cursor: pointer; font: inherit; text-align: left; }
+.meet-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; }
+.meet-grid article { display: flex; flex-direction: column; min-width: 0; padding: 1.5rem; border: 1px solid #eadfe4; border-radius: 20px; background: white; }
+.meet-grid article a { margin-top: auto; color: #8f2853; font-weight: 600; }
+.meet-icon { font-size: 1.7rem; }
+.meet-seller { padding: clamp(1.2rem, 4vw, 3rem); background: #f6f1f8; border-radius: 24px; }
+.meet-page :focus-visible { outline: 3px solid #8f2853; outline-offset: 4px; }
+@media (max-width: 600px) { .meet-grid { grid-template-columns: minmax(0, 1fr); } .meet-actions { flex-direction: column; } .meet-page { overflow-wrap: anywhere; } }
