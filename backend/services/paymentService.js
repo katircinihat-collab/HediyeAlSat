@@ -48,6 +48,57 @@ function retrieveCheckoutForm(client, token, timeoutMs = CALLBACK_RETRIEVE_TIMEO
     });
 }
 
+const IYZICO_INITIALIZE_MAX_ATTEMPTS = 3;
+const IYZICO_RETRYABLE_NETWORK_CODES = new Set([
+    "ECONNRESET",
+    "ETIMEDOUT",
+    "EPIPE",
+    "ECONNREFUSED",
+    "EAI_AGAIN"
+]);
+
+function sleep(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function initializeCheckoutForm(client, request) {
+    return new Promise((resolve, reject) => {
+        client.checkoutFormInitialize.create(request, (error, result) => {
+            if (error) return reject(error);
+            return resolve(result);
+        });
+    });
+}
+
+async function initializeCheckoutFormWithRetry(client, request) {
+    let lastError = null;
+
+    for (let attempt = 1; attempt <= IYZICO_INITIALIZE_MAX_ATTEMPTS; attempt += 1) {
+        try {
+            return await initializeCheckoutForm(client, request);
+        } catch (error) {
+            lastError = error;
+            const code = String(error?.code || "").toUpperCase();
+            const retryable = IYZICO_RETRYABLE_NETWORK_CODES.has(code);
+
+            console.error("İyzico ödeme formu bağlantı hatası:", {
+                code: code || "IYZICO_NETWORK_ERROR",
+                attempt,
+                maxAttempts: IYZICO_INITIALIZE_MAX_ATTEMPTS
+            });
+
+            if (!retryable || attempt >= IYZICO_INITIALIZE_MAX_ATTEMPTS) {
+                throw error;
+            }
+
+            // Yeni TCP/TLS bağlantısının kurulabilmesi için kısa bir gecikme bırak.
+            await sleep(400 * attempt);
+        }
+    }
+
+    throw lastError || new Error("Iyzico ödeme formu oluşturulamadı.");
+}
+
 function scheduleCartCleanup(email, cleanup = orderService.sepetTemizle) {
     if (!email) return;
     setImmediate(() => {
@@ -461,35 +512,7 @@ async function createPayment(data, authenticatedUser, requestContext = {}) {
         if (!iyzipay) {
             throw new Error("Iyzico henüz yapılandırılmadı.");
         }
-        return await new Promise((resolve, reject) => {
-
-        iyzipay.checkoutFormInitialize.create(
-
-            request,
-
-            (err, result) => {
-
-                if (err) {
-
-                    console.log(
-                        "İyzico bağlantı hatası:",
-                        err
-                    );
-
-                    reject(err);
-
-                    return;
-
-                }
-
-
-                resolve(result);
-
-            }
-
-        );
-
-        });
+        return await initializeCheckoutFormWithRetry(iyzipay, request);
     } catch (error) {
         if (stockReservation?.id) {
             await releaseReservation({
