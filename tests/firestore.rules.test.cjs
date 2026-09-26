@@ -120,6 +120,7 @@ before(async () => {
         aliciUid: ownerAuth.uid,
         alici: ownerAuth.email,
         satici: otherAuth.email,
+        saticiUid: otherAuth.uid,
         fiyat: 100,
         durum: "Ödeme Bekleniyor",
         odemeDurumu: false
@@ -419,9 +420,13 @@ test("21q - production buyer ve seller list sorguları yalnız kendi siparişler
   const uidResult = await assertSucceeds(getDocs(query(collection(ownerDb, "siparisler"), where("aliciUid", "==", ownerAuth.uid))));
   const emailResult = await assertSucceeds(getDocs(query(collection(ownerDb, "siparisler"), where("alici", "==", ownerAuth.email))));
   const sellerResult = await assertSucceeds(getDocs(query(collection(dbFor(otherAuth), "siparisler"), where("satici", "==", otherAuth.email))));
+  const sellerUidResult = await assertSucceeds(getDocs(query(collection(dbFor(otherAuth), "siparisler"), where("saticiUid", "==", otherAuth.uid))));
   assert.deepEqual(uidResult.docs.map((item) => item.id), ["owner-order"]);
   assert.deepEqual(emailResult.docs.map((item) => item.id), ["owner-order"]);
   assert.deepEqual(sellerResult.docs.map((item) => item.id), ["owner-order"]);
+  assert.deepEqual(sellerUidResult.docs.map((item) => item.id), ["owner-order"]);
+  await assertFails(getDocs(query(collection(dbFor(otherAuth), "siparisler"), where("saticiUid", "==", "unrelated-seller"))));
+  await assertFails(getDocs(query(collection(dbFor(otherAuth), "siparisler"), where("satici", "==", "unrelated@example.com"))));
 });
 
 test("21a - satıcı sipariş durumunu Firestore'dan doğrudan değiştiremez", async () => {

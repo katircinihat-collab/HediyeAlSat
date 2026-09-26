@@ -1,0 +1,66 @@
+.store-orders { max-width: 1120px; margin: 0 auto; padding: 32px 20px 64px; color: #293244; overflow-wrap: anywhere; }
+.store-orders *, .store-orders *::before, .store-orders *::after { box-sizing: border-box; }
+.store-orders h1 { margin: 8px 0; font-size: clamp(1.65rem, 4vw, 2.2rem); }
+.store-orders h2 { margin: 0 0 12px; font-size: 1.15rem; line-height: 1.45; }
+.store-orders p { line-height: 1.6; }
+.store-orders__eyebrow { font-size: .75rem; font-weight: 750; letter-spacing: .12em; color: #95551e; }
+.store-orders__muted, .store-orders time { color: #60697a; font-size: .875rem; }
+.store-orders__summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-top: 28px; }
+.store-orders__summary > div { border: 1px solid #e5e7ec; border-radius: 16px; background: #fff; padding: 20px; }
+.store-orders__summary span { display: block; font-size: .85rem; color: #60697a; }
+.store-orders__summary strong { display: block; margin-top: 12px; font-size: clamp(1.2rem, 2vw, 1.6rem); }
+.store-orders__toolbar { display: grid; grid-template-columns: minmax(0, 1fr) minmax(160px, .4fr); gap: 16px; padding: 20px; background: #f5f6f8; border-radius: 16px; margin-top: 24px; }
+.store-orders label { display: grid; gap: 8px; font-size: .875rem; font-weight: 650; min-width: 0; }
+.store-orders input, .store-orders select { width: 100%; min-width: 0; min-height: 44px; border: 1px solid #c5cad4; border-radius: 9px; background: white; color: #293244; padding: 10px 12px; font: inherit; }
+.store-orders button { min-height: 44px; border: 1px solid transparent; border-radius: 10px; background: #a74713; color: white; padding: 11px 18px; font: inherit; font-weight: 650; white-space: normal; cursor: pointer; max-width: 100%; }
+.store-orders button:hover:not(:disabled) { background: #86380f; }
+.store-orders button:disabled { opacity: .55; cursor: not-allowed; }
+.store-orders :is(button, input, select, a):focus-visible { outline: 3px solid #235bb7; outline-offset: 3px; }
+.store-orders .store-orders__secondary { background: white; border-color: #c5cad4; color: #293244; }
+.store-orders .store-orders__secondary:hover:not(:disabled) { background: #edf0f5; }
+.store-orders__list { display: grid; gap: 20px; }
+.store-orders__card { min-width: 0; border: 1px solid #e1e5eb; background: white; border-radius: 18px; padding: 24px; box-shadow: 0 4px 18px #28324706; }
+.store-orders__card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; padding-bottom: 18px; border-bottom: 1px solid #edf0f3; flex-wrap: wrap; }
+.store-orders__card-head > div { min-width: 0; }
+.store-orders time { display: block; margin-top: 5px; }
+.store-orders__badge { display: inline-block; padding: 7px 11px; border-radius: 8px; background: #fff0db; color: #824b09; font-weight: 650; font-size: .8rem; }
+.store-orders__badge.is-delivered { background: #e9f6ef; color: #206443; }
+.store-orders__badge.is-problem { background: #fff0ef; color: #9e2828; }
+.store-orders__product { display: grid; grid-template-columns: 100px minmax(0, 1fr); gap: 20px; margin: 22px 0; }
+.store-orders__image { aspect-ratio: 1; background: #f6f7f9; border-radius: 12px; display: grid; place-items: center; align-self: start; overflow: hidden; }
+.store-orders__image img { width: 100%; height: 100%; object-fit: contain; }
+.store-orders__image span { text-align: center; color: #60697a; padding: 10px; font-size: .75rem; }
+.store-orders dl { display: flex; flex-wrap: wrap; gap: 16px 32px; margin: 0; }
+.store-orders dl > div { min-width: 0; }
+.store-orders dt { font-size: .8rem; color: #60697a; }
+.store-orders dd { margin: 5px 0 0; font-weight: 650; }
+.store-orders__timeline { list-style: none; padding: 16px 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; border-block: 1px solid #edf0f3; }
+.store-orders__timeline li { color: #636c7a; font-size: .8rem; display: flex; align-items: center; gap: 8px; }
+.store-orders__timeline li > span { display: grid; place-items: center; width: 26px; height: 26px; flex-shrink: 0; border: 1px solid #c5cad4; border-radius: 50%; }
+.store-orders__timeline .is-complete { color: #206443; font-weight: 650; }
+.store-orders__timeline .is-complete > span { background: #e9f6ef; border-color: #65a282; }
+.store-orders__actions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 20px; }
+.store-orders__shipment { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 20px; }
+.store-orders__shipment button { grid-column: 1 / -1; justify-self: start; }
+.store-orders__notice, .store-orders__delivery { padding: 16px; border-radius: 12px; background: #f5f6f8; margin-top: 16px; font-size: .875rem; }
+.store-orders__notice p { margin-bottom: 0; }
+.store-orders address { font-style: normal; line-height: 1.75; margin-top: 12px; }
+.store-orders__notice .seller-return-status { display: grid; gap: 10px; margin-top: 12px; }
+.store-orders__empty { text-align: center; padding: 48px 20px; border: 1px solid #e1e5eb; background: #fff; border-radius: 18px; margin-top: 24px; }
+.store-orders__empty > span { display: block; font-size: 2rem; margin-bottom: 16px; }
+.store-orders__error { color: #a12222; }
+.store-orders__loading { margin-top: 24px; }
+.store-orders__skeleton { height: 160px; margin-top: 18px; border-radius: 18px; background: #edf0f3; }
+.store-orders__back { display: inline-block; margin-top: 24px; color: #824b09; padding: 10px 0; }
+@media (max-width: 768px) {
+  .store-orders__summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .store-orders__timeline { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 480px) {
+  .store-orders { padding: 24px 12px 48px; }
+  .store-orders__card, .store-orders__summary > div, .store-orders__toolbar { padding: 16px; }
+  .store-orders__toolbar, .store-orders__shipment { grid-template-columns: minmax(0, 1fr); }
+  .store-orders__product { grid-template-columns: 64px minmax(0, 1fr); gap: 12px; }
+  .store-orders__actions { align-items: stretch; flex-direction: column; }
+  .store-orders__actions button, .store-orders__shipment button { width: 100%; }
+}

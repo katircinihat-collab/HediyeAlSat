@@ -16,21 +16,12 @@ const finance = fs.readFileSync(
 );
 const sellerOrders = fs.readFileSync(path.join(root, "src/components/seller/SellerOrders.jsx"), "utf8");
 
-test("satıcı hazırlanan sipariş sayacını dashboarda aktarır", () => {
-  assert.match(
-    seller,
-    /canonicalDurum\s*===\s*"Hazırlanıyor"/
-  );
-
-  assert.match(
-    seller,
-    /setHazirlanan\(hazirlananSayisi\)/
-  );
-
-  assert.match(
-    seller,
-    /hazirlanan=\{hazirlanan\}/
-  );
+test("satıcı paneli sipariş kaynağını paylaşır ve yönetim ekranını kopyalamaz", () => {
+  assert.match(seller, /useSellerOrders\(\)/);
+  assert.match(seller, /sellerDashboard\(orders, data.products\)/);
+  assert.match(seller, /metrics.preparing/);
+  assert.match(seller, /to="\/satici-siparisleri"/);
+  assert.doesNotMatch(seller, /<SellerOrders/);
 });
 
 test("tekrarlı satış istatistikleri kaldırılır ve marketplace ile legacy bakiye ayrılır", () => {
@@ -46,7 +37,7 @@ test("tekrarlı satış istatistikleri kaldırılır ve marketplace ile legacy b
 
   assert.match(
     seller,
-    /hareket\.settlementMode\s*===\s*"IYZICO_MARKETPLACE"/
+    /splitSellerMovements\(data.movements\)/
   );
 
   assert.match(

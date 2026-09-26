@@ -1,7 +1,10 @@
 import "../../styles/pages/seller-finance.css";
+import { finiteMoney } from "../../utils/sellerDashboard";
+import { orderDate } from "../../utils/storeOrders";
+import { isDigitalOrder } from "../../utils/orderLifecycle";
 
 const money = (value) =>
-  Number(value || 0).toLocaleString("tr-TR", {
+  finiteMoney(value).toLocaleString("tr-TR", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   });
@@ -33,19 +36,8 @@ function normalizeStatus(value) {
 
 function sumNet(items) {
   return items.reduce(
-    (total, item) => total + Number(item.netTutar || 0),
+    (total, item) => total + finiteMoney(item.netTutar),
     0
-  );
-}
-
-function isDigitalOrder(order) {
-  if (!order) return false;
-
-  return (
-    order.urunTipi === "dijital" ||
-    order.fizikselKargo === false ||
-    order.dijitalTeslimat === true ||
-    order.teslimatTipi === "dijital"
   );
 }
 
@@ -121,6 +113,7 @@ function isRealizedMarketplaceMovement(item, orderMap) {
 }
 
 function movementStatusLabel(item, orderMap) {
+  if (!isRealizedMarketplaceMovement(item, orderMap)) return "İade / iptal kaydı";
   const status = normalizeStatus(item?.settlementStatus);
 
   switch (status) {
@@ -164,6 +157,8 @@ function SellerFinance({
   siparisler = [],
   marketplaceHareketleri = []
 }) {
+  siparisler = siparisler.filter((item) => item && typeof item === "object");
+  marketplaceHareketleri = marketplaceHareketleri.filter((item) => item && item.settlementMode === "IYZICO_MARKETPLACE");
   const orderMap = buildOrderMap(siparisler);
 
   const realizedMarketplaceHareketleri =
@@ -174,11 +169,11 @@ function SellerFinance({
   const metrics = realizedMarketplaceHareketleri.reduce(
     (totals, item) => ({
       grossSales:
-        totals.grossSales + Number(item.toplamTutar || 0),
+        totals.grossSales + finiteMoney(item.toplamTutar),
       platformCommission:
-        totals.platformCommission + Number(item.komisyon || 0),
+        totals.platformCommission + finiteMoney(item.komisyon),
       sellerNetShare:
-        totals.sellerNetShare + Number(item.netTutar || 0)
+        totals.sellerNetShare + finiteMoney(item.netTutar)
     }),
     {
       grossSales: 0,
@@ -187,7 +182,7 @@ function SellerFinance({
     }
   );
 
-  const protectedItems = marketplaceHareketleri.filter((item) =>
+  const protectedItems = realizedMarketplaceHareketleri.filter((item) =>
     STATUS_GROUPS.protected.has(
       normalizeStatus(item.settlementStatus)
     )
@@ -206,31 +201,31 @@ function SellerFinance({
       )
   );
 
-  const processingItems = marketplaceHareketleri.filter((item) =>
+  const processingItems = realizedMarketplaceHareketleri.filter((item) =>
     STATUS_GROUPS.processing.has(
       normalizeStatus(item.settlementStatus)
     )
   );
 
-  const approvedItems = marketplaceHareketleri.filter((item) =>
+  const approvedItems = realizedMarketplaceHareketleri.filter((item) =>
     STATUS_GROUPS.approved.has(
       normalizeStatus(item.settlementStatus)
     )
   );
 
-  const paidItems = marketplaceHareketleri.filter((item) =>
+  const paidItems = realizedMarketplaceHareketleri.filter((item) =>
     STATUS_GROUPS.paid.has(
       normalizeStatus(item.settlementStatus)
     )
   );
 
-  const reviewItems = marketplaceHareketleri.filter((item) =>
+  const reviewItems = realizedMarketplaceHareketleri.filter((item) =>
     STATUS_GROUPS.review.has(
       normalizeStatus(item.settlementStatus)
     )
   );
 
-  const unknownItems = marketplaceHareketleri.filter(
+  const unknownItems = realizedMarketplaceHareketleri.filter(
     (item) =>
       normalizeStatus(item.settlementStatus) === "UNKNOWN"
   );
@@ -248,23 +243,7 @@ function SellerFinance({
 
   const sortedMovements = [...marketplaceHareketleri].sort(
     (a, b) => {
-      const getTime = (value) => {
-        if (!value) return 0;
-
-        if (typeof value.toDate === "function") {
-          return value.toDate().getTime();
-        }
-
-        if (value.seconds) {
-          return Number(value.seconds) * 1000;
-        }
-
-        const date = new Date(value);
-
-        return Number.isNaN(date.getTime())
-          ? 0
-          : date.getTime();
-      };
+      const getTime = (value) => orderDate(value)?.getTime() || 0;
 
       return getTime(b.tarih) - getTime(a.tarih);
     }
@@ -287,7 +266,7 @@ function SellerFinance({
         <div className="finance-card yellow">
           <h3>⏳ 48 Saat Kontrol Süresi</h3>
 
-          <h1>₺{money(protectionPeriodTotal)}</h1>
+          <strong className="finance-value">₺{money(protectionPeriodTotal)}</strong>
 
           <p>
             {protectionPeriodItems.length} hakediş teslimat sonrası
@@ -298,7 +277,7 @@ function SellerFinance({
         <div className="finance-card blue">
           <h3>🔄 Aktarım Sürecinde</h3>
 
-          <h1>₺{money(aktarimBekleyen)}</h1>
+          <strong className="finance-value">₺{money(aktarimBekleyen)}</strong>
 
           <p>
             {processingItems.length + approvedItems.length} hakediş
@@ -309,7 +288,7 @@ function SellerFinance({
         <div className="finance-card green">
           <h3>✅ Ödendi</h3>
 
-          <h1>₺{money(paidTotal)}</h1>
+          <strong className="finance-value">₺{money(paidTotal)}</strong>
 
           <p>
             {paidItems.length} hakediş için banka aktarımı
@@ -320,7 +299,7 @@ function SellerFinance({
         <div className="finance-card orange">
           <h3>🔎 İnceleniyor</h3>
 
-          <h1>₺{money(reviewTotal + unknownTotal)}</h1>
+          <strong className="finance-value">₺{money(reviewTotal + unknownTotal)}</strong>
 
           <p>
             {reviewItems.length + unknownItems.length} kayıt ödeme
@@ -348,7 +327,7 @@ function SellerFinance({
           <div className="finance-card green">
             <h3>Gerçekleşen Brüt Satış</h3>
 
-            <h1>₺{money(metrics.grossSales)}</h1>
+            <strong className="finance-value">₺{money(metrics.grossSales)}</strong>
 
             <p>
               Ödemesi doğrulanmış, iptal veya iade edilmemiş satışlar.
@@ -358,7 +337,7 @@ function SellerFinance({
           <div className="finance-card red">
             <h3>Platform Komisyonu</h3>
 
-            <h1>₺{money(metrics.platformCommission)}</h1>
+            <strong className="finance-value">₺{money(metrics.platformCommission)}</strong>
 
             <p>
               Gerçekleşen satışlar üzerinden hesaplanan platform
@@ -369,7 +348,7 @@ function SellerFinance({
           <div className="finance-card purple">
             <h3>Satıcı Net Satış Payı</h3>
 
-            <h1>₺{money(metrics.sellerNetShare)}</h1>
+            <strong className="finance-value">₺{money(metrics.sellerNetShare)}</strong>
 
             <p>
               Brüt satış eksi platform komisyonu. Çekilebilir
@@ -380,7 +359,7 @@ function SellerFinance({
           <div className="finance-card dark">
             <h3>Marketplace Hakediş Kaydı</h3>
 
-            <h1>{marketplaceHareketleri.length}</h1>
+            <strong className="finance-value">{marketplaceHareketleri.length}</strong>
 
             <p>
               iyzico Marketplace settlement sistemine bağlı
@@ -446,14 +425,6 @@ function SellerFinance({
         )}
       </div>
 
-      <div className="legacy-finance-notice">
-        <strong>Eski bakiye ve para çekme kayıtları</strong>
-
-        <p>
-          Önceki cüzdan sistemine ait finansal geçmişiniz silinmez.
-          Bu kayıtlar Marketplace kazançlarından ayrı tutulur.
-        </p>
-      </div>
     </section>
   );
 }

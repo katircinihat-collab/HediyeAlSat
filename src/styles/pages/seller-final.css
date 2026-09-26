@@ -1,0 +1,52 @@
+.seller-final { max-width: 1180px; margin: 0 auto; padding: 32px 20px 64px; color: #293244; overflow-wrap: anywhere; }
+.seller-final *, .seller-final *::before, .seller-final *::after { box-sizing: border-box; min-width: 0; }
+.seller-final h1 { font-size: clamp(1.7rem, 4vw, 2.2rem); margin: 8px 0; }
+.seller-final h2, .seller-final .section-title { font-size: 1.3rem; margin: 0 0 20px; color: #293244; }
+.seller-final p { line-height: 1.65; color: #60697a; }
+.seller-final__eyebrow { font-size: .75rem; letter-spacing: .1em; font-weight: 700; }
+.seller-final__section { background: #fff; border: 1px solid #e1e5eb; border-radius: 18px; padding: 24px; margin-top: 24px; scroll-margin-top: 110px; }
+.seller-final__nav, .seller-final__links { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-top: 24px; }
+.seller-final a { color: #914011; font-weight: 650; }
+.seller-final__nav a { display: inline-block; padding: 10px 12px; border-radius: 9px; background: #f5f6f8; }
+.seller-final__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr)); gap: 16px; }
+.seller-final__grid article { padding: 20px; background: #f7f8fa; border-radius: 12px; }
+.seller-final__grid span { display: block; color: #60697a; font-size: .875rem; }
+.seller-final__grid strong { display: block; margin-top: 10px; font-size: 1.6rem; }
+.seller-final__tasks { padding: 0; list-style: none; }
+.seller-final__tasks li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 0; border-bottom: 1px solid #edf0f3; }
+.seller-final button, .seller-final .seller-final__cta { display: inline-block; min-height: 44px; border: 1px solid transparent; border-radius: 10px; padding: 11px 18px; background: #a74713; color: white; font: inherit; font-weight: 650; cursor: pointer; white-space: normal; max-width: 100%; }
+.seller-final .seller-final__cta { margin-top: 18px; text-decoration: none; }
+.seller-final button:disabled { opacity: .55; cursor: not-allowed; }
+.seller-final button:hover:not(:disabled), .seller-final .seller-final__cta:hover { background: #86380f; }
+.seller-final .seller-final__secondary { color: #293244; background: #edf0f3; margin-left: 8px; }
+.seller-final :is(button, input, a, summary):focus-visible { outline: 3px solid #235bb7; outline-offset: 3px; }
+.seller-final__bank-form { display: grid; gap: 16px; max-width: 620px; }
+.seller-final__bank-form label { display: grid; gap: 8px; font-weight: 650; }
+.seller-final input { width: 100%; min-height: 44px; border: 1px solid #c5cad4; border-radius: 9px; padding: 10px 12px; font: inherit; }
+.seller-final__chart { list-style: none; margin: 0; padding: 0; }
+.seller-final__chart li { display: grid; grid-template-columns: 50px minmax(20px, 1fr) minmax(90px, auto); align-items: center; gap: 12px; margin-top: 12px; }
+.seller-final__chart li > div { height: 16px; background: #f1f3f6; border-radius: 4px; overflow: hidden; }
+.seller-final__chart i { display: block; height: 100%; background: #b65821; }
+.seller-final__chart strong { font-size: .85rem; text-align: right; }
+.seller-final__loading { padding: 40px 20px; margin-top: 20px; background: #f5f6f8; border-radius: 16px; }
+.seller-final .finance-grid { grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr)); }
+.seller-final .finance-card { padding: 18px; box-shadow: none; border-radius: 12px; }
+.seller-final .finance-card:hover { transform: none; }
+.seller-final .finance-value { display: block; font-size: 1.5rem; }
+.seller-final .finance-table { min-width: 0; width: 100%; table-layout: fixed; }
+.seller-final .finance-table-wrap { overflow: visible; }
+.seller-final .withdraw-card { max-width: 100%; }
+.seller-final [role="alert"] { color: #9e2828; }
+@media (max-width: 600px) {
+  .seller-final { padding: 24px 12px 48px; }
+  .seller-final__section { padding: 16px; }
+  .seller-final .finance-table thead { display: none; }
+  .seller-final .finance-table tr { display: grid; border: 1px solid #e1e5eb; border-radius: 12px; margin-bottom: 12px; padding: 12px; }
+  .seller-final .finance-table td { display: block; padding: 6px; border: 0; }
+  .seller-final .finance-table td:nth-child(1)::before { content: "Sipariş: "; }
+  .seller-final .finance-table td:nth-child(2)::before { content: "Brüt: "; }
+  .seller-final .finance-table td:nth-child(3)::before { content: "Komisyon: "; }
+  .seller-final .finance-table td:nth-child(4)::before { content: "Net kazanç: "; }
+  .seller-final .finance-table td:nth-child(5)::before { content: "Durum: "; }
+  .seller-final .wallet-stats { grid-template-columns: 1fr; }
+}
