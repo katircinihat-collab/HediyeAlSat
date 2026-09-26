@@ -64,3 +64,6 @@
   .store-orders__actions { align-items: stretch; flex-direction: column; }
   .store-orders__actions button, .store-orders__shipment button { width: 100%; }
 }
+.store-orders__cleanup { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e5e7eb; overflow-wrap: anywhere; }
+.store-orders button.store-orders__danger { background: #fff; color: #a61b1b; border: 1px solid #a61b1b; }
+.store-orders button.store-orders__danger:disabled { opacity: .55; cursor: not-allowed; }

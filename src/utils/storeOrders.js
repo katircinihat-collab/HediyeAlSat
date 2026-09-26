@@ -1,7 +1,12 @@
 import { isDigitalOrder, normalizeOrderStatus, sellerNextAction } from "./orderLifecycle.js";
 import { payoutDisplay } from "./orderDelivery.js";
 
-export const storeOrderFilters = ["Tümü", "Yeni", "Hazırlanıyor", "Kargoda", "Teslim", "Sorunlu / İtirazlı"];
+export const storeOrderFilters = ["Tümü", "Yeni", "Hazırlanıyor", "Kargoda", "Teslim", "Sorunlu / İtirazlı", "Ödeme Denemeleri", "Başarısız Ödemeler"];
+// This is presentation only. Eligibility and archival are always decided by the backend.
+export const isPaymentAttempt = (order) => order?.odemeDurumu === false
+  && ["Ödeme Bekleniyor", "Ödeme Başarısız", "FAILED", "EXPIRED"].includes(order.durum);
+export const isSellerArchivedAttempt = (order) => order?.sellerAttemptArchived === true && isPaymentAttempt(order)
+  && !Object.entries(order).some(([key, value]) => value && /^(paymentId|paymentTransaction|settlement|hakEdis|refund|payout|aktifTalep|kargoNo|teslimatDogrul)/i.test(key));
 export const orderText = (value) => typeof value === "string" ? value.trim() : "";
 export const orderImage = (value) => /^(https?:\/\/|\/[^/])/.test(orderText(value)) ? orderText(value) : "";
 export const orderMoney = (value) => Number.isFinite(value) ? value.toLocaleString("tr-TR", { style: "currency", currency: "TRY" }) : "Tutar bilgisi yok";
@@ -40,12 +45,17 @@ export function storeOrderView(source = {}) {
     group: status === "Ödendi" ? "Yeni" : delivered ? "Teslim" : status,
     payout: payoutDisplay(normalized),
     step: delivered ? 3 : status === "Kargoda" ? 2 : status === "Hazırlanıyor" ? 1 : status === "Ödendi" ? 0 : -1,
-    paid: order.odemeDurumu === true,
+    paid: order.odemeDurumu === true, paymentAttempt: isPaymentAttempt(order),
   };
 }
 
 export function matchesStoreOrder(view, search, filter) {
   const term = search.trim().toLocaleLowerCase("tr-TR");
+  if (filter === "Ödeme Denemeleri" || filter === "Başarısız Ödemeler") {
+    return view.paymentAttempt && (filter !== "Başarısız Ödemeler" || view.cleanupEligible === true)
+      && [view.number, view.title, view.buyer].some((value) => value.toLocaleLowerCase("tr-TR").includes(term));
+  }
+  if (view.paymentAttempt) return false;
   return (filter === "Tümü" || (filter === "Sorunlu / İtirazlı" ? view.problem : view.group === filter))
     && [view.number, view.title, view.buyer].some((value) => value.toLocaleLowerCase("tr-TR").includes(term));
 }

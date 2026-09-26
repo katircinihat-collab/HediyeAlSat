@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { auth, db } from "../firebase";
+import { isSellerArchivedAttempt } from "../utils/storeOrders";
 
 export function useSellerOrders() {
   const [state, setState] = useState({ loading: true, orders: [], error: "", uid: "" });
@@ -27,7 +28,7 @@ export function useSellerOrders() {
           if (snapshots.size !== sources.length || errors.size) return;
           clearTimeout(timer);
           const unique = new Map([...snapshots.values()].flat().map((order) => [order.id, order]));
-          setState({ loading: false, orders: [...unique.values()], error: "", uid: user.uid });
+          setState({ loading: false, orders: [...unique.values()].filter((order) => !isSellerArchivedAttempt(order)), error: "", uid: user.uid });
         },
         () => { errors.add(field); clearTimeout(timer); fail(); },
       ));

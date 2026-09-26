@@ -1,7 +1,22 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
-import { matchesStoreOrder, orderDate, storeOrderView, summarizeStoreOrders } from "../src/utils/storeOrders.js";
+import { matchesStoreOrder, orderDate, storeOrderView, summarizeStoreOrders, isSellerArchivedAttempt } from "../src/utils/storeOrders.js";
+
+test("payment attempts do not clutter operations; legacy deliveries remain visible", () => {
+  const attempt = storeOrderView({ odemeDurumu: false, durum: "Ödeme Bekleniyor", toplam: 50 });
+  assert.equal(matchesStoreOrder(attempt, "", "Tümü"), false);
+  assert.equal(matchesStoreOrder(attempt, "", "Ödeme Denemeleri"), true);
+  assert.equal(matchesStoreOrder(attempt, "", "Başarısız Ödemeler"), false);
+  assert.equal(matchesStoreOrder({ ...attempt, cleanupEligible: true }, "", "Başarısız Ödemeler"), true);
+  const archived = { odemeDurumu: false, durum: "Ödeme Bekleniyor", sellerAttemptArchived: true };
+  assert.equal(isSellerArchivedAttempt(archived), true);
+  assert.equal(isSellerArchivedAttempt({ ...archived, odemeDurumu: true }), false);
+  assert.equal(isSellerArchivedAttempt({ ...archived, durum: "Teslim Edildi" }), false);
+  assert.equal(isSellerArchivedAttempt({ ...archived, settlementStatus: "PROTECTED" }), false);
+  assert.equal(matchesStoreOrder(storeOrderView({ durum: "Teslim Edildi" }), "", "Tümü"), true);
+  assert.equal(summarizeStoreOrders([attempt, storeOrderView({ toplam: 200, odemeDurumu: true })]).revenue, 200);
+});
 
 test("Mağazam modern ve legacy durumları ortak lifecycle üzerinden eşler", () => {
   for (const [status, group, step] of [["Bekliyor", "Yeni", 0], ["Hazırlanıyor", "Hazırlanıyor", 1], ["Kargoya Verildi", "Kargoda", 2], ["Teslim", "Teslim", 3]]) {

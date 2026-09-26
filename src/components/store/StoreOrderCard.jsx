@@ -5,9 +5,12 @@ import { apiUrl } from "../../config/api";
 import { updateSellerOrderStatus } from "../../services/sellerOrderStatusApi";
 import SellerReturnStatus from "../seller/SellerReturnStatus";
 import { orderImage, orderMoney, orderText } from "../../utils/storeOrders";
+import { sellerArchiveRequest } from "../../services/sellerOrderArchiveApi";
 
 export default function StoreOrderCard({ order, view }) {
   const [busy, setBusy] = useState(false);
+  const [confirmArchive, setConfirmArchive] = useState(false);
+  const [archived, setArchived] = useState(false);
   const lock = useRef(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -73,6 +76,16 @@ export default function StoreOrderCard({ order, view }) {
   }
   const destination = order.isRaffleGift === true ? delivery : { fullName: order.adSoyad, address: order.adres, city: order.il, district: order.ilce, phone: order.telefon };
   const canShowAddress = !view.digital && view.paid && ["Ödendi", "Hazırlanıyor", "Kargoda"].includes(view.status);
+  async function archive() {
+    if (lock.current) return;
+    lock.current = true; setBusy(true); setError("");
+    try {
+      await sellerArchiveRequest(`${encodeURIComponent(view.id)}/archive-failed`);
+      setArchived(true); // Firestore listener subsequently recalculates the shared list and counters.
+    } catch (failure) { setError(failure.message || "Bu kayıt silinemedi."); }
+    finally { lock.current = false; setBusy(false); }
+  }
+  if (archived && view.paymentAttempt) return null;
   return <article className="store-orders__card" aria-label={`Sipariş ${view.number}`}>
     <div className="store-orders__card-head"><div><strong>Sipariş #{view.number}</strong><time dateTime={view.date?.toISOString()}>{view.date ? view.date.toLocaleString("tr-TR", { dateStyle: "medium", timeStyle: "short" }) : "Tarih bilgisi yok"}</time></div><span className={`store-orders__badge ${view.problem ? "is-problem" : view.delivered ? "is-delivered" : ""}`}>{view.status === "Ödendi" ? "Yeni sipariş" : view.status}</span></div>
     <div className="store-orders__product"><div className="store-orders__image" ref={imageAnchor}>{image && imageFailed !== image ? <img src={image} alt={view.title} loading="lazy" onError={() => setImageFailed(image)} /> : <span>Görsel mevcut değil</span>}</div><div><h2>{view.title}</h2>{view.variant && <p>Varyant: {view.variant}</p>}<p className="store-orders__muted">{view.digital ? "💻 Dijital Teslimat" : "Fiziksel teslimat"}{order.isRaffleGift === true ? " · Kura Hediyesi" : ""}</p><dl><div><dt>Alıcı</dt><dd>{view.buyer}</dd></div><div><dt>Adet</dt><dd>{view.quantity ?? "Bilgi yok"}</dd></div><div><dt>Sipariş toplamı</dt><dd>{orderMoney(view.amount)}</dd></div></dl></div></div>
@@ -86,6 +99,10 @@ export default function StoreOrderCard({ order, view }) {
           : <span className="store-orders__muted">{view.status === "Teslim Edildi" ? "Teslimat tamamlandı." : view.action.label}</span>}
       {canShowAddress && <button className="store-orders__secondary" type="button" aria-expanded={addressOpen} onClick={() => { setDelivery(null); setDeliveryError(""); setAddressOpen((value) => !value); }}>{addressOpen ? "Teslimat bilgisini gizle" : "Kargo için teslimat bilgisi"}</button>}
     </div>
+    {view.cleanupEligible && view.paymentAttempt && <div className="store-orders__cleanup">
+      {!confirmArchive ? <button className="store-orders__danger" type="button" disabled={busy} onClick={() => setConfirmArchive(true)}>Başarısız Kaydı Sil</button>
+        : <section role="group" aria-label="Başarısız kayıt temizleme onayı"><p>Bu ödeme tamamlanmadı. Bu başarısız sipariş kaydını silmek istediğine emin misin?</p><p>Tamamlanmış satışlar ve finansal kayıtlar silinemez. Kayıt listeden kaldırılır; denetim geçmişi güvenli arşivde korunur.</p><div className="store-orders__actions"><button type="button" disabled={busy} onClick={() => setConfirmArchive(false)}>Vazgeç</button><button className="store-orders__danger" type="button" disabled={busy} onClick={archive}>{busy ? "Siliniyor…" : "Kaydı Sil"}</button></div></section>}
+    </div>}
     {shipping && view.action.kind === "SHIP" && <form className="store-orders__shipment" onSubmit={(event) => { event.preventDefault(); if (carrier.trim() && tracking.trim()) update({ durum: "Kargoda", kargoFirma: carrier.trim(), kargoNo: tracking.trim() }); }}><label>Kargo firması<input required maxLength={80} value={carrier} onChange={(e) => setCarrier(e.target.value)} disabled={busy} /></label><label>Takip numarası<input required maxLength={120} value={tracking} onChange={(e) => setTracking(e.target.value)} disabled={busy} /></label><button disabled={busy || !carrier.trim() || !tracking.trim()} type="submit">{busy ? "Kaydediliyor…" : "Kargoya verildiğini onayla"}</button></form>}
     {addressOpen && canShowAddress && <section className="store-orders__delivery" aria-label="Kargo teslimat bilgisi"><strong>Yalnızca siparişin teslimatı için kullanın.</strong>{deliveryError ? <p role="alert">{deliveryError}</p> : destination ? <address>{orderText(destination.fullName)}<br />{orderText(destination.address) || "Adres bilgisi kayıtta bulunmuyor."}<br />{orderText(destination.district)} {orderText(destination.city)}{orderText(destination.phone) && <><br />{orderText(destination.phone)}</>}</address> : <p role="status">Teslimat bilgisi yükleniyor…</p>}</section>}
     {orderText(order.aktifTalepId) && <div className="store-orders__notice"><strong>İade / itiraz kaydı</strong><SellerReturnStatus claimId={order.aktifTalepId} /></div>}
