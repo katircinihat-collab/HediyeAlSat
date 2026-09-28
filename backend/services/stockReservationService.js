@@ -1,4 +1,5 @@
 const crypto = require("crypto");
+const { trace, failure } = require("./paymentTrace");
 
 const RESERVATION_TTL_MS = 15 * 60 * 1000;
 
@@ -59,7 +60,7 @@ async function reserveStock({ firestore, FieldValue, conversationId, verifiedIte
             updatedAt: FieldValue.serverTimestamp()
         });
         return { id, status: "ACTIVE", items, expiresAt, idempotent: false };
-    });
+    }).then((result) => { trace("RESERVATION_CREATED", { conversationId, reservationId: id, reservationStatus: result.status }); return result; }, (error) => { failure("RESERVATION_CREATE", error); throw error; });
 }
 
 async function releaseReservation({ firestore, FieldValue, reservationId: id, reason = "PAYMENT_FAILED", now = new Date() }) {
@@ -80,7 +81,7 @@ async function releaseReservation({ firestore, FieldValue, reservationId: id, re
         });
         tx.update(ref, { status: "RELEASED", releaseReason: reason, releasedAt: now, updatedAt: FieldValue.serverTimestamp() });
         return { released: true };
-    });
+    }).then((result) => { trace(result.released ? "RESERVATION_RELEASED" : "RESERVATION_RELEASE_SKIPPED", { reservationId: id, reason }); return result; }, (error) => { failure("RESERVATION_RELEASE", error); throw error; });
 }
 
 async function releaseExpiredReservations({ firestore, FieldValue, now = new Date() }) {

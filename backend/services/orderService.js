@@ -137,8 +137,7 @@ SEPETİ TEMİZLE
 async function sepetTemizle(email) {
 
     console.log(
-        "Sepet temizleniyor:",
-        email
+        "Sepet temizleniyor."
     );
 
     const snap = await firestore

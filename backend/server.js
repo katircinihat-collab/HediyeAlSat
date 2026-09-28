@@ -4,6 +4,8 @@ require("dotenv").config();
 
 const app = express();
 app.set("trust proxy", 1);
+const paymentTrace = require("./services/paymentTrace");
+app.use(paymentTrace.ingress);
 
 
 // =====================================================
@@ -27,11 +29,19 @@ app.use(cors({
     allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
+app.use((req, _res, next) => {
+    if (req.paymentTrace) paymentTrace.trace("CORS_PASSED");
+    next();
+});
 app.use(express.json());
 
 app.use(express.urlencoded({
     extended: true
 }));
+app.use((req, _res, next) => {
+    if (req.paymentTrace) paymentTrace.trace("BODY_PARSERS_PASSED");
+    next();
+});
 
 
 // =====================================================
@@ -245,7 +255,8 @@ app.use((req, res) => {
 
 app.use((err, req, res, _next) => {
 
-    console.error(
+    if (req.paymentTrace) paymentTrace.failure("HTTP_MIDDLEWARE_OR_HANDLER", err);
+    else console.error(
         "SERVER HATASI:",
         err
     );
@@ -272,6 +283,7 @@ const PORT =
 app.listen(
     PORT,
     () => {
+        paymentTrace.trace("TRACE_LOGGING_READY", { commit: process.env.RENDER_GIT_COMMIT });
 
         console.log(
             "================================="

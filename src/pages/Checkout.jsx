@@ -450,8 +450,7 @@ function Checkout() {
         } else {
 
           console.error(
-            "Sponsor ödeme oluşturulamadı:",
-            data
+            "Sponsor ödeme oluşturulamadı."
           );
 
           alert(
@@ -461,11 +460,10 @@ function Checkout() {
           );
         }
 
-      } catch (error) {
+      } catch {
 
         console.error(
-          "Sponsor ödeme hatası:",
-          error
+          "Sponsor ödeme hatası."
         );
 
         alert(
@@ -755,8 +753,7 @@ function Checkout() {
       } else {
 
         console.error(
-          "Ödeme oluşturulamadı:",
-          data
+          "Ödeme oluşturulamadı."
         );
 
         alert(
@@ -766,11 +763,10 @@ function Checkout() {
         );
       }
 
-    } catch (error) {
+    } catch {
 
       console.error(
-        "Ödeme hatası:",
-        error
+        "Ödeme hatası."
       );
 
       alert(

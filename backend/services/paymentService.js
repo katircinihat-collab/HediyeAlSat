@@ -1,6 +1,7 @@
 
 const iyzipay = require("../config/iyzico");
 const crypto = require("crypto");
+const paymentTrace = require("./paymentTrace");
 
 const paymentModel = require("../models/paymentModel");
 
@@ -27,12 +28,18 @@ const KOMISYON_ORANI = 0.08;
 const CALLBACK_RETRIEVE_TIMEOUT_MS = 15000;
 
 function retrieveCheckoutForm(client, token, timeoutMs = CALLBACK_RETRIEVE_TIMEOUT_MS) {
+    paymentTrace.trace("IYZICO_RETRIEVE_REQUEST", { tokenFingerprint: paymentTrace.fingerprint(token) });
     return new Promise((resolve, reject) => {
         let completed = false;
         const finish = (callback) => (value) => {
             if (completed) return;
             completed = true;
             clearTimeout(timer);
+            if (callback === reject) paymentTrace.failure("IYZICO_RETRIEVE", value);
+            else {
+                paymentTrace.bindConversation(value?.conversationId || value?.basketId);
+                paymentTrace.trace("IYZICO_RETRIEVE_RESPONSE", { ...paymentTrace.providerFields(value), tokenFingerprint: paymentTrace.fingerprint(token) });
+            }
             callback(value);
         };
         const timer = setTimeout(() => {
@@ -62,8 +69,11 @@ function sleep(ms) {
 }
 
 function initializeCheckoutForm(client, request) {
+    paymentTrace.trace("IYZICO_INITIALIZE_REQUEST", { conversationId: request.conversationId, basketId: request.basketId, callbackUrl: request.callbackUrl, amount: request.paidPrice, currency: request.currency, itemCount: request.basketItems?.length });
     return new Promise((resolve, reject) => {
         client.checkoutFormInitialize.create(request, (error, result) => {
+            if (error) paymentTrace.failure("IYZICO_INITIALIZE", error);
+            else paymentTrace.trace("IYZICO_INITIALIZE_RESPONSE", paymentTrace.providerFields(result));
             if (error) return reject(error);
             return resolve(result);
         });
@@ -81,8 +91,8 @@ async function initializeCheckoutFormWithRetry(client, request) {
             const code = String(error?.code || "").toUpperCase();
             const retryable = IYZICO_RETRYABLE_NETWORK_CODES.has(code);
 
-            console.error("İyzico ödeme formu bağlantı hatası:", {
-                code: code || "IYZICO_NETWORK_ERROR",
+            paymentTrace.trace("IYZICO_INITIALIZE_RETRY_DECISION", {
+                errorCode: code || "IYZICO_NETWORK_ERROR",
                 attempt,
                 maxAttempts: IYZICO_INITIALIZE_MAX_ATTEMPTS
             });
@@ -142,6 +152,8 @@ async function createPayment(data, authenticatedUser, requestContext = {}) {
 
     const conversationId =
         `${Date.now()}_${crypto.randomUUID()}`;
+    paymentTrace.bindConversation(conversationId);
+    paymentTrace.trace("PAYMENT_ATTEMPT_CREATED", { conversationId, itemCount: Array.isArray(siparisIds) ? siparisIds.length : 0 });
 
 
     /*
@@ -512,7 +524,9 @@ async function createPayment(data, authenticatedUser, requestContext = {}) {
         if (!iyzipay) {
             throw new Error("Iyzico henüz yapılandırılmadı.");
         }
-        return await initializeCheckoutFormWithRetry(iyzipay, request);
+        const result = await initializeCheckoutFormWithRetry(iyzipay, request);
+        paymentTrace.trace("PAYMENT_FORM_RESPONSE_READY", { conversationId, redirectAvailable: Boolean(result?.paymentPageUrl), tokenFingerprint: paymentTrace.fingerprint(result?.token) });
+        return result;
     } catch (error) {
         if (stockReservation?.id) {
             await releaseReservation({
@@ -681,10 +695,7 @@ async function paymentCallback(token) {
                     "retrieve callback çalıştı"
                 );
 
-                console.log(
-                    "ERR:",
-                    err
-                );
+                if (err) paymentTrace.failure("LEGACY_RETRIEVE", err);
 
                 try {
 
@@ -800,10 +811,7 @@ async function paymentCallback(token) {
                     }
 
 
-                    console.log(
-                        "Ödeme kaydı bulundu:",
-                        odeme
-                    );
+                    paymentTrace.trace("LEGACY_PAYMENT_RECORD_FOUND", { conversationId });
 
 
                     /*
@@ -980,10 +988,7 @@ async function paymentCallback(token) {
 
                 } catch (e) {
 
-                    console.log(
-                        "Callback işlem hatası:",
-                        e
-                    );
+                    paymentTrace.failure("LEGACY_CALLBACK", e);
 
                     reject(e);
 
@@ -1003,14 +1008,17 @@ async function securePaymentCallback(token) {
 
     const conversationId = result.conversationId || result.basketId;
     const payment = conversationId ? await paymentModel.getPayment(conversationId) : null;
+    paymentTrace.bindConversation(conversationId);
 
     try {
         const verified = validateRetrievedPayment(result, payment);
+        paymentTrace.trace("PAYMENT_VERIFIED", { paymentVerified: true, paymentId: verified.paymentId });
         // Daha önce güvenle tamamlanmış ödemelerin tekrarlanan callback'i yeniden
         // finansal işlem üretmeden finalizePayment'in idempotent yoluna düşer.
         const itemTransactions = payment?.sponsor || payment?.listingBoost || payment?.paymentStatus === "SUCCESS"
             ? null
             : mapPaymentItemTransactions(result, payment);
+        paymentTrace.trace("ORDER_FINALIZATION_STARTED", { paymentId: verified.paymentId, reservationId: payment?.stockReservationId });
         const finalized = await finalizePayment({
             firestore,
             FieldValue,
@@ -1020,6 +1028,10 @@ async function securePaymentCallback(token) {
             currency: result.currency
         });
 
+        paymentTrace.trace("ORDER_FINALIZATION_COMPLETED", { paymentId: verified.paymentId, alreadyFinalized: finalized.alreadyFinalized, paymentStatus: "SUCCESS" });
+        for (const orderId of payment?.siparisIds || []) paymentTrace.trace("ORDER_FINALIZED", { orderId, paymentId: verified.paymentId });
+        if (payment?.stockReservationId) paymentTrace.trace("RESERVATION_COMMITTED", { reservationId: payment.stockReservationId, alreadyFinalized: finalized.alreadyFinalized });
+
         if (!finalized.alreadyFinalized && payment?.kullanici && !payment?.listingBoost && !payment?.sponsor) {
             scheduleCartCleanup(payment.kullanici);
         }
@@ -1028,6 +1040,7 @@ async function securePaymentCallback(token) {
             : "/payment-success";
         return { success: true, sponsor: finalized.sponsor, listingBoost: finalized.listingBoost, redirect };
     } catch (error) {
+        paymentTrace.failure("CALLBACK_VERIFICATION_OR_FINALIZATION", error);
         if (payment && error.paymentStatus) {
             await paymentModel.updatePayment(payment.id, {
                 paymentStatus: error.paymentStatus,
@@ -1062,10 +1075,7 @@ async function securePaymentCallback(token) {
                 sourceId: payment.id
             } }).catch(() => undefined);
         }
-        console.error("Callback doğrulama/finalize hatası:", {
-            conversationId: conversationId || null,
-            code: error.code || "CALLBACK_FAILED"
-        });
+        paymentTrace.trace("CALLBACK_FAILED", { conversationId, errorCode: error.code || "CALLBACK_FAILED" });
         throw error;
     }
 }

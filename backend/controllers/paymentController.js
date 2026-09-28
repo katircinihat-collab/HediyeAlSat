@@ -1,6 +1,7 @@
 
 const paymentService =
     require("../services/paymentService");
+const paymentTrace = require("../services/paymentTrace");
 
 
 /*
@@ -25,7 +26,7 @@ exports.startPayment = async (req, res) => {
 
     } catch (err) {
 
-        console.error("Ödeme başlatma hatası:", err.message);
+        paymentTrace.failure("PAYMENT_INITIALIZATION", err);
 
         res.status(err.status || 500).json({
 
@@ -54,12 +55,14 @@ exports.paymentCallback = async (
     try {
 
         console.info("Ödeme callback alındı.", { tokenPresent: Boolean(req.body?.token) });
+        paymentTrace.callbackParsed(req.body);
 
         const token =
             req.body.token;
 
 
         if (!token) {
+            paymentTrace.trace("PAYMENT_FAILURE", { failedStage: "CALLBACK_PARSE", errorCode: "TOKEN_MISSING" });
 
             console.info(
                 "Callback token bulunamadı."
@@ -107,9 +110,7 @@ exports.paymentCallback = async (
 
     } catch (err) {
 
-        console.error("Callback controller hatası:", {
-            code: err.code || "CALLBACK_FAILED"
-        });
+        paymentTrace.failure("CALLBACK_HANDLER", err);
 
 
         return res.redirect(
