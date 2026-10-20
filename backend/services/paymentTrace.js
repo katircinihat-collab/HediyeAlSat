@@ -56,7 +56,13 @@ function providerFields(result = {}) {
 }
 
 function failure(failedStage, error) {
-    trace("PAYMENT_FAILURE", { failedStage, errorName: error?.name, errorCode: error?.code, errorMessage: error?.message,
+    // iyzipay's callback errors are commonly provider response objects with
+    // `errorCode`/`errorGroup`, rather than native Error instances with `code`.
+    // Preserve those machine-readable fields while keeping free text withheld.
+    trace("PAYMENT_FAILURE", { failedStage, errorName: error?.name,
+        errorCode: error?.code || error?.errorCode || error?.response?.errorCode,
+        errorGroup: error?.errorGroup || error?.response?.errorGroup,
+        errorMessage: error?.message || error?.errorMessage || error?.response?.errorMessage,
         reason: error?.message === "CORS origin reddedildi." ? "CORS_REJECTED" : ["entity.parse.failed", "entity.too.large", "encoding.unsupported"].includes(error?.type) ? error.type : undefined });
 }
 

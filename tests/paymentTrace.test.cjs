@@ -35,6 +35,19 @@ test("free provider/exception messages cannot disclose credentials or PII", () =
   assert.equal(result.errorCode, undefined);
 });
 
+test("iyzipay response object error code/group survive failure tracing without free-text leakage", async () => {
+  const logs = await capture(() => failure("IYZICO_RETRIEVE", {
+    errorCode: "10051",
+    errorGroup: "2DS",
+    errorMessage: "private@example.test card 4111111111111111"
+  }));
+  assert.equal(logs[0].failedStage, "IYZICO_RETRIEVE");
+  assert.equal(logs[0].errorCode, "10051");
+  assert.equal(logs[0].errorGroup, "2DS");
+  assert.equal(logs[0].errorMessage, "Message withheld; consult errorCode with provider.");
+  assert.doesNotMatch(JSON.stringify(logs), /private@example|411111/);
+});
+
 test("configured secrets cannot be smuggled into allowed identifiers", () => {
   const old = process.env.IYZIPAY_API_KEY;
   process.env.IYZIPAY_API_KEY = "secretSentinel";
